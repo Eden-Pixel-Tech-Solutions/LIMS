@@ -1,0 +1,50 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Build outputs
+dist/
+build/
+out/
+.next/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# LIS Agent specifics
+/LIS-Agent/db/lis-agent.db
+/LIS-Agent/db/*.db-journal
+
+# WhatsApp Bot specifics
+/WhatsApp-chat-bot/.wwebjs_auth/
+/WhatsApp-chat-bot/.wwebjs_cache/
+/WhatsApp-chat-bot/session.json
+/WhatsApp-chat-bot/auth_info.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+
+# Database dumps (optional, but safer to ignore if they are huge)
+*.sql
