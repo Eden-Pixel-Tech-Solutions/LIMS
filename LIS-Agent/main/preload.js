@@ -4,6 +4,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
   listPorts: () => ipcRenderer.invoke('list-ports'),
   saveConfig: (config) => ipcRenderer.invoke('save-config', config),
   getConfig: () => ipcRenderer.invoke('get-config'),
+  deleteConfig: (id) => ipcRenderer.invoke('delete-config', id),
   startListening: (testInfo) => ipcRenderer.invoke('start-listening', testInfo),
   stopListening: () => ipcRenderer.invoke('stop-listening'),
   onTestCompleted: (callback) => {

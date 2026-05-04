@@ -31,11 +31,15 @@ import {
   getReportDetails,
   generateLabReportPDF,
   bookLabTests,
-  trackTestStatus
+  trackTestStatus,
+  getHospitalCode,
+  getMachineProtocol
 } from '../controllers/labController.js';
 import {
   getLabMachines,
+  getMachineBySerial,
   addLabMachine,
+  syncLabMachine,
   updateLabMachine,
   deleteLabMachine
 } from '../controllers/labMachineController.js';
@@ -100,10 +104,18 @@ router.get('/approved-reports', getApprovedReports);
 router.get('/report-details/:sampleId', getReportDetails);
 router.get('/generate-report-pdf/:sampleId', generateLabReportPDF);
 
+// Hospital Code for Machine ID
+router.get('/hospital-code/:userId', getHospitalCode);
+
 // Lab Machines Routes
 router.get('/machines/:labId', getLabMachines);
+router.get('/machine-by-serial/:serialNumber', getMachineBySerial);
 router.post('/machines', addLabMachine);
+router.post('/machines/sync', syncLabMachine);
 router.put('/machines/:id', updateLabMachine);
 router.delete('/machines/:id', deleteLabMachine);
+
+// Machine Protocol Route
+router.get('/machine-protocol/:model', getMachineProtocol);
 
 export default router;

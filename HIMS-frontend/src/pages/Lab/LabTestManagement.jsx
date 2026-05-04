@@ -43,18 +43,56 @@ const LabTestManagement = () => {
   });
 
   const CLINIQUANT_TESTS = [
-    { id: 1, name: "RBC", unit: "10^6/µL" }, { id: 2, name: "HEMOGLOBIN", unit: "g/dL" },
-    { id: 3, name: "HEMATOCRIT", unit: "%" }, { id: 4, name: "MCV", unit: "fL" },
-    { id: 5, name: "MCH", unit: "pg" }, { id: 6, name: "MCHC", unit: "g/dL" },
-    { id: 7, name: "RDW", unit: "%" }, { id: 8, name: "WBC", unit: "10^3/µL" },
-    { id: 9, name: "NEUTROPHILS", unit: "%" }, { id: 10, name: "LYMPHOCYTES", unit: "%" },
-    { id: 11, name: "MONOCYTES", unit: "%" }, { id: 12, name: "EOSINOPHILS", unit: "%" },
-    { id: 13, name: "BASOPHILS", unit: "%" }, { id: 14, name: "PLATELETS", unit: "10^3/µL" },
-    { id: 15, name: "MPV", unit: "fL" }, { id: 16, name: "PCT", unit: "%" },
-    { id: 17, name: "PDW", unit: "fL" }, { id: 18, name: "NRBC", unit: "%" },
-    // Biochemistry defaults from PDF
-    { id: 101, name: "GLU", unit: "mg/dL" }, { id: 112, name: "UREA", unit: "mg/dL" },
-    { id: 113, name: "URIC-ACID", unit: "mg/dL" }
+    { id: 1, name: "ALP", unit: "U/L" },
+    { id: 2, name: "ALT", unit: "U/L" },
+    { id: 3, name: "AMY", unit: "U/L" },
+    { id: 4, name: "AST", unit: "U/L" },
+    { id: 5, name: "CHO", unit: "mg/dL" },
+    { id: 6, name: "CKMB", unit: "U/L" },
+    { id: 7, name: "CKNAC", unit: "U/L" },
+    { id: 8, name: "GGT", unit: "U/L" },
+    { id: 9, name: "GLU", unit: "mg/dL" },
+    { id: 10, name: "LDH", unit: "U/L" },
+    { id: 11, name: "TRIG", unit: "mg/dL" },
+    { id: 12, name: "UREA", unit: "mg/dL" },
+    { id: 13, name: "URIC-ACID", unit: "mg/dL" },
+    { id: 14, name: "ALB", unit: "g/dL" },
+    { id: 15, name: "TBIL", unit: "mg/dL" },
+    { id: 16, name: "CAL-A", unit: "mg/dL" },
+    { id: 17, name: "CAL-O", unit: "mg/dL" },
+    { id: 18, name: "CHL", unit: "mmol/L" },
+    { id: 19, name: "CREAT", unit: "mg/dL" },
+    { id: 20, name: "DBIL", unit: "mg/dL" },
+    { id: 21, name: "HDL", unit: "mg/dL" },
+    { id: 22, name: "PHO", unit: "mg/dL" },
+    { id: 23, name: "TP", unit: "g/dL" },
+    { id: 24, name: "MICRO PROTEIN", unit: "mg/dL" },
+    { id: 25, name: "HBA1C", unit: "%" },
+    { id: 26, name: "ASO LATEX", unit: "" },
+    { id: 27, name: "CRP LATEX", unit: "" },
+    { id: 28, name: "RF LATEX", unit: "" },
+    { id: 29, name: "D DIMER", unit: "" }
+  ];
+
+  const CELQUANT_TESTS = [
+    { id: "6690-2", name: "WBC", unit: "10^3/µL" },
+    { id: "789-8", name: "RBC", unit: "10^6/µL" },
+    { id: "718-7", name: "HGB", unit: "g/dL" },
+    { id: "4544-3", name: "HCT", unit: "%" },
+    { id: "785-6", name: "MCH", unit: "pg" },
+    { id: "786-4", name: "MCHC", unit: "g/dL" },
+    { id: "788-0", name: "RDW-CV", unit: "%" },
+    { id: "70-5", name: "RDW-SD", unit: "fL" },
+    { id: "777-3", name: "PLT", unit: "10^3/µL" },
+    { id: "32623-1", name: "MPV", unit: "fL" },
+    { id: "32207-3", name: "PDW", unit: "fL" },
+    { id: "10002", name: "PCT", unit: "%" },
+    { id: "731-0", name: "Lymph#", unit: "10^3/µL" },
+    { id: "736-9", name: "Lymph%", unit: "%" },
+    { id: "10027", name: "Mid#", unit: "10^3/µL" },
+    { id: "10029", name: "Mid%", unit: "%" },
+    { id: "10028", name: "Gran#", unit: "10^3/µL" },
+    { id: "10030", name: "Gran%", unit: "%" }
   ];
 
   const [selectedAnalyzer, setSelectedAnalyzer] = useState(''); // 'CliniQuant Micro' or ''
@@ -608,84 +646,56 @@ const LabTestManagement = () => {
                 >
                   <option value="">Select Analyzer</option>
                   <option value="CliniQuant Micro">Merilyzer CliniQuant Micro</option>
+                  <option value="CelQuant Edge">Merilyzer CelQuant Edge (3-Part)</option>
                 </select>
               </div>
 
-              {/* MACHINE PARAMETERS ONLY */}
+              {/* CLINIQUANT (BIOCHEMISTRY) PARAMETERS */}
               {selectedAnalyzer === 'CliniQuant Micro' && (
                 <div className="machine-tests-section" style={{ marginTop: '20px' }}>
-                  
-                  <h3 style={{ marginBottom: '10px', color: '#1e293b' }}>
-                    Select CBC Parameters
-                  </h3>
-
-                  <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: '1fr 1fr 1fr',
-                    gap: '10px',
-                    maxHeight: '320px',
-                    overflowY: 'auto',
-                    padding: '15px',
-                    background: 'white',
-                    border: '1px solid #e2e8f0',
-                    borderRadius: '8px'
-                  }}>
-
+                  <h3 style={{ marginBottom: '10px', color: '#1e293b' }}>Select Biochemistry Parameters</h3>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', maxHeight: '320px', overflowY: 'auto', padding: '15px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px' }}>
                     {CLINIQUANT_TESTS.map(mTest => (
-                      <label key={mTest.id} style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        padding: '8px',
-                        border: '1px solid #f1f5f9',
-                        borderRadius: '6px',
-                        fontSize: '13px',
-                        cursor: 'pointer'
-                      }}>
-                        
-                        <input 
-                          type="checkbox"
-                          checked={formData.parameters.some(p => p.machine_parameter_code === mTest.id.toString())}
+                      <label key={mTest.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px', border: '1px solid #f1f5f9', borderRadius: '6px', fontSize: '13px', cursor: 'pointer' }}>
+                        <input type="checkbox" checked={formData.parameters.some(p => p.machine_parameter_code === mTest.id.toString())}
                           onChange={(e) => {
-
                             if (e.target.checked) {
-                              setFormData(prev => ({
-                                ...prev,
-                                parameters: [
-                                  ...prev.parameters,
-                                  {
-                                    parameter_name: mTest.name,
-                                    parameter_unit: mTest.unit,
-                                    machine_parameter_code: mTest.id.toString(),
-                                    result_type: 'numeric',
-                                    display_order: prev.parameters.length
-                                  }
-                                ]
-                              }));
+                              setFormData(prev => ({ ...prev, parameters: [...prev.parameters, { parameter_name: mTest.name, parameter_unit: mTest.unit, machine_parameter_code: mTest.id.toString(), result_type: 'numeric', display_order: prev.parameters.length }] }));
                             } else {
-                              setFormData(prev => ({
-                                ...prev,
-                                parameters: prev.parameters.filter(
-                                  p => p.machine_parameter_code !== mTest.id.toString()
-                                )
-                              }));
+                              setFormData(prev => ({ ...prev, parameters: prev.parameters.filter(p => p.machine_parameter_code !== mTest.id.toString()) }));
                             }
-
                           }}
                         />
-
-                        <div>
-                          <strong>{mTest.name}</strong>
-                          <div style={{ fontSize: '10px', color: '#94a3b8' }}>
-                            ID: {mTest.id} | {mTest.unit}
-                          </div>
-                        </div>
-
+                        <div><strong>{mTest.name}</strong><div style={{ fontSize: '10px', color: '#94a3b8' }}>ID: {mTest.id} | {mTest.unit}</div></div>
                       </label>
                     ))}
                   </div>
                 </div>
               )}
+
+              {/* CELQUANT (HEMATOLOGY) PARAMETERS */}
+              {selectedAnalyzer === 'CelQuant Edge' && (
+                <div className="machine-tests-section" style={{ marginTop: '20px' }}>
+                  <h3 style={{ marginBottom: '10px', color: '#1e293b' }}>Select CBC (Hematology) Parameters</h3>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', maxHeight: '320px', overflowY: 'auto', padding: '15px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px' }}>
+                    {CELQUANT_TESTS.map(mTest => (
+                      <label key={mTest.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px', border: '1px solid #f1f5f9', borderRadius: '6px', fontSize: '13px', cursor: 'pointer' }}>
+                        <input type="checkbox" checked={formData.parameters.some(p => p.machine_parameter_code === mTest.id.toString())}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setFormData(prev => ({ ...prev, parameters: [...prev.parameters, { parameter_name: mTest.name, parameter_unit: mTest.unit, machine_parameter_code: mTest.id.toString(), result_type: 'numeric', display_order: prev.parameters.length }] }));
+                            } else {
+                              setFormData(prev => ({ ...prev, parameters: prev.parameters.filter(p => p.machine_parameter_code !== mTest.id.toString()) }));
+                            }
+                          }}
+                        />
+                        <div><strong>{mTest.name}</strong><div style={{ fontSize: '10px', color: '#94a3b8' }}>HL7: {mTest.id} | {mTest.unit}</div></div>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+
           </div>
           <div className="form-actions">
                 <button type="button" onClick={() => {

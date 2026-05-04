@@ -63,6 +63,9 @@ export default function Login() {
       if (data.role) localStorage.setItem('role', data.role);
       if (data.role_level) localStorage.setItem('role_level', data.role_level);
       
+      // Store user object for easier access to ID
+      localStorage.setItem('user', JSON.stringify(data));
+      
       // For LIS Agent specific context
       localStorage.setItem("labId", data.branch_id); 
 

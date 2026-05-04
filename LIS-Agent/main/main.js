@@ -46,6 +46,15 @@ app.whenReady().then(() => {
     }
   });
 
+  ipcMain.handle('delete-config', async (event, id) => {
+    try {
+      return await db.deleteConfig(id);
+    } catch (e) {
+      console.error("IPC delete-config error:", e);
+      return false;
+    }
+  });
+
   ipcMain.handle('list-ports', async () => {
     try {
       console.log("Listing serial ports...");

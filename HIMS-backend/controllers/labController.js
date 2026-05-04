@@ -1121,24 +1121,59 @@ export const saveTestResults = async (req, res) => {
       labId = billItem[0].lab_id;
     }
 
-    // Store all results as single JSON row
-    const [insertResult] = await connection.query(
-      `INSERT INTO lab_test_result 
-       (bill_item_id, patient_id, sample_id, machine_no, test_id, test_name,
-        results_json, tested_by, tested_at, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Test Done')`,
-      [
-        bill_item_id || null,
-        resolvedPatientId || null,
-        sample_id,
-        machine_no || null,
-        test_id || null,
-        test_name || null,
-        JSON.stringify(results), // Store entire results array as JSON
-        tested_by || null,
-        testedAt
-      ]
+    // CHECK IF RESULTS ALREADY EXIST FOR THIS BILL ITEM (TO APPEND/UPSERT)
+    const [existing] = await connection.query(
+      `SELECT id, results_json FROM lab_test_result WHERE bill_item_id = ? LIMIT 1`,
+      [bill_item_id]
     );
+
+    if (existing && existing.length > 0) {
+      // APPEND LOGIC
+      let currentResults = [];
+      try {
+        currentResults = JSON.parse(existing[0].results_json || '[]');
+      } catch (e) {
+        currentResults = [];
+      }
+
+      // Merge new results into existing (overwrite if same parameter name)
+      results.forEach(newRes => {
+        const idx = currentResults.findIndex(r => r.parameter_name === newRes.parameter_name);
+        if (idx !== -1) {
+          currentResults[idx] = newRes;
+        } else {
+          currentResults.push(newRes);
+        }
+      });
+
+      await connection.query(
+        `UPDATE lab_test_result 
+         SET results_json = ?, machine_no = ?, tested_at = NOW(), status = 'Test Done'
+         WHERE id = ?`,
+        [JSON.stringify(currentResults), machine_no || null, existing[0].id]
+      );
+      var finalResultId = existing[0].id;
+    } else {
+      // INSERT LOGIC (First parameter for this test)
+      const [insertResult] = await connection.query(
+        `INSERT INTO lab_test_result 
+         (bill_item_id, patient_id, sample_id, machine_no, test_id, test_name,
+          results_json, tested_by, tested_at, status)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Test Done')`,
+        [
+          bill_item_id || null,
+          resolvedPatientId || null,
+          sample_id,
+          machine_no || null,
+          test_id || null,
+          test_name || null,
+          JSON.stringify(results),
+          tested_by || null,
+          testedAt
+        ]
+      );
+      var finalResultId = insertResult.insertId;
+    }
 
     // Update bill item status to Test Done if bill_item_id provided
     if (bill_item_id) {
@@ -1210,7 +1245,7 @@ export const saveTestResults = async (req, res) => {
       success: true,
       message: 'Test results saved successfully',
       data: {
-        result_id: insertResult.insertId,
+        result_id: finalResultId,
         sample_id,
         machine_no,
         results_count: results.length,
@@ -1849,5 +1884,40 @@ export const generateLabReportPDF = async (req, res) => {
       success: false,
       message: 'Server error generating PDF'
     });
+  }
+};
+
+// Get hospital code for machine ID generation
+export const getHospitalCode = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const [rows] = await db.query(
+      `SELECT hospital_code FROM branches WHERE id = (SELECT branch_id FROM users WHERE id = ?)`,
+      [userId]
+    );
+    if (rows.length === 0) {
+      return res.json({ success: true, hospital_code: 'LAB' }); // Fallback
+    }
+    res.json({ success: true, hospital_code: rows[0].hospital_code });
+  } catch (error) {
+    console.error('Error fetching hospital code:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// Get machine protocol JSON for dynamic parsing in LIS Agent
+export const getMachineProtocol = async (req, res) => {
+  try {
+    const { model } = req.params;
+    const path = `./utils/machinesid.json/${model.toLowerCase()}.json`;
+    
+    const fs = await import('fs/promises');
+    const data = await fs.readFile(path, 'utf8');
+    const protocol = JSON.parse(data);
+    
+    res.json({ success: true, protocol });
+  } catch (error) {
+    console.error('Error fetching machine protocol:', error);
+    res.status(404).json({ success: false, message: 'Protocol not found for this model' });
   }
 };

@@ -9,10 +9,14 @@ db.serialize(() => {
   db.run(`
     CREATE TABLE IF NOT EXISTS analyzer_config (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
+      unique_id TEXT UNIQUE,
       analyzer_name TEXT,
       model TEXT,
       port TEXT,
-      baud INTEGER
+      baud INTEGER,
+      lab_id INTEGER,
+      lab_name TEXT,
+      manufacturer TEXT
     )
   `);
 });
@@ -20,15 +24,19 @@ db.serialize(() => {
 function saveConfig(config) {
   return new Promise((resolve, reject) => {
     const stmt = db.prepare(`
-      INSERT INTO analyzer_config (analyzer_name, model, port, baud)
-      VALUES (?, ?, ?, ?)
+      INSERT OR REPLACE INTO analyzer_config (unique_id, analyzer_name, model, port, baud, lab_id, lab_name, manufacturer)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     stmt.run(
+      config.uniqueId,
       config.name,
       config.model,
       config.port,
       config.baud,
+      config.labId,
+      config.labName,
+      config.manufacturer,
       function (err) {
         if (err) reject(err);
         else resolve(this.lastID);
@@ -41,11 +49,20 @@ function saveConfig(config) {
 
 function getConfig() {
   return new Promise((resolve, reject) => {
-    db.get(`SELECT * FROM analyzer_config ORDER BY id DESC LIMIT 1`, (err, row) => {
+    db.all(`SELECT * FROM analyzer_config ORDER BY id DESC`, (err, rows) => {
       if (err) reject(err);
-      else resolve(row);
+      else resolve(rows); // Return all rows
     });
   });
 }
 
-module.exports = { saveConfig, getConfig };
+function deleteConfig(id) {
+  return new Promise((resolve, reject) => {
+    db.run(`DELETE FROM analyzer_config WHERE id = ?`, [id], (err) => {
+      if (err) reject(err);
+      else resolve(true);
+    });
+  });
+}
+
+module.exports = { saveConfig, getConfig, deleteConfig };
