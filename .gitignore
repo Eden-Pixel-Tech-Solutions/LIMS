@@ -45,6 +45,3 @@ __pycache__/
 *$py.class
 venv/
 .venv/
-
-# Database dumps (optional, but safer to ignore if they are huge)
-*.sql
