@@ -154,7 +154,8 @@ export default function LabWorklist() {
           body: JSON.stringify({
             bill_item_id: item.bill_item_id,
             sample_id: sampleId,
-            status: 'Collected'
+            status: 'Collected',
+            collected_by: localStorage.getItem('user_id')
           })
         });
 
@@ -397,7 +398,7 @@ export default function LabWorklist() {
               </thead>
               <tbody>
                 {worklist
-                  .filter(item => ['Pending', 'Collected', 'In Progress'].includes(item.status))
+                  .filter(item => ['Pending', 'Collected', 'In Progress', 'Test Done'].includes(item.status))
                   .map((item, index) => (
                   <tr key={index} className={`status-${item.status?.toLowerCase().replace(' ', '-')}`}>
                     <td className="queue-number">
@@ -439,7 +440,7 @@ export default function LabWorklist() {
                           <Check size={14} />
                           Acknowledge
                         </button>
-                      ) : item.status === 'Test Done' ? (
+                      ) : (item.status === 'Test Done' || item.status === 'In Progress') ? (
                         <button
                           className="view-results-btn"
                           onClick={() => handleViewResults(item)}

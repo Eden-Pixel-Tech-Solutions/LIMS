@@ -38,7 +38,7 @@ BG3     = "#21262d"
 
 ACCENT  = "#1f6feb"
 
-GREEN   = "#3fb950"
+GREEN   = "#3fb950"`
 RED     = "#f85149"
 BLUE    = "#58a6ff"
 YELLOW  = "#d29922"

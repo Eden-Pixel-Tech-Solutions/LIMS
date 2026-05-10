@@ -671,13 +671,7 @@ async function syncSession(session, machine, sessionKey) {
   if (isComplete) {
     console.log(`✅ Panel COMPLETE for ${session.patientName}. Closing session.`);
     
-    // 1. Notify UI via IPC for the pop-up alert
-    mainWindow?.webContents?.send('panel-complete', {
-      patientName: session.patientName,
-      sampleId: session.sampleId,
-      machine: machine.model,
-      count: session.results.length
-    });
+
 
     // 2. Automate the manual "Mark as Completed" step
     // This moves the test from Lab Worklist to Doctor's Verification list automatically.

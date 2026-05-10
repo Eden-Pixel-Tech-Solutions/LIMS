@@ -14,7 +14,8 @@ const Worklist = () => {
   const [activeItem, setActiveItem] = useState(null);
   const [currentMachine, setCurrentMachine] = useState(null);
   const [incomingResults, setIncomingResults] = useState([]);
-  const [selectedParams, setSelectedParams] = useState([]);
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [departmentFilter, setDepartmentFilter] = useState('all');
   const [isFetchingParams, setIsFetchingParams] = useState(false);
   const barcodeRef = useRef(null);
 
@@ -25,7 +26,7 @@ const Worklist = () => {
     fetchMachines();
     const interval = setInterval(fetchWorklist, 30000);
     return () => clearInterval(interval);
-  }, [search, selectedBranch]);
+  }, [search, selectedBranch, statusFilter, departmentFilter]);
 
   useEffect(() => {
     if (printLabel && barcodeRef.current) {
@@ -47,7 +48,13 @@ const Worklist = () => {
   const fetchWorklist = async () => {
     try {
       const res = await axios.get(`${API_BASE}/api/lab/worklist`, {
-        params: { department: 'all', branch_id: selectedBranch, role_level: 'Branch', search: search }
+        params: { 
+          department: departmentFilter, 
+          branch_id: selectedBranch, 
+          role_level: 'Branch', 
+          search: search,
+          status: statusFilter !== 'all' ? statusFilter : undefined
+        }
       });
       if (res.data.success) setWorklist(res.data.worklist || []);
     } catch (err) { console.error("Error fetching worklist:", err); }
@@ -195,6 +202,7 @@ const Worklist = () => {
       'Collected': { bg: '#eff6ff', color: '#1e40af', border: '#bfdbfe' },
       'In Progress': { bg: '#fef9c3', color: '#854d0e', border: '#fef08a' },
       'Test Done': { bg: '#f0fdfa', color: '#115e59', border: '#99f6e4' },
+      'Partially Done': { bg: '#fff7ed', color: '#c2410c', border: '#ffedd5' },
       'Completed': { bg: '#f0fdf4', color: '#166534', border: '#bbf7d0' }
     };
     return styles[status] || { bg: '#f8fafc', color: '#475569', border: '#e2e8f0' };
@@ -207,7 +215,44 @@ const Worklist = () => {
           <h1 style={{ fontSize: '28px', fontWeight: '900', color: '#0f172a', margin: 0 }}>Lab Worklist</h1>
           <p style={{ color: '#64748b', fontSize: '15px', marginTop: '4px' }}>Smart Diagnostic Command Center</p>
         </div>
-        <button onClick={fetchWorklist} style={{ padding: '12px 20px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '10px', fontWeight: '600', cursor: 'pointer' }}>Refresh</button>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <div style={{ display: 'flex', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '4px 12px', alignItems: 'center' }}>
+            <span style={{ fontSize: '14px', color: '#64748b', marginRight: '8px' }}>🔍</span>
+            <input 
+              type="text" 
+              placeholder="Search patient or ID..." 
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              style={{ border: 'none', outline: 'none', fontSize: '14px', padding: '8px 0', width: '200px' }}
+            />
+          </div>
+
+          <select 
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            style={{ padding: '8px 12px', borderRadius: '10px', border: '1px solid #e2e8f0', fontSize: '14px', fontWeight: '600' }}
+          >
+            <option value="all">All Status</option>
+            <option value="Pending">Pending</option>
+            <option value="Collected">Collected</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Test Done">Partially Done</option>
+          </select>
+
+          <select 
+            value={departmentFilter}
+            onChange={(e) => setDepartmentFilter(e.target.value)}
+            style={{ padding: '8px 12px', borderRadius: '10px', border: '1px solid #e2e8f0', fontSize: '14px', fontWeight: '600' }}
+          >
+            <option value="all">All Departments</option>
+            <option value="Hematology">Hematology</option>
+            <option value="Biochemistry">Biochemistry</option>
+            <option value="Serology">Serology</option>
+            <option value="Microbiology">Microbiology</option>
+          </select>
+
+          <button onClick={fetchWorklist} style={{ padding: '12px 20px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '10px', fontWeight: '600', cursor: 'pointer' }}>Refresh</button>
+        </div>
       </div>
 
       <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
@@ -223,7 +268,16 @@ const Worklist = () => {
           </thead>
           <tbody>
             {worklist
-              .filter(item => ['Pending', 'Collected', 'In Progress'].includes(item.status))
+              .filter(item => {
+                const baseFilter = ['Pending', 'Collected', 'In Progress', 'Test Done'].includes(item.status);
+                if (statusFilter !== 'all') {
+                  if (statusFilter === 'Test Done') {
+                    return item.status === 'Test Done' && item.pending_params?.length > 0;
+                  }
+                  return item.status === statusFilter;
+                }
+                return baseFilter;
+              })
               .map((item) => (
               <tr key={item.bill_item_id} style={{ borderBottom: '1px solid #f1f5f9' }}>
                 <td style={{ padding: '20px 24px' }}>
@@ -242,8 +296,12 @@ const Worklist = () => {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                     <span style={{
                       padding: '6px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: '800', width: 'fit-content',
-                      background: getStatusStyle(item.status).bg, color: getStatusStyle(item.status).color, border: `1px solid ${getStatusStyle(item.status).border}`
-                    }}>{item.status}</span>
+                      background: getStatusStyle((item.status === 'Test Done' && item.pending_params?.length > 0) ? 'Partially Done' : item.status).bg, 
+                      color: getStatusStyle((item.status === 'Test Done' && item.pending_params?.length > 0) ? 'Partially Done' : item.status).color, 
+                      border: `1px solid ${getStatusStyle((item.status === 'Test Done' && item.pending_params?.length > 0) ? 'Partially Done' : item.status).border}`
+                    }}>
+                      {(item.status === 'Test Done' && item.pending_params?.length > 0) ? 'Partially Done' : (item.status === 'Collected' ? 'Pending' : item.status)}
+                    </span>
                     {item.pending_params && item.pending_params.length > 0 && (
                       <div style={{ fontSize: '10px', color: '#64748b', fontWeight: '600', maxWidth: '120px' }}>
                         ⏳ Waiting: {item.pending_params.join(', ')}
@@ -326,9 +384,22 @@ const Worklist = () => {
                     </div>
                   ) : (
                     incomingResults.map((res, i) => (
-                      <div key={i} style={{ padding: '8px 0', borderBottom: '1px solid #1e293b', display: 'flex', justifyContent: 'space-between' }}>
-                        <span>{res.test_name}</span>
-                        <span style={{ color: '#fff', fontWeight: '800' }}>{res.result_value} {res.unit}</span>
+                      <div key={i} style={{ 
+                        padding: '8px 0', 
+                        borderBottom: '1px solid #1e293b', 
+                        display: 'flex', 
+                        justifyContent: 'space-between',
+                        background: res.flag === 'H' ? 'rgba(239, 68, 68, 0.05)' : res.flag === 'L' ? 'rgba(59, 130, 246, 0.05)' : 'transparent'
+                      }}>
+                        <span style={{ color: res.flag === 'H' ? '#ef4444' : res.flag === 'L' ? '#3b82f6' : '#38bdf8' }}>
+                          {res.test_name} {res.flag && res.flag !== 'N' ? `(${res.flag})` : ''}
+                        </span>
+                        <span style={{ 
+                          color: res.flag === 'H' ? '#ef4444' : res.flag === 'L' ? '#3b82f6' : '#fff', 
+                          fontWeight: '800' 
+                        }}>
+                          {res.result_value} {res.unit}
+                        </span>
                       </div>
                     ))
                   )}

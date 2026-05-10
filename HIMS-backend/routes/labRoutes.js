@@ -34,7 +34,8 @@ import {
   bookLabTests,
   trackTestStatus,
   getHospitalCode,
-  getMachineProtocol
+  getMachineProtocol,
+  getActivityLogs
 } from '../controllers/labController.js';
 import {
   getLabMachines,
@@ -106,6 +107,7 @@ router.post('/verify-test', verifyTest);
 router.get('/approved-reports', getApprovedReports);
 router.get('/report-details/:sampleId', getReportDetails);
 router.get('/generate-report-pdf/:sampleId', generateLabReportPDF);
+router.get('/activity-logs', getActivityLogs);
 
 // Hospital Code for Machine ID
 router.get('/hospital-code/:userId', getHospitalCode);

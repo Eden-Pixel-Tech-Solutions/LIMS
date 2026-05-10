@@ -321,10 +321,6 @@ export default function SampleList() {
         </div>
       </div>
 
-
-
-
-
       {/* Worklist Table */}
       <div className="worklist-section">
         <div className="worklist-header-bar">

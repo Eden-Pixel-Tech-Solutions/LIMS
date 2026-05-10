@@ -1,5 +1,20 @@
 import PDFDocument from 'pdfkit';
 import QRCode from 'qrcode';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+function base64ToBuffer(dataUrl) {
+  const base64 = dataUrl.split(',')[1];
+  return Buffer.from(base64, 'base64');
+}
+
+function mimeType(dataUrl) {
+  return dataUrl.match(/data:([^;]+);/)?.[1] || 'image/png';
+}
 
 // ─── Colors ───────────────────────────────────────────────────────────────────
 const C = {
@@ -12,9 +27,11 @@ const C = {
   rowText:      '#1A1A1A',
   subHeader:    '#1A1A1A',
   normalVal:    '#166534',
-  highVal:      '#C0272D',
+  highVal:      '#FF0000',
+  lowVal:       '#0000FF',
   normalFlagBg: '#166534',
-  highFlagBg:   '#C0272D',
+  highFlagBg:   '#FF0000',
+  lowFlagBg:    '#0000FF',
   flagText:     '#FFFFFF',
   altRow:       '#F9F9F9',
   subHeaderBg:  '#F0F0F0',
@@ -33,6 +50,18 @@ const PAGE_H    = 841.89;
 const MARGIN    = 30;
 const CONTENT_W = PAGE_W - MARGIN * 2;
 
+// Fixed footer height — always reserved at the bottom of every page
+const FOOTER_H  = 70;   // px reserved for footer block
+// Fixed header height for page 1 (hospital header + patient info)
+// For page 2+, only hospital header is repeated
+const HOSPITAL_HEADER_H = 60; // approximate, computed dynamically per page
+
+// Content area boundaries
+// Page 1: below patient info (computed dynamically)
+// Page 2+: below hospital mini-header
+// Bottom boundary: always PAGE_H - MARGIN - FOOTER_H
+const PAGE_BOTTOM_MARGIN = MARGIN + FOOTER_H + 10; // distance from bottom
+
 // Column widths: Observation | Result | Unit | Ref
 const COL = {
   obs:    CONTENT_W * 0.40,
@@ -48,12 +77,42 @@ const COL_X = {
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-function resolveFlag(flag) {
-  const f = (flag || 'normal').toLowerCase();
+function resolveFlag(flag, value, range) {
+  let f = (flag || 'normal').toLowerCase();
+
+  // If flag is normal or missing, try to calculate it from range
+  if ((f === 'normal' || f === 'n' || !f) && range && value !== undefined && value !== null) {
+    try {
+      const val = parseFloat(value);
+      if (!isNaN(val)) {
+        // Handle "Min - Max" format
+        const rangeMatch = range.match(/([0-9.]+)\s*-\s*([0-9.]+)/);
+        if (rangeMatch) {
+          const min = parseFloat(rangeMatch[1]);
+          const max = parseFloat(rangeMatch[2]);
+          if (val < min) f = 'low';
+          else if (val > max) f = 'high';
+        } 
+        // Handle "< Max" format
+        else if (range.startsWith('<')) {
+          const max = parseFloat(range.replace('<', '').trim());
+          if (!isNaN(max) && val >= max) f = 'high';
+        }
+        // Handle "> Min" format
+        else if (range.startsWith('>')) {
+          const min = parseFloat(range.replace('>', '').trim());
+          if (!isNaN(min) && val <= min) f = 'low';
+        }
+      }
+    } catch (e) {
+      console.error('Error parsing range for flag calculation:', e);
+    }
+  }
+
   if (['high', 'h', 'critical', 'c'].includes(f)) {
     return { label: 'HIGH',   valColor: C.highVal,   bgColor: C.highFlagBg,   textColor: C.flagText };
   } else if (['low', 'l'].includes(f)) {
-    return { label: 'LOW',    valColor: C.highVal,   bgColor: C.highFlagBg,   textColor: C.flagText };
+    return { label: 'LOW',    valColor: C.lowVal,    bgColor: C.lowFlagBg,    textColor: C.flagText };
   } else {
     return { label: 'NORMAL', valColor: C.normalVal, bgColor: C.normalFlagBg, textColor: C.flagText };
   }
@@ -73,37 +132,149 @@ function rectStroke(doc, x, y, w, h, color, lw = 0.5) {
 }
 
 // ─── Hospital Header ──────────────────────────────────────────────────────────
+// Returns the Y position after the header separator line
 function drawHospitalHeader(doc, report) {
   const y = MARGIN;
+  const settings = report.hospital_settings || {};
+  const hospitalName = settings.hospital_name || 'MERIL HIMS HOSPITAL';
+  const address = settings.address || '123 Healthcare Avenue, Medical District';
+  const contact = `${settings.phone || '+91-1234567890'}  |  ${settings.email || 'lab@merilhims.com'}`;
 
-  // Left: Logo mark + tagline
-  doc.font('Helvetica-Bold').fontSize(22).fillColor(C.red);
-  doc.text('H·O·D', MARGIN, y);
-  doc.font('Helvetica').fontSize(7).fillColor(C.gray);
-  doc.text('HOUSE of DIAGNOSTICS', MARGIN, y + 26);
+  // ── Logo (left side) ─────────────────────────────────────────────────────
+  const LOGO_H  = 55; // actual rendered height for logo image
+  const LOGO_W  = 55; // actual rendered width (square logo)
+  let logoDrawn = false;
 
-  // Right: Hospital name + contact
-  const rightX = PAGE_W - MARGIN - 200;
-  doc.font('Helvetica-Bold').fontSize(14).fillColor(C.red);
-  doc.text('MERIL HIMS HOSPITAL', rightX, y, { width: 200, align: 'right' });
+  if (settings.logo_url && settings.logo_url.startsWith('data:image')) {
+    try {
+      const mime = mimeType(settings.logo_url);
+      if (mime.includes('png') || mime.includes('jpeg') || mime.includes('jpg')) {
+        const logoBuffer = base64ToBuffer(settings.logo_url);
+        doc.image(logoBuffer, MARGIN, y, { height: LOGO_H });
+        logoDrawn = true;
+      }
+    } catch (_) { /* skip */ }
+  }
+
+  if (!logoDrawn) {
+    const defaultLogoPath = path.join(__dirname, '../config/logo.png');
+    if (fs.existsSync(defaultLogoPath)) {
+      try {
+        doc.image(defaultLogoPath, MARGIN, y, { height: LOGO_H });
+        logoDrawn = true;
+      } catch (err) {
+        console.error('Failed to draw default logo:', err.message);
+      }
+    }
+  }
+
+  if (!logoDrawn) {
+    // Fallback: just a placeholder text, no tagline
+    doc.font('Helvetica-Bold').fontSize(16).fillColor(C.red);
+    doc.text('HOD', MARGIN, y + 8, { width: LOGO_W, align: 'left' });
+  }
+
+  // ── Right side: hospital name + address + contact ────────────────────────
+  // Use as much width as possible — from just past logo area to right margin
+  const LOGO_AREA_W = LOGO_W + 10; // logo + gap before text can start
+  const RIGHT_W     = PAGE_W - MARGIN - LOGO_AREA_W - MARGIN; // full remaining width
+  const rightX      = PAGE_W - MARGIN - RIGHT_W;
+
+  // Pre-measure all right-side text heights BEFORE drawing anything
+  doc.font('Helvetica-Bold').fontSize(11);
+  const nameH = doc.heightOfString(hospitalName.toUpperCase(), { width: RIGHT_W, lineGap: 1 });
+
+  doc.font('Helvetica').fontSize(7.5);
+  const addrH    = doc.heightOfString(address, { width: RIGHT_W });
+  const contactH = doc.heightOfString(contact,  { width: RIGHT_W });
+
+  // Total right-block height: name + 4 gap + address + 3 gap + contact + 8 bottom padding
+  const rightTotalH = nameH + 4 + addrH + 3 + contactH + 8;
+
+  // Line sits below whichever is taller: logo (+ padding) or full right block
+  const lineY = y + Math.max(LOGO_H + 8, rightTotalH);
+
+  // Pin right block to top — name starts at y, contact ends before lineY
+  const rightStartY = y;
+
+  // Draw hospital name
+  doc.font('Helvetica-Bold').fontSize(11).fillColor(C.red);
+  doc.text(hospitalName.toUpperCase(), rightX, rightStartY, { width: RIGHT_W, align: 'right', lineGap: 1 });
+
+  // Draw address below name
+  const addrY = rightStartY + nameH + 4;
   doc.font('Helvetica').fontSize(7.5).fillColor(C.gray);
-  doc.text('123 Healthcare Avenue, Medical District', rightX, y + 18, { width: 200, align: 'right' });
-  doc.text('Phone: +91-1234567890  |  lab@merilhims.com', rightX, y + 28, { width: 200, align: 'right' });
+  doc.text(address, rightX, addrY, { width: RIGHT_W, align: 'right' });
 
-  const lineY = y + 44;
+  // Draw contact below address
+  const contactY = addrY + addrH + 3;
+  doc.text(contact, rightX, contactY, { width: RIGHT_W, align: 'right' });
+
+  // Draw separator AFTER all text — guaranteed below everything
   doc.moveTo(MARGIN, lineY).lineTo(PAGE_W - MARGIN, lineY).lineWidth(1.5).stroke(C.red);
   return lineY + 8;
 }
 
-// ─── Patient Info Block (with QR code on right) ───────────────────────────────
+// ─── Compact hospital header for continuation pages ───────────────────────────
+// Returns the Y after the separator line
+function drawContinuationHeader(doc, report) {
+  const y = MARGIN;
+  const settings = report.hospital_settings || {};
+  const hospitalName = settings.hospital_name || 'MERIL HIMS HOSPITAL';
+
+  const LOGO_H = 32;
+  const LOGO_W = 36;
+
+  // ── Logo ──────────────────────────────────────────────────────────────────
+  let logoDrawn = false;
+  if (settings.logo_url && settings.logo_url.startsWith('data:image')) {
+    try {
+      const mime = mimeType(settings.logo_url);
+      if (mime.includes('png') || mime.includes('jpeg') || mime.includes('jpg')) {
+        const logoBuffer = base64ToBuffer(settings.logo_url);
+        doc.image(logoBuffer, MARGIN, y, { height: LOGO_H });
+        logoDrawn = true;
+      }
+    } catch (_) {}
+  }
+  if (!logoDrawn) {
+    const defaultLogoPath = path.join(__dirname, '../config/logo.png');
+    if (fs.existsSync(defaultLogoPath)) {
+      try { doc.image(defaultLogoPath, MARGIN, y, { height: LOGO_H }); logoDrawn = true; } catch (_) {}
+    }
+  }
+  if (!logoDrawn) {
+    doc.font('Helvetica-Bold').fontSize(12).fillColor(C.red);
+    doc.text('HOD', MARGIN, y + 6, { width: LOGO_W });
+  }
+
+  // ── Hospital name (right-aligned, sized to fit in one line if possible) ───
+  const RIGHT_W = 240;
+  const rightX  = PAGE_W - MARGIN - RIGHT_W;
+  doc.font('Helvetica-Bold').fontSize(10).fillColor(C.red);
+  doc.text(hospitalName.toUpperCase(), rightX, y + 4, { width: RIGHT_W, align: 'right', lineGap: 1 });
+
+  // ── Patient strip sits below logo — always below LOGO_H ──────────────────
+  const patientY = y + LOGO_H + 2;
+  doc.font('Helvetica').fontSize(7.5).fillColor(C.gray);
+  doc.text(
+    `Patient: ${report.patient_name || ''}   |   Sample ID: ${report.sample_id || ''}   |   ${report.age || ''}/${report.gender || ''}`,
+    MARGIN, patientY, { width: CONTENT_W }
+  );
+
+  const lineY = patientY + 12;
+  doc.moveTo(MARGIN, lineY).lineTo(PAGE_W - MARGIN, lineY).lineWidth(1.5).stroke(C.red);
+  return lineY + 6;
+}
+
+// ─── Patient Info Block ───────────────────────────────────────────────────────
 async function drawPatientInfo(doc, report, startY) {
   const QR_SIZE     = 64;
-  const QR_LABEL_H  = 16;  // ← increased from 10 to give label room
+  const QR_LABEL_H  = 16;
   const BLOCK_PAD   = 10;
   const ROW_H       = 16;
   const NUM_ROWS    = 2;
 
-  // Block must be tall enough for both the 2-row fields AND the QR + its label
   const fieldsNeeded = BLOCK_PAD + ROW_H * NUM_ROWS + BLOCK_PAD;
   const qrNeeded     = BLOCK_PAD + QR_SIZE + QR_LABEL_H + BLOCK_PAD;
   const blockH       = Math.max(fieldsNeeded, qrNeeded);
@@ -112,81 +283,56 @@ async function drawPatientInfo(doc, report, startY) {
     { label: 'Patient Name',    value: report.patient_name },
     { label: 'Lab No',          value: report.sample_id },
     { label: 'Registration On', value: report.registration_date },
-    { label: 'CRN No',      value: report.patient_reg_no },
+    { label: 'CRN No',          value: report.patient_reg_no },
     { label: 'Age / Sex',       value: `${report.age} / ${report.gender}` },
     { label: 'Referred By',     value: report.referred_by },
     { label: 'Centre',          value: report.centre },
   ];
 
-  // Background
   rect(doc, MARGIN, startY, CONTENT_W, blockH, C.patientBg);
   rectStroke(doc, MARGIN, startY, CONTENT_W, blockH, C.borderLight, 0.5);
-
-  // Left accent bar
   rect(doc, MARGIN, startY, 3, blockH, C.red);
 
-  // ── QR Code: positioned first, with explicit absolute coordinates ──────────
   const qrX     = PAGE_W - MARGIN - QR_SIZE - BLOCK_PAD;
-  // Centre the QR image within the block (label sits below, inside padding)
   const qrAreaH = QR_SIZE + QR_LABEL_H;
   const qrY     = startY + (blockH - qrAreaH) / 2;
-  const labelY  = qrY + QR_SIZE + 4; // ← fixed absolute Y, not relative to doc.y
+  const labelY  = qrY + QR_SIZE + 4;
 
   if (report.report_url) {
     try {
       const qrDataUrl = await QRCode.toDataURL(report.report_url, {
-        width: QR_SIZE * 2,
-        margin: 1,
+        width: QR_SIZE * 2, margin: 1,
         color: { dark: '#000000', light: '#FFFFFF' },
       });
-      // Thin border around QR only (not around label)
       rectStroke(doc, qrX - 2, qrY - 2, QR_SIZE + 4, QR_SIZE + 4, C.borderLight, 0.5);
       doc.image(qrDataUrl, qrX, qrY, { width: QR_SIZE, height: QR_SIZE });
-
-      // ← Key fix: use explicit absolute Y, lineBreak:false, and clip to QR width
       doc.font('Helvetica').fontSize(5.5).fillColor(C.lightGray);
-      doc.text('Scan to Download Report', qrX, labelY, {
-        width: QR_SIZE,
-        align: 'center',
-        lineBreak: false,
-      });
-    } catch (e) {
-      // QR failed silently
-    }
+      doc.text('Scan to Download Report', qrX, labelY, { width: QR_SIZE, align: 'center', lineBreak: false });
+    } catch (_) {}
   }
 
-  // Vertical divider before QR area
   const divX = qrX - BLOCK_PAD - 4;
-  doc.moveTo(divX, startY + 6).lineTo(divX, startY + blockH - 6)
-     .lineWidth(0.4).stroke(C.borderLight);
+  doc.moveTo(divX, startY + 6).lineTo(divX, startY + blockH - 6).lineWidth(0.4).stroke(C.borderLight);
 
-  // ── Patient fields ─────────────────────────────────────────────────────────
-  // Use absolute Y positions derived from startY — never rely on doc.y
   const totalFieldsH = ROW_H * NUM_ROWS + 7 * (NUM_ROWS - 1);
   const fieldsW      = divX - MARGIN - 10;
   const colW         = fieldsW / 4;
   const firstRowY    = startY + (blockH - totalFieldsH) / 2;
 
   const rows = [fields.slice(0, 4), fields.slice(4)];
-
   rows.forEach((row, ri) => {
     const rowY = firstRowY + ri * (ROW_H + 7);
     row.forEach(({ label, value }, ci) => {
       const fx = MARGIN + 8 + ci * colW;
-
       doc.font('Helvetica').fontSize(6.5).fillColor(C.labelColor);
       doc.text(label.toUpperCase(), fx, rowY, { width: colW - 4, lineBreak: false });
-
       doc.font('Helvetica-Bold').fontSize(8).fillColor(C.colHeader);
       doc.text(value || '—', fx, rowY + 8, { width: colW - 4, lineBreak: false });
     });
   });
 
-  // Bottom separator
   const afterY = startY + blockH;
-  doc.moveTo(MARGIN, afterY).lineTo(PAGE_W - MARGIN, afterY)
-     .lineWidth(0.5).stroke(C.borderLight);
-
+  doc.moveTo(MARGIN, afterY).lineTo(PAGE_W - MARGIN, afterY).lineWidth(0.5).stroke(C.borderLight);
   return afterY + 8;
 }
 
@@ -195,21 +341,16 @@ function drawSectionBanner(doc, test, startY) {
   const BANNER_H = 20;
   const META_H   = 18;
 
-  // Red bar: test name | sample type
   rect(doc, MARGIN, startY, CONTENT_W, BANNER_H, C.red);
-
   doc.font('Helvetica-Bold').fontSize(9.5).fillColor(C.white);
   doc.text((test.test_name || '').toUpperCase(), MARGIN + 6, startY + 5, { width: CONTENT_W * 0.55 });
-
   doc.font('Helvetica').fontSize(8.5).fillColor(C.white);
   doc.text(test.sample_type || '', MARGIN + 6, startY + 5.5, { width: CONTENT_W - 12, align: 'right' });
 
-  // Darker sub-row
   const metaY = startY + BANNER_H;
   rect(doc, MARGIN, metaY, CONTENT_W, META_H, C.redDark);
 
   const metaColW = CONTENT_W / 4;
-
   doc.font('Helvetica-Bold').fontSize(7.5).fillColor(C.white);
   doc.text('Accession No:', MARGIN + 6, metaY + 2);
   doc.font('Helvetica').fontSize(7.5).fillColor(C.white);
@@ -235,9 +376,7 @@ function drawSectionBanner(doc, test, startY) {
 function drawColumnHeaders(doc, startY) {
   const ROW_H = 18;
   rect(doc, MARGIN, startY, CONTENT_W, ROW_H, '#EEEEEE');
-
-  doc.moveTo(MARGIN, startY + ROW_H).lineTo(PAGE_W - MARGIN, startY + ROW_H)
-     .lineWidth(0.8).stroke(C.red);
+  doc.moveTo(MARGIN, startY + ROW_H).lineTo(PAGE_W - MARGIN, startY + ROW_H).lineWidth(0.8).stroke(C.red);
 
   const headers = [
     { label: 'Observation',              x: COL_X.obs,    w: COL.obs,    align: 'left'   },
@@ -248,14 +387,13 @@ function drawColumnHeaders(doc, startY) {
 
   doc.font('Helvetica-Bold').fontSize(8).fillColor(C.colHeader);
   headers.forEach(h => {
-    doc.text(h.label, h.x + (h.align === 'left' ? 5 : 0), startY + 5,
-      { width: h.w, align: h.align });
+    doc.text(h.label, h.x + (h.align === 'left' ? 5 : 0), startY + 5, { width: h.w, align: h.align });
   });
 
   return startY + ROW_H;
 }
 
-// ─── Row helpers ──────────────────────────────────────────────────────────────
+// ─── Row Measurement ──────────────────────────────────────────────────────────
 function measureRowHeight(doc, param) {
   if (param.is_subheader) return 16;
   const obsH = measureTextHeight(doc, param.parameter_name || '', COL.obs - 10);
@@ -263,14 +401,13 @@ function measureRowHeight(doc, param) {
   return Math.max(obsH, refH, 18) + 6;
 }
 
-function drawDataRow(doc, param, rowY, rowIndex, pageBottom) {
+// ─── Draw a single data row ───────────────────────────────────────────────────
+function drawDataRow(doc, param, rowY, rowIndex) {
   const rowH = measureRowHeight(doc, param);
-  if (rowY + rowH > pageBottom) return null;
 
   if (param.is_subheader) {
     rect(doc, MARGIN, rowY, CONTENT_W, rowH, C.subHeaderBg);
-    doc.moveTo(MARGIN, rowY + rowH).lineTo(PAGE_W - MARGIN, rowY + rowH)
-       .lineWidth(0.4).stroke(C.borderLight);
+    doc.moveTo(MARGIN, rowY + rowH).lineTo(PAGE_W - MARGIN, rowY + rowH).lineWidth(0.4).stroke(C.borderLight);
     doc.font('Helvetica-Bold').fontSize(8).fillColor(C.subHeader);
     doc.text(param.parameter_name, MARGIN + 5, rowY + 4, { width: CONTENT_W - 10 });
     return rowY + rowH;
@@ -280,13 +417,14 @@ function drawDataRow(doc, param, rowY, rowIndex, pageBottom) {
     rect(doc, MARGIN, rowY, CONTENT_W, rowH, C.altRow);
   }
 
-  const { valColor } = resolveFlag(param.result_flag);
+  const { valColor, label } = resolveFlag(param.result_flag, param.result_value, param.reference_range);
   const textY = rowY + 5;
 
   doc.font('Helvetica').fontSize(8).fillColor(C.rowText);
   doc.text(param.parameter_name || '', COL_X.obs + 5, textY, { width: COL.obs - 10, lineGap: 1.5 });
 
-  doc.font('Helvetica-Bold').fontSize(8.5).fillColor(valColor);
+  // Use Bold for all results, but color for high/low
+  doc.font('Helvetica-Bold').fontSize(9).fillColor(valColor);
   doc.text(String(param.result_value || ''), COL_X.result, textY, { width: COL.result, align: 'center' });
 
   doc.font('Helvetica').fontSize(8).fillColor(C.gray);
@@ -295,51 +433,61 @@ function drawDataRow(doc, param, rowY, rowIndex, pageBottom) {
   doc.font('Helvetica').fontSize(8).fillColor(C.gray);
   doc.text(param.reference_range || '', COL_X.ref + 5, textY, { width: COL.ref - 10, lineGap: 1.5 });
 
-  doc.moveTo(MARGIN, rowY + rowH).lineTo(PAGE_W - MARGIN, rowY + rowH)
-     .lineWidth(0.3).stroke(C.borderLight);
+  doc.moveTo(MARGIN, rowY + rowH).lineTo(PAGE_W - MARGIN, rowY + rowH).lineWidth(0.3).stroke(C.borderLight);
 
   return rowY + rowH;
 }
 
-// ─── Remarks ──────────────────────────────────────────────────────────────────
+// ─── Remarks (inline after data) ─────────────────────────────────────────────
 function drawRemarks(doc, remarks, y) {
   if (!remarks) return y;
   doc.font('Helvetica-Oblique').fontSize(7.5).fillColor(C.lightGray);
   doc.text(`Remarks: ${remarks}`, MARGIN + 5, y + 4, { width: CONTENT_W - 10 });
-  return doc.y + 4;
+  return y + 4 + doc.heightOfString(`Remarks: ${remarks}`, { width: CONTENT_W - 10 }) + 4;
 }
 
-// ─── Footer ───────────────────────────────────────────────────────────────────
+// ─── Disclaimer (inline after data) ──────────────────────────────────────────
+function drawDisclaimer(doc, y) {
+  doc.font('Helvetica-Oblique').fontSize(7).fillColor(C.lightGray);
+  const text = 'In case of any unexpected or alarming results, please contact us immediately for re-confirmation, clarifications, and rectifications, if needed.';
+  doc.text(text, MARGIN + 5, y + 3, { width: CONTENT_W - 10 });
+  return y + 3 + doc.heightOfString(text, { width: CONTENT_W - 10 }) + 6;
+}
+
+// ─── Fixed Footer (drawn on every page absolutely) ───────────────────────────
+// This is drawn FIXED at the bottom — always at the same absolute Y position.
+// It does NOT consume curY content space — it's purely absolute.
 function drawPageFooter(doc, report, pageNum, totalPages) {
-  doc.page.margins.bottom = 0;
+  // Footer zone starts at PAGE_H - MARGIN - FOOTER_H
+  const fY = PAGE_H - MARGIN - FOOTER_H;
 
-  const fY = PAGE_H - MARGIN - 46;
-
+  // Top separator line of footer
   doc.moveTo(MARGIN, fY).lineTo(PAGE_W - MARGIN, fY).lineWidth(0.5).stroke(C.borderLight);
 
   const midX = PAGE_W / 2;
 
-  // Left column
+  // Left: Tested By
   doc.font('Helvetica-Bold').fontSize(8).fillColor(C.footerGray);
   doc.text(`Tested By: ${report.tested_by_name || 'N/A'}`, MARGIN, fY + 6, { width: midX - MARGIN - 10 });
   doc.font('Helvetica').fontSize(7.5).fillColor(C.lightGray);
-  doc.text(`Date: ${report.tested_at || ''}`, MARGIN, fY + 18, { width: midX - MARGIN - 10 });
+  doc.text(`Date: ${report.tested_at || ''}`, MARGIN, fY + 17, { width: midX - MARGIN - 10 });
 
   const sigY = fY + 30;
   doc.moveTo(MARGIN, sigY).lineTo(MARGIN + 120, sigY).lineWidth(0.5).stroke(C.borderLight);
   doc.font('Helvetica').fontSize(7).fillColor(C.lightGray);
   doc.text('Lab Technician', MARGIN, sigY + 3, { width: 120 });
 
-  // Right column
+  // Right: Verified By
   doc.font('Helvetica-Bold').fontSize(8).fillColor(C.red);
   doc.text(`Verified & Approved By: ${report.verified_by_name || 'N/A'}`, midX, fY + 6, { width: midX - MARGIN - 10 });
   doc.font('Helvetica').fontSize(7.5).fillColor(C.lightGray);
-  doc.text(`Date: ${report.verified_at || ''}`, midX, fY + 18, { width: midX - MARGIN - 10 });
+  doc.text(`Date: ${report.verified_at || ''}`, midX, fY + 17, { width: midX - MARGIN - 10 });
 
   doc.moveTo(midX, sigY).lineTo(midX + 150, sigY).lineWidth(0.5).stroke(C.borderLight);
   doc.font('Helvetica').fontSize(7).fillColor(C.lightGray);
   doc.text('Lab Head / Pathologist', midX, sigY + 3, { width: 150 });
 
+  // Bottom strip
   const bottomY = sigY + 14;
   doc.moveTo(MARGIN, bottomY).lineTo(PAGE_W - MARGIN, bottomY).lineWidth(0.3).stroke(C.borderLight);
 
@@ -359,31 +507,49 @@ function drawPageFooter(doc, report, pageNum, totalPages) {
 
 // ─── Main PDF generation ──────────────────────────────────────────────────────
 export async function generateLabReportPDFStream(reportData) {
+  // We use bufferPages:true so we can do a second pass for footers
   const options = {
     size: 'A4',
-    margins: { top: MARGIN, bottom: MARGIN + 60, left: MARGIN, right: MARGIN },
+    // No bottom margin needed — we handle everything manually
+    margins: { top: 0, bottom: 0, left: 0, right: 0 },
     bufferPages: true,
   };
 
-  // Secure the PDF with a password if the registration number is available
   if (reportData.patient_reg_no && reportData.patient_reg_no !== 'N/A') {
-    options.userPassword = reportData.patient_reg_no;
+    options.userPassword  = reportData.patient_reg_no;
     options.ownerPassword = reportData.patient_reg_no;
   }
 
   const doc = new PDFDocument(options);
 
-  const PAGE_BOTTOM = PAGE_H - MARGIN - 60;
+  // The usable content area bottom for every page.
+  // Footer is FOOTER_H tall and sits MARGIN from the absolute bottom.
+  // We leave a small gap above the footer too.
+  const PAGE_BOTTOM = PAGE_H - MARGIN - FOOTER_H - 8;
 
+  // ── Page 1: Hospital Header + Patient Info ────────────────────────────────
   let curY = drawHospitalHeader(doc, reportData);
   curY     = await drawPatientInfo(doc, reportData, curY);
 
+  // Track which page we're on (1-indexed) for headers on new pages
+  let isFirstPage = true;
+
+  // Helper: add a new page with a compact continuation header
+  function addNewPage() {
+    doc.addPage();
+    isFirstPage = false;
+    curY = drawContinuationHeader(doc, reportData);
+  }
+
   const tests = reportData.tests || [];
 
-  tests.forEach((test, ti) => {
-    if (curY + 60 > PAGE_BOTTOM) {
-      doc.addPage();
-      curY = MARGIN + 10;
+  for (let ti = 0; ti < tests.length; ti++) {
+    const test = tests[ti];
+
+    // Section banner needs ~40px (banner 20 + meta 18 + colHeader 18 = 56)
+    const bannerNeeds = 56;
+    if (curY + bannerNeeds > PAGE_BOTTOM) {
+      addNewPage();
     }
 
     curY = drawSectionBanner(doc, test, curY);
@@ -392,52 +558,55 @@ export async function generateLabReportPDFStream(reportData) {
     const params = test.parameters || [];
     let dataRowIndex = 0;
 
-    params.forEach(param => {
-      const estimatedH = measureRowHeight(doc, param);
-      if (curY + estimatedH > PAGE_BOTTOM) {
-        doc.addPage();
-        curY = MARGIN + 10;
-        curY = drawColumnHeaders(doc, curY);
-      }
+    for (const param of params) {
+      const rowH = measureRowHeight(doc, param);
 
-      const nextY = drawDataRow(doc, param, curY, dataRowIndex, PAGE_BOTTOM);
-      if (nextY === null) {
-        doc.addPage();
-        curY = MARGIN + 10;
+      // If this row doesn't fit, go to a new page
+      if (curY + rowH > PAGE_BOTTOM) {
+        addNewPage();
+        // Re-draw column headers at the top of the new page
         curY = drawColumnHeaders(doc, curY);
         dataRowIndex = 0;
-        const retryY = drawDataRow(doc, param, curY, dataRowIndex, PAGE_BOTTOM);
-        curY = retryY || curY + 20;
-      } else {
-        curY = nextY;
       }
 
+      curY = drawDataRow(doc, param, curY, dataRowIndex);
       if (!param.is_subheader) dataRowIndex++;
-    });
+    }
 
+    // ── Remarks (inline, right after the last row) ─────────────────────────
     if (test.remarks) {
-      if (curY + 20 > PAGE_BOTTOM) { doc.addPage(); curY = MARGIN + 10; }
+      const remarksH = 4 + doc.heightOfString(`Remarks: ${test.remarks}`, { width: CONTENT_W - 10, font: 'Helvetica-Oblique', fontSize: 7.5 }) + 8;
+      if (curY + remarksH > PAGE_BOTTOM) {
+        addNewPage();
+      }
       curY = drawRemarks(doc, test.remarks, curY);
     }
 
-    if (curY + 14 < PAGE_BOTTOM) {
-      doc.font('Helvetica-Oblique').fontSize(7).fillColor(C.lightGray);
-      doc.text(
-        'In case of any unexpected or alarming results, please contact us immediately for re-confirmation, clarifications, and rectifications, if needed.',
-        MARGIN + 5, curY + 5, { width: CONTENT_W - 10 }
-      );
-      curY = doc.y + 8;
+    // ── Disclaimer (inline, right after remarks/last row) ─────────────────
+    const disclaimerText = 'In case of any unexpected or alarming results, please contact us immediately for re-confirmation, clarifications, and rectifications, if needed.';
+    const disclaimerH = 3 + doc.heightOfString(disclaimerText, { width: CONTENT_W - 10, font: 'Helvetica-Oblique', fontSize: 7 }) + 10;
+    if (curY + disclaimerH > PAGE_BOTTOM) {
+      addNewPage();
     }
+    curY = drawDisclaimer(doc, curY);
 
+    // ── Divider between tests ──────────────────────────────────────────────
     if (ti < tests.length - 1) {
-      doc.moveTo(MARGIN, curY).lineTo(PAGE_W - MARGIN, curY).lineWidth(0.5).stroke(C.borderLight);
-      curY += 10;
+      if (curY + 14 <= PAGE_BOTTOM) {
+        doc.moveTo(MARGIN, curY).lineTo(PAGE_W - MARGIN, curY).lineWidth(0.5).stroke(C.borderLight);
+        curY += 10;
+      } else {
+        addNewPage();
+      }
     }
-  });
+  }
 
+  // ── Second pass: draw footer on every page ────────────────────────────────
   const totalPages = doc.bufferedPageRange().count;
   for (let i = 0; i < totalPages; i++) {
     doc.switchToPage(i);
+    // Disable the automatic page margins so we can draw in the reserved zone
+    doc.page.margins.bottom = 0;
     drawPageFooter(doc, reportData, i + 1, totalPages);
   }
 

@@ -41,15 +41,15 @@
   --ok-border:   #86efac;
   --ok-strong:   #16a34a;
 
-  --low-bg:      #fffbeb;
-  --low-text:    #78350f;
-  --low-border:  #fcd34d;
-  --low-strong:  #d97706;
-
   --high-bg:     #fff1f2;
   --high-text:   #881337;
   --high-border: #fda4af;
-  --high-strong: #e11d48;
+  --high-strong: #FF0000; /* Vibrant Red */
+
+  --low-bg:      #eff6ff;
+  --low-text:    #1e40af;
+  --low-border:  #bfdbfe;
+  --low-strong:  #0000FF; /* Vibrant Blue */
 
   --crit-bg:     #1e1b4b;
   --crit-text:   #c4b5fd;
@@ -832,17 +832,18 @@
 
 /* ── Result value with status color ───────────────────────── */
 .result-value {
-  font-family: 'Roboto', sans-serif;
-  font-weight: 600;
-  font-size: 14px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-weight: 700;
+  font-size: 15px;
   color: var(--text-primary);
 }
 
-.result-value.normal   { color: var(--ok-strong); }
-.result-value.low      { color: var(--low-strong); }
-.result-value.high     { color: var(--high-strong); }
-.result-value.critical {
-  color: #7c3aed;
+.result-value.normal, .result-value.n   { color: var(--ok-strong); }
+.result-value.low, .result-value.l      { color: var(--low-strong); }
+.result-value.high, .result-value.h     { color: var(--high-strong); }
+.result-value.critical, .result-value.c {
+  color: var(--crit-border);
+  font-weight: 800;
   animation: lrd-critical-blink 2s ease-in-out infinite;
 }
 

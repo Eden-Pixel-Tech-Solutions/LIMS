@@ -7,6 +7,7 @@ import SampleList from "./pages/SampleList";
 import Verification from "./pages/Verification";
 import Reports from "./pages/Reports";
 import Inventory from "./pages/Inventory";
+import Logs from "./pages/Logs";
 import Settings from "./pages/Settings";
 import Layout from "./components/Layout";
 import Demos from "./pages/Demos";
@@ -25,6 +26,7 @@ export default function App() {
         <Route path="/verification" element={<Layout><Verification /></Layout>} />
         <Route path="/reports" element={<Layout><Reports /></Layout>} />
         <Route path="/inventory" element={<Layout><Inventory /></Layout>} />
+        <Route path="/logs" element={<Layout><Logs /></Layout>} />
         <Route path="/settings" element={<Layout><Settings /></Layout>} />
         <Route path="/demos" element={<Layout><Demos /></Layout>} />
         <Route path="/demos/micro" element={<Layout><MERILIYZERMICRO /></Layout>} />

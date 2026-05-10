@@ -39,7 +39,8 @@ export const createBill = async (req, res) => {
       notes,
       branch_id = 1,
       hospital_code = 'BILL',
-      overwrite_duplicates = false
+      overwrite_duplicates = false,
+      user_id // new field
     } = req.body;
 
     if (!patient_id || !items || items.length === 0) {
@@ -82,8 +83,8 @@ export const createBill = async (req, res) => {
     const [billResult] = await connection.query(
       `INSERT INTO bills (
         bill_number, patient_id, patient_name, patient_phone, total_amount, discount_amount, 
-        net_amount, payment_method, payment_status, paid_amount, status, notes, branch_id
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        net_amount, payment_method, payment_status, paid_amount, status, notes, branch_id, created_by
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         bill_number,
         patient_id,
@@ -97,7 +98,8 @@ export const createBill = async (req, res) => {
         paid_amount,
         'Active',
         notes || null,
-        branch_id
+        branch_id,
+        user_id || null
       ]
     );
     const bill_id = billResult.insertId;

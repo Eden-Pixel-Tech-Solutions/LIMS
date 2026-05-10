@@ -133,6 +133,11 @@ const NAV_ITEMS = [
         label: 'Test Management',
         path: '/lab-test-management',
       },
+      {
+        id: 'lab-logs',
+        label: 'Audit Logs',
+        path: '/lab-logs',
+      },
     ]
   },
   {
@@ -225,7 +230,7 @@ function Sidebar() {
       return {
         ...item,
         children: item.children.filter(child => 
-          child.id === 'lab-worklist' || child.id === 'lab-reports' || child.id === 'lab-sample-list'
+          child.id === 'lab-worklist' || child.id === 'lab-reports' || child.id === 'lab-sample-list' || child.id === 'lab-logs'
         )
       };
     }

@@ -571,8 +571,18 @@
 }
 
 .result-value {
-  font-weight: 600;
+  font-weight: 700;
   color: #1e293b;
+}
+
+tr.flag-high .result-value,
+tr.flag-h .result-value {
+  color: #ef4444; /* High - Red */
+}
+
+tr.flag-low .result-value,
+tr.flag-l .result-value {
+  color: #3b82f6; /* Low - Blue */
 }
 
 /* Result Flags */
@@ -589,13 +599,15 @@
   color: #166534;
 }
 
-.flag-badge.low {
-  background: #fef3c7;
-  color: #92400e;
+.flag-badge.low,
+.flag-badge.l {
+  background: #eff6ff;
+  color: #1e40af;
 }
 
-.flag-badge.high {
-  background: #fee2e2;
+.flag-badge.high,
+.flag-badge.h {
+  background: #fef2f2;
   color: #991b1b;
 }
 
@@ -618,16 +630,18 @@
 }
 
 /* Row colors based on flag */
-tr.flag-low {
-  background: #fffbeb;
+tr.flag-low,
+tr.flag-l {
+  background: #f8fafc;
 }
 
-tr.flag-high {
-  background: #fef2f2;
+tr.flag-high,
+tr.flag-h {
+  background: #fffcfc;
 }
 
 tr.flag-critical {
-  background: #fee2e2;
+  background: #fef2f2;
 }
 
 /* Print Media Query for Browser Print */

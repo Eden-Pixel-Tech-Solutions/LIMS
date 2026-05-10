@@ -252,6 +252,8 @@ function Billing({ regNo, patientId, bookingData, onFinish }) {
         }
       }
 
+      const userId = localStorage.getItem('user_id');
+
       let res;
       if (invoice && invoice.billingId && showModify) {
         res = await fetch(`${API_BASE}/api/billing/${invoice.billingId}`, {
@@ -265,7 +267,8 @@ function Billing({ regNo, patientId, bookingData, onFinish }) {
             payment_status: effectiveStatus,
             paid_amount: effectivePaidAmount,
             notes: amountGiven ? `Amount Given: ₹${parseFloat(amountGiven).toFixed(2)}` : '',
-            overwrite_duplicates: overwriteDuplicates
+            overwrite_duplicates: overwriteDuplicates,
+            user_id: userId
           }),
         });
       } else {
@@ -281,7 +284,8 @@ function Billing({ regNo, patientId, bookingData, onFinish }) {
             payment_status: effectiveStatus,
             paid_amount: effectivePaidAmount,
             notes: amountGiven ? `Amount Given: ₹${parseFloat(amountGiven).toFixed(2)}` : '',
-            overwrite_duplicates: overwriteDuplicates
+            overwrite_duplicates: overwriteDuplicates,
+            user_id: userId
           }),
         });
       }

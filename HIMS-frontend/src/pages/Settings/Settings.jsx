@@ -101,7 +101,20 @@ function Settings() {
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setForm({ ...form, logo_url: reader.result });
+        // Create an image to get its dimensions and draw to canvas
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+          
+          // Export as PNG (guaranteed compatibility with PDF generator)
+          const pngData = canvas.toDataURL('image/png');
+          setForm({ ...form, logo_url: pngData });
+        };
+        img.src = reader.result;
       };
       reader.readAsDataURL(file);
     }

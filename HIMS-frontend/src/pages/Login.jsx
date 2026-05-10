@@ -64,11 +64,13 @@ function Login() {
 
       // Store fresh session context
       if (data.token) localStorage.setItem('hims_token', data.token);
+      if (data.id) localStorage.setItem('user_id', data.id);
       if (data.branch_id !== undefined && data.branch_id !== null) localStorage.setItem('branch_id', data.branch_id);
       if (data.hospital_code) localStorage.setItem('hospital_code', data.hospital_code);
       if (data.role_level) localStorage.setItem('role_level', data.role_level);
       if (data.role) localStorage.setItem('role', data.role);
       if (data.district_id) localStorage.setItem('district_id', data.district_id);
+      localStorage.setItem('user', JSON.stringify(data)); // helpful for full context
 
       navigate('/dashboard');
     } catch (err) {

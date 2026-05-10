@@ -106,13 +106,14 @@ const LabReportDownload = () => {
               table { width: 100%; border-collapse: collapse; margin-top: 10px; }
               th { background: #0f172a; color: rgba(255,255,255,0.7); padding: 10px; text-align: left; font-size: 10px; text-transform: uppercase; font-family: 'IBM Plex Mono', monospace; }
               td { padding: 12px; border-bottom: 1px solid #e2e8f0; font-size: 13px; }
-              .result-value { font-family: 'IBM Plex Mono', monospace; font-weight: 600; font-size: 14px; }
-              .normal { color: #16a34a; }
-              .low { color: #d97706; }
-              .high { color: #e11d48; }
-              .critical { color: #7c3aed; font-weight: bold; }
-              .flag-badge { display: inline-block; padding: 2px 8px; border-radius: 9999px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
-              .flag-badge.normal { background: #f0fdf4; color: #166534; border: 1px solid #86efac; }
+              .result-value { font-family: 'IBM Plex Mono', monospace; font-weight: 700; font-size: 14px; }
+              .normal { color: #166534; }
+              .low, .l { color: #0000FF; font-weight: bold; }
+              .high, .h { color: #FF0000; font-weight: bold; }
+              .critical, .c { color: #7c3aed; font-weight: bold; }
+              .flag-badge.normal, .flag-badge.n { background: #f0fdf4; color: #166534; border: 1px solid #86efac; }
+              .flag-badge.low, .flag-badge.l { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
+              .flag-badge.high, .flag-badge.h { background: #fff1f2; color: #991b1b; border: 1px solid #fda4af; }
               .footer { margin-top: 40px; border-top: 2px solid #e2e8f0; padding-top: 20px; }
               .audit-row { display: flex; gap: 40px; margin-bottom: 20px; }
               .signature-section { display: flex; justify-content: space-between; margin-top: 60px; }
@@ -167,6 +168,32 @@ const LabReportDownload = () => {
       month: 'short',
       year: 'numeric'
     });
+  };
+
+  const getFlagClass = (result) => {
+    let flag = (result.result_flag || 'normal').toLowerCase();
+    
+    // Auto-calculate if normal
+    if ((flag === 'normal' || flag === 'n' || !flag) && result.reference_range && result.result_value !== undefined) {
+      const val = parseFloat(result.result_value);
+      const range = result.reference_range;
+      if (!isNaN(val)) {
+        const rangeMatch = range.match(/([0-9.]+)\s*-\s*([0-9.]+)/);
+        if (rangeMatch) {
+          const min = parseFloat(rangeMatch[1]);
+          const max = parseFloat(rangeMatch[2]);
+          if (val < min) flag = 'low';
+          else if (val > max) flag = 'high';
+        } else if (range.startsWith('<')) {
+          const max = parseFloat(range.replace('<', '').trim());
+          if (!isNaN(max) && val >= max) flag = 'high';
+        } else if (range.startsWith('>')) {
+          const min = parseFloat(range.replace('>', '').trim());
+          if (!isNaN(min) && val <= min) flag = 'low';
+        }
+      }
+    }
+    return flag;
   };
 
   const formatDateTime = (dateStr) => {
@@ -401,21 +428,24 @@ const LabReportDownload = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {reportDetails.results?.map((result, idx) => (
-                      <tr key={idx}>
-                        <td style={{ fontWeight: 500 }}>{result.parameter_name}</td>
-                        <td className={`result-value ${result.result_flag?.toLowerCase()}`}>
-                          {result.result_value}
-                        </td>
-                        <td style={{ fontFamily: 'IBM Plex Mono' }}>{result.unit}</td>
-                        <td style={{ color: '#64748b', fontSize: '12px' }}>{result.reference_range}</td>
-                        <td>
-                          <span className={`flag-badge ${result.result_flag?.toLowerCase()}`}>
-                            {result.result_flag}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
+                    {reportDetails.results?.map((result, idx) => {
+                      const flagClass = getFlagClass(result);
+                      return (
+                        <tr key={idx}>
+                          <td style={{ fontWeight: 500 }}>{result.parameter_name}</td>
+                          <td className={`result-value ${flagClass}`}>
+                            {result.result_value}
+                          </td>
+                          <td style={{ fontFamily: 'IBM Plex Mono' }}>{result.unit}</td>
+                          <td style={{ color: '#64748b', fontSize: '12px' }}>{result.reference_range}</td>
+                          <td>
+                            <span className={`flag-badge ${flagClass}`}>
+                              {flagClass.toUpperCase()}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

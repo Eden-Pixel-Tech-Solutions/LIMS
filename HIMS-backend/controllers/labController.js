@@ -1003,7 +1003,7 @@ export const bookLabTests = async (req, res) => {
 // Acknowledge test and update status
 export const acknowledgeTest = async (req, res) => {
   try {
-    const { bill_item_id, sample_id, short_id, status } = req.body;
+    const { bill_item_id, sample_id, short_id, status, collected_by } = req.body;
 
     if (!bill_item_id || !sample_id) {
       return res.status(400).json({
@@ -1012,12 +1012,12 @@ export const acknowledgeTest = async (req, res) => {
       });
     }
 
-    // Update bill item with sample ID and status
+    // Update bill item with sample ID, status and collector
     const [result] = await db.query(
       `UPDATE bill_items 
-       SET sample_id = ?, short_id = ?, status = ?, updated_at = NOW()
+       SET sample_id = ?, short_id = ?, status = ?, collected_by = ?, updated_at = NOW()
        WHERE id = ?`,
-      [sample_id, short_id || null, status || 'Collected', bill_item_id]
+      [sample_id, short_id || null, status || 'Collected', collected_by || null, bill_item_id]
     );
 
     if (result.affectedRows === 0) {
@@ -1147,6 +1147,66 @@ export const updateTestStatus = async (req, res) => {
   } catch (error) {
     console.error('Error updating test status:', error);
     res.status(500).json({ success: false, message: 'Server error updating status' });
+  }
+};
+
+/**
+ * Get Lab Activity Logs (Audit Trail)
+ */
+export const getActivityLogs = async (req, res) => {
+  const { branch_id, search, limit = 50 } = req.query;
+  try {
+    let query = `
+      SELECT 
+        bi.id as bill_item_id,
+        bi.sample_id,
+        bi.service_name as test_name,
+        bi.status as current_status,
+        bi.created_at as billed_at,
+        bi.updated_at as status_updated_at,
+        p.id as patient_id,
+        p.first_name as patient_first_name,
+        p.last_name as patient_last_name,
+        ltr.tested_at,
+        ltr.verified_at,
+        ltr.machine_no,
+        ltr.status as result_status,
+        -- Billed By
+        CONCAT(bu.first_name, ' ', bu.last_name) as billed_by_name,
+        -- Acknowledged By
+        CONCAT(cu.first_name, ' ', cu.last_name) as acknowledged_by_name,
+        -- Run By
+        CONCAT(tu.first_name, ' ', tu.last_name) as technician_name,
+        -- Verified By
+        CONCAT(vu.first_name, ' ', vu.last_name) as verifier_name,
+        -- Approved By
+        CONCAT(au.first_name, ' ', au.last_name) as approver_name
+      FROM bill_items bi
+      JOIN bills b ON bi.bill_id = b.id
+      JOIN patients p ON b.patient_id = p.id
+      LEFT JOIN lab_test_result ltr ON bi.id = ltr.bill_item_id
+      LEFT JOIN users bu ON b.created_by = bu.id
+      LEFT JOIN users cu ON bi.collected_by = cu.id
+      LEFT JOIN users tu ON ltr.tested_by = tu.id
+      LEFT JOIN users vu ON ltr.verified_by = vu.id
+      LEFT JOIN users au ON ltr.approved_by = au.id
+      WHERE bi.service_type = 'Laboratory'
+    `;
+    const params = [];
+
+    if (search) {
+      query += ` AND (bi.sample_id LIKE ? OR p.first_name LIKE ? OR bi.service_name LIKE ?)`;
+      params.push(`%${search}%`, `%${search}%`, `%${search}%`);
+    }
+
+    query += ` ORDER BY bi.created_at DESC LIMIT ?`;
+    params.push(parseInt(limit));
+
+    const [logs] = await db.query(query, params);
+    res.json({ success: true, logs });
+  } catch (err) {
+    console.error('getActivityLogs error:', err);
+    res.status(500).json({ success: false, message: err.message });
   }
 };
 
@@ -1483,6 +1543,8 @@ export const getPendingVerifications = async (req, res) => {
   }
 };
 
+
+
 // Verify test by Lab Head Doctor
 export const verifyTest = async (req, res) => {
   const connection = await db.getConnection();
@@ -1517,15 +1579,17 @@ export const verifyTest = async (req, res) => {
     const verifiedAt = new Date();
 
     // Update test result with verification details
+    // If status is Approved, we also set approved_by
     await connection.query(
       `UPDATE lab_test_result 
        SET verified_by = ?, 
            verified_at = ?, 
+           approved_by = CASE WHEN ? = 'Approved' THEN ? ELSE approved_by END,
            status = ?,
            notes = COALESCE(?, notes),
            updated_at = NOW()
        WHERE id = ? AND sample_id = ?`,
-      [verified_by, verifiedAt, status, notes || null, test_result_id, sample_id]
+      [verified_by, verifiedAt, status, verified_by, status, notes || null, test_result_id, sample_id]
     );
 
     // Also update bill_items status if status is Approved
@@ -1593,14 +1657,19 @@ export const verifyTest = async (req, res) => {
              
              const reportUrl = `${req.protocol || 'http'}://${req.get('host') || 'localhost:7005'}/api/lab/generate-report-pdf/${sample_id}`;
              
+             // Fetch hospital settings for branding
+             const [settingsRows] = await db.query(`SELECT * FROM hospital_settings LIMIT 1`);
+             const hospitalSettings = settingsRows.length > 0 ? settingsRows[0] : null;
+
              const reportData = {
+               hospital_settings: hospitalSettings,
                patient_name: report.patient_name || 'Unknown',
                patient_reg_no: report.patient_reg_no || 'N/A',
                sample_id: report.sample_id,
                gender: report.gender || 'N/A',
                age: age,
                referred_by: 'Self',
-               centre: report.lab_name || 'MERIL HIMS',
+               centre: report.lab_name || hospitalSettings?.hospital_name || 'MERIL HIMS',
                registration_date: formatDate(report.tested_at),
                tested_by_name: report.tested_by_name || 'N/A',
                tested_at: formatDate(report.tested_at),
@@ -1913,15 +1982,20 @@ export const generateLabReportPDF = async (req, res) => {
     // Build report URL for QR code - Now points to the PDF download endpoint for instant verification
     const reportUrl = `${req.protocol}://${req.get('host')}/api/lab/generate-report-pdf/${sampleId}`;
 
+    // Fetch hospital settings for branding
+    const [settingsRows] = await db.query(`SELECT * FROM hospital_settings LIMIT 1`);
+    const hospitalSettings = settingsRows.length > 0 ? settingsRows[0] : null;
+
     // Transform database results to PDF format
     const reportData = {
+      hospital_settings: hospitalSettings,
       patient_name: report.patient_name || 'Unknown',
       patient_reg_no: report.patient_reg_no || 'N/A',
       sample_id: report.sample_id,
       gender: report.gender || 'N/A',
       age: age,
       referred_by: 'Self', // Could be fetched from doctor if available
-      centre: report.lab_name || 'MERIL HIMS',
+      centre: report.lab_name || hospitalSettings?.hospital_name || 'MERIL HIMS',
       registration_date: formatDate(report.tested_at),
       tested_by_name: report.tested_by_name || 'N/A',
       tested_at: formatDate(report.tested_at),
