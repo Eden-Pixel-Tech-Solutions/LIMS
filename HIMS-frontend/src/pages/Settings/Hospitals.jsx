@@ -1,4 +1,28 @@
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { 
+  Hospital, 
+  Database, 
+  LayoutGrid, 
+  Map as MapIcon, 
+  Activity, 
+  ShieldCheck, 
+  Clock, 
+  Users, 
+  Search, 
+  Plus, 
+  Edit2, 
+  Trash2, 
+  X, 
+  Maximize, 
+  Minimize, 
+  Home, 
+  ChevronDown, 
+  Navigation, 
+  RefreshCw,
+  AlertCircle,
+  MapPin,
+  GitBranch,
+  Layers
+} from 'lucide-react';
 import '../../assets/CSS/Hospitals.css';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://172.16.11.160:7005';
@@ -223,9 +247,9 @@ function NetworkGraph({ branches, selectedId, onSelect }) {
         {tooltip.text}
       </div>
       <div className="h-graph-controls">
-        <button className="h-ctrl-btn" onClick={zoomIn} title="Zoom in">+</button>
-        <button className="h-ctrl-btn" onClick={zoomOut} title="Zoom out">−</button>
-        <button className="h-ctrl-btn" onClick={reset} title="Reset view" style={{ fontSize: 13 }}>⌂</button>
+        <button className="h-ctrl-btn" onClick={zoomIn} title="Zoom in"><Plus size={16} /></button>
+        <button className="h-ctrl-btn" onClick={zoomOut} title="Zoom out"><Minimize size={16} /></button>
+        <button className="h-ctrl-btn" onClick={reset} title="Reset view"><Home size={16} /></button>
       </div>
       <div style={{
         position: 'absolute', bottom: 20, left: 16,
@@ -432,10 +456,7 @@ function MapView({ branches, selectedId, onSelect, onCoordsUpdate }) {
           </div>
           <button className="h-map-fix-btn" onClick={() => setShowFixer(f => !f)}>
             {showFixer ? 'Hide' : 'Fix Now'}
-            <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"
-              style={{ transform: showFixer ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>
-              <polyline points="6 9 12 15 18 9" />
-            </svg>
+            <ChevronDown size={14} style={{ transform: showFixer ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />
           </button>
         </div>
       )}
@@ -457,17 +478,12 @@ function MapView({ branches, selectedId, onSelect, onCoordsUpdate }) {
             >
               {batchRunning ? (
                 <>
-                  <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"
-                    style={{ animation: 'spin 0.8s linear infinite' }}>
-                    <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-                  </svg>
+                  <RefreshCw size={12} className="animate-spin" />
                   Running…
                 </>
               ) : (
                 <>
-                  <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                    <polyline points="23 4 23 10 17 10" /><path d="M20.49 15a9 9 0 1 1-.08-8.53" />
-                  </svg>
+                  <RefreshCw size={12} />
                   Geocode All ({branchesMissingCoords.filter(b => b.address).length})
                 </>
               )}
@@ -518,9 +534,7 @@ function MapView({ branches, selectedId, onSelect, onCoordsUpdate }) {
                         onClick={() => geocodeSingle(b)}
                         disabled={batchRunning}
                       >
-                        <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" />
-                        </svg>
+                        <MapPin size={12} />
                         Locate
                       </button>
                     )}
@@ -797,7 +811,7 @@ export default function Hospitals() {
       <header className="h-topbar">
         <div className="h-topbar-left">
           <div className="h-topbar-icon">
-            <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" /></svg>
+            <Hospital size={20} color="white" />
           </div>
           <div>
             <div className="h-topbar-title">Hospital Network</div>
@@ -821,10 +835,10 @@ export default function Hospitals() {
       {/* ── Stats Strip ─────────────────────────────────────────── */}
       <div className="h-stats-strip">
         {[
-          { label: 'Total Facilities', val: stats.total, icon: '🏥', cls: 'navy' },
-          { label: 'Central Hubs', val: stats.central, icon: '🔵', cls: 'navy' },
-          { label: 'Sub-Central', val: stats.sub, icon: '🔷', cls: 'blue' },
-          { label: 'Centers / Labs', val: stats.centers, icon: '🔹', cls: 'sky' },
+          { label: 'Total Facilities', val: stats.total, icon: <Hospital size={18} />, cls: 'navy' },
+          { label: 'Central Hubs', val: stats.central, icon: <Database size={18} />, cls: 'navy' },
+          { label: 'Sub-Central', val: stats.sub, icon: <Layers size={18} />, cls: 'blue' },
+          { label: 'Centers / Labs', val: stats.centers, icon: <GitBranch size={18} />, cls: 'sky' },
         ].map(s => (
           <div className="h-stat-cell" key={s.label}>
             <div className={`h-stat-icon ${s.cls}`}>{s.icon}</div>
@@ -844,7 +858,7 @@ export default function Hospitals() {
           <div className="h-sidebar-section">
             <div className="h-sidebar-label">Search</div>
             <div className="h-search">
-              <svg className="h-search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>
+              <Search className="h-search-icon" size={14} />
               <input type="text" placeholder="Name, code, district…" value={search} onChange={e => setSearch(e.target.value)} />
             </div>
           </div>
@@ -891,24 +905,15 @@ export default function Hospitals() {
           {/* View toggle — now 3 buttons */}
           <div className="h-view-toggle">
             <button className={`h-vtbtn ${viewMode === 'graph' ? 'active' : ''}`} onClick={() => setViewMode('graph')}>
-              <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <circle cx="12" cy="5" r="2" /><circle cx="5" cy="19" r="2" /><circle cx="19" cy="19" r="2" />
-                <line x1="12" y1="7" x2="5" y2="17" /><line x1="12" y1="7" x2="19" y2="17" />
-              </svg>
+              <GitBranch size={14} />
               Graph
             </button>
             <button className={`h-vtbtn ${viewMode === 'grid' ? 'active' : ''}`} onClick={() => setViewMode('grid')}>
-              <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" />
-                <rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" />
-              </svg>
+              <LayoutGrid size={14} />
               Grid
             </button>
             <button className={`h-vtbtn ${viewMode === 'map' ? 'active' : ''}`} onClick={() => setViewMode('map')}>
-              <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6" />
-                <line x1="8" y1="2" x2="8" y2="18" /><line x1="16" y1="6" x2="16" y2="22" />
-              </svg>
+              <MapIcon size={14} />
               Map
             </button>
           </div>
@@ -983,7 +988,7 @@ export default function Hospitals() {
                 <span className={`h-detail-badge ${BADGE_CLASS[selectedNode.branch_level] || 'badge-center'}`}>
                   {selectedNode.branch_level || 'Center'}
                 </span>
-                <button className="h-detail-close" onClick={() => setSelectedNode(null)}>✕</button>
+                <button className="h-detail-close" onClick={() => setSelectedNode(null)}><X size={16} /></button>
               </div>
               <div className="h-detail-name">{selectedNode.branch_name}</div>
               <div className="h-detail-code">{selectedNode.hospital_code}</div>
@@ -1012,10 +1017,7 @@ export default function Hospitals() {
                     className="btn-map-view"
                     onClick={() => setViewMode('map')}
                   >
-                    <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                      <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6" />
-                      <line x1="8" y1="2" x2="8" y2="18" /><line x1="16" y1="6" x2="16" y2="22" />
-                    </svg>
+                    <MapIcon size={14} />
                     View on Map
                   </button>
                 </div>
