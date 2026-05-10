@@ -469,8 +469,8 @@ export default function SampleList() {
               <button className="complete-btn" onClick={() => handleCompleteTest(viewResults)}>
                 ✓ Mark Complete
               </button>
-              <button className="close-btn" onClick={() => setViewResults(null)}>
-                ✕ Close
+              <button className="close-preview-btn" onClick={() => setViewResults(null)}>
+                ✕ Cancel
               </button>
             </div>
           </div>
