@@ -3,6 +3,7 @@ import Login from "./pages/Login";
 import Setup from "./pages/Setup";
 import Dashboard from "./pages/Dashboard";
 import Worklist from "./pages/Worklist";
+import SampleList from "./pages/SampleList";
 import Verification from "./pages/Verification";
 import Reports from "./pages/Reports";
 import Inventory from "./pages/Inventory";
@@ -20,6 +21,7 @@ export default function App() {
         <Route path="/setup" element={<Layout><Setup /></Layout>} />
         <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />
         <Route path="/worklist" element={<Layout><Worklist /></Layout>} />
+        <Route path="/sample-list" element={<Layout><SampleList /></Layout>} />
         <Route path="/verification" element={<Layout><Verification /></Layout>} />
         <Route path="/reports" element={<Layout><Reports /></Layout>} />
         <Route path="/inventory" element={<Layout><Inventory /></Layout>} />
