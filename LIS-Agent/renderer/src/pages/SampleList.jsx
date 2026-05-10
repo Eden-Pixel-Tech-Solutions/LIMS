@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import JsBarcode from 'jsbarcode';
 
-const Worklist = () => {
+const SampleList = () => {
   const [worklist, setWorklist] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -204,8 +204,8 @@ const Worklist = () => {
     <div style={{ padding: '24px', maxWidth: '1400px', margin: '0 auto' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '32px' }}>
         <div>
-          <h1 style={{ fontSize: '28px', fontWeight: '900', color: '#0f172a', margin: 0 }}>Lab Worklist</h1>
-          <p style={{ color: '#64748b', fontSize: '15px', marginTop: '4px' }}>Smart Diagnostic Command Center</p>
+          <h1 style={{ fontSize: '28px', fontWeight: '900', color: '#0f172a', margin: 0 }}>Sample Master List</h1>
+          <p style={{ color: '#64748b', fontSize: '15px', marginTop: '4px' }}>Complete Diagnostic Audit Trail</p>
         </div>
         <button onClick={fetchWorklist} style={{ padding: '12px 20px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '10px', fontWeight: '600', cursor: 'pointer' }}>Refresh</button>
       </div>
@@ -222,9 +222,7 @@ const Worklist = () => {
             </tr>
           </thead>
           <tbody>
-            {worklist
-              .filter(item => ['Pending', 'Collected', 'In Progress'].includes(item.status))
-              .map((item) => (
+            {worklist.map((item) => (
               <tr key={item.bill_item_id} style={{ borderBottom: '1px solid #f1f5f9' }}>
                 <td style={{ padding: '20px 24px' }}>
                   <div style={{ fontWeight: '800' }}>{item.sample_id || '---'}</div>
@@ -256,8 +254,10 @@ const Worklist = () => {
                     <button onClick={() => handleAcknowledge(item)} style={{ padding: '8px 16px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: '700', cursor: 'pointer' }}>Acknowledge</button>
                   ) : item.status === 'Collected' ? (
                     <button onClick={() => handleRunTestRequest(item)} style={{ padding: '8px 16px', background: '#059669', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: '700', cursor: 'pointer' }}>🚀 Run Test</button>
-                  ) : (
+                  ) : item.status === 'In Progress' ? (
                     <button onClick={() => handleViewProcess(item)} style={{ padding: '8px 16px', background: '#0f172a', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: '700', cursor: 'pointer' }}>👁️ View</button>
+                  ) : (
+                    <span style={{ color: '#10b981', fontWeight: '700' }}>DONE</span>
                   )}
                 </td>
               </tr>
@@ -365,4 +365,4 @@ const Worklist = () => {
   );
 };
 
-export default Worklist;
+export default SampleList;

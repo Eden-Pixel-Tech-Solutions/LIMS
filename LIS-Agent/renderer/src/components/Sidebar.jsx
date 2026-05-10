@@ -17,6 +17,7 @@ const Sidebar = () => {
   const menuItems = [
     { name: 'Dashboard', path: '/dashboard', icon: '📊' },
     { name: 'Worklist', path: '/worklist', icon: '📋' },
+    { name: 'Sample List', path: '/sample-list', icon: '🧪' },
     { name: 'Inventory', path: '/inventory', icon: '📦' },
     { name: 'Machine Setup', path: '/setup', icon: '🛠️' },
     { name: 'Settings', path: '/settings', icon: '⚙️' },
