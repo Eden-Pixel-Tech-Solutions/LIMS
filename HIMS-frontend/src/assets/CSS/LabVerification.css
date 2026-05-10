@@ -120,7 +120,7 @@
 
 .verify-btn {
   padding: 8px 16px;
-  background: #8b5cf6;
+  background: #0d2554;
   color: white;
   border: none;
   border-radius: 8px;
@@ -131,8 +131,9 @@
 }
 
 .verify-btn:hover {
-  background: #7c3aed;
+  background: #1a3a7a;
   transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(13, 37, 84, 0.2);
 }
 
 .approve-btn {
@@ -198,7 +199,7 @@
 .verification-modal h2 {
   margin: 0;
   padding: 24px;
-  background: #8b5cf6;
+  background: #0d2554;
   color: white;
   font-size: 20px;
 }
@@ -237,10 +238,10 @@
 .results-table th {
   text-align: left;
   padding: 12px;
-  background: #f3f4f6;
+  background: #0d2554;
   font-size: 12px;
   font-weight: 600;
-  color: #374151;
+  color: white;
   text-transform: uppercase;
 }
 
@@ -325,45 +326,58 @@
 
 .verification-notes textarea:focus {
   outline: none;
-  border-color: #8b5cf6;
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+  border-color: #0d2554;
+  box-shadow: 0 0 0 3px rgba(13, 37, 84, 0.1);
 }
 
 .modal-actions {
   display: flex;
-  gap: 12px;
+  gap: 16px;
   padding: 0 24px 24px;
 }
 
 .verify-submit-btn {
   flex: 1;
-  padding: 14px;
-  background: #8b5cf6;
+  padding: 12px;
+  background: #0d2554;
   color: white;
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .verify-submit-btn:hover {
-  background: #7c3aed;
+  background: #1a3a7a;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(13, 37, 84, 0.2);
 }
 
 .close-btn {
-  padding: 14px 24px;
-  background: #e5e7eb;
-  color: #374151;
-  border: none;
+  flex: 1;
+  padding: 12px;
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fee2e2;
   border-radius: 8px;
   cursor: pointer;
-  font-size: 15px;
-  font-weight: 500;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: 'Roboto', sans-serif;
   transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .close-btn:hover {
-  background: #d1d5db;
+  background: #fee2e2;
+  color: #b91c1c;
+  border-color: #fecaca;
 }

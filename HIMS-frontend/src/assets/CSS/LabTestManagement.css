@@ -680,14 +680,17 @@
 }
 
 .close-btn {
-  width: 34px;
-  height: 34px;
+  position: absolute;
+  top: 20px;
+  right: 24px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: var(--gray-100);
   border: 1.5px solid var(--border);
-  font-size: 18px;
+  font-size: 20px;
   color: var(--text-muted);
   cursor: pointer;
   border-radius: var(--r-md);
@@ -695,12 +698,13 @@
   flex-shrink: 0;
   font-family: sans-serif;
   line-height: 1;
+  z-index: 20;
 }
 
 .close-btn:hover {
-  background: rgba(239,68,68,.08);
-  border-color: rgba(239,68,68,.35);
-  color: var(--rose-500);
+  background: #fef2f2;
+  border-color: #fee2e2;
+  color: #dc2626;
   transform: rotate(90deg);
 }
 
@@ -974,12 +978,19 @@
 .form-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
-  padding: 20px 28px;
+  align-items: center;
+  gap: 16px;
+  padding: 24px 28px;
   border-top: 1.5px solid var(--border);
   background: var(--white);
-  flex-wrap: wrap;
   flex-shrink: 0;
+  border-radius: 0 0 var(--r-2xl) var(--r-2xl);
+}
+
+.form-actions .btn-secondary,
+.form-actions .btn-primary {
+  min-width: 140px;
+  padding: 12px 28px;
 }
 
 /* ── Empty State ──────────────────────────────────────────── */

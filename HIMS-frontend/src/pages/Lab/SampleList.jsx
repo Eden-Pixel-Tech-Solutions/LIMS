@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import JsBarcode from 'jsbarcode';
+import { RefreshCw, Search, Monitor } from 'lucide-react';
 import '../../assets/CSS/LabWorklist.css';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://172.16.11.160:7005';
@@ -296,75 +297,11 @@ export default function SampleList() {
           <h1>📋 Laboratory Sample Master List</h1>
           <p>Complete history of all samples and tests</p>
         </div>
-        {(userRole === 'Central' || userRole === 'Sub-Central') && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <label style={{ fontWeight: 'bold', color: 'var(--text-color)' }}>View Network Branch:</label>
-            <select
-              value={selectedBranch}
-              onChange={(e) => setSelectedBranch(e.target.value)}
-              style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '14px' }}
-            >
-              <option value="all">All Branches</option>
-              {branches.map(b => (
-                <option key={b.id} value={b.id}>{b.name}</option>
-              ))}
-            </select>
-          </div>
-        )}
       </div>
 
-      {/* Department Selection */}
-      <div className="department-section">
-        <h3>Select Department</h3>
-        <div className="department-grid">
-          {DEPARTMENTS.map(dept => (
-            <button
-              key={dept.id}
-              className={`dept-card ${selectedDepartment === dept.id ? 'active' : ''}`}
-              onClick={() => setSelectedDepartment(dept.id)}
-            >
-              <span className="dept-icon">{dept.icon}</span>
-              <span className="dept-name">{dept.name}</span>
-            </button>
-          ))}
-        </div>
-      </div>
 
-      {/* Now Serving Banner */}
-      {!loading && worklist.length > 0 && (
-        <div className="now-serving-banner" style={{
-          background: 'linear-gradient(135deg, #0d2554 0%, #1e3a8a 100%)',
-          color: 'white',
-          padding: '24px',
-          borderRadius: 'var(--radius-lg)',
-          marginTop: '24px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          boxShadow: 'var(--shadow-md)'
-        }}>
-          <div>
-            <h2 style={{ margin: '0 0 8px 0', fontSize: '18px', opacity: 0.9 }}>Next Patient to Call</h2>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: '16px' }}>
-              <span style={{ fontSize: '36px', fontWeight: 'bold' }}>
-                Token #{(() => {
-                  const firstPending = worklist.find(w => w.status === 'Pending') || worklist[0];
-                  return firstPending.lab_queue_number || 1;
-                })()}
-              </span>
-              <span style={{ fontSize: '24px' }}>
-                {(worklist.find(w => w.status === 'Pending') || worklist[0]).patient_name}
-              </span>
-            </div>
-          </div>
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '14px', opacity: 0.9 }}>Total Pending</div>
-            <div style={{ fontSize: '28px', fontWeight: 'bold' }}>
-              {worklist.filter(w => w.status === 'Pending').length}
-            </div>
-          </div>
-        </div>
-      )}
+
+
 
       {/* Worklist Table */}
       <div className="worklist-section">
@@ -376,13 +313,13 @@ export default function SampleList() {
           <div style={{ display: 'flex', gap: '12px' }}>
             <button
               className="btn-primary"
-              style={{ background: '#10b981', borderColor: '#10b981' }}
+              style={{ background: '#10b981', borderColor: '#10b981', display: 'flex', alignItems: 'center', gap: '8px' }}
               onClick={() => window.open('/lab-tv', '_blank')}
             >
-              📺 Open TV Mode
+              <Monitor size={16} /> Open TV Mode
             </button>
-            <button className="refresh-btn" onClick={refreshWorklist}>
-              🔄 Refresh
+            <button className="refresh-btn" onClick={refreshWorklist} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <RefreshCw size={16} /> Refresh
             </button>
           </div>
         </div>

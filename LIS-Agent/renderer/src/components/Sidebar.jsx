@@ -19,6 +19,7 @@ const Sidebar = () => {
     { name: 'Worklist', path: '/worklist', icon: '📋' },
     { name: 'Inventory', path: '/inventory', icon: '📦' },
     { name: 'Machine Setup', path: '/setup', icon: '🛠️' },
+    { name: 'Demos', path: '/demos', icon: '📺' },
     { name: 'Settings', path: '/settings', icon: '⚙️' },
   ];
 

@@ -8,6 +8,9 @@ import Reports from "./pages/Reports";
 import Inventory from "./pages/Inventory";
 import Settings from "./pages/Settings";
 import Layout from "./components/Layout";
+import Demos from "./pages/Demos";
+import MERILIYZERMICRO from "./pages/merilyxermicro";
+
 
 export default function App() {
   return (
@@ -21,6 +24,11 @@ export default function App() {
         <Route path="/reports" element={<Layout><Reports /></Layout>} />
         <Route path="/inventory" element={<Layout><Inventory /></Layout>} />
         <Route path="/settings" element={<Layout><Settings /></Layout>} />
+        <Route path="/demos" element={<Layout><Demos /></Layout>} />
+        <Route path="/demos/micro" element={<Layout><MERILIYZERMICRO /></Layout>} />
+        <Route path="/demos/3part" element={<Layout><MERILIYZERMICRO /></Layout>} />
+        <Route path="/demos/5part" element={<Layout><MERILIYZERMICRO /></Layout>} />
+
       </Routes>
     </BrowserRouter>
   );

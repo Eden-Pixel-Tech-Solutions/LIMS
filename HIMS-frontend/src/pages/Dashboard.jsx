@@ -1,4 +1,21 @@
 import { useState, useEffect, useMemo } from 'react';
+import { 
+  Users, 
+  FlaskConical, 
+  Clock, 
+  IndianRupee, 
+  Hospital, 
+  ShieldCheck, 
+  Map, 
+  Microscope,
+  Activity,
+  ArrowUpRight,
+  ArrowDownRight,
+  Home,
+  Monitor,
+  RefreshCw,
+  Search
+} from 'lucide-react';
 import '../assets/CSS/Dashboard.css';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://172.16.11.160:7005';
@@ -149,18 +166,23 @@ function DonutChart({ data }) {
 // ─── Shared sub-components ───────────────────────────────────────────────────
 function KpiCards({ kpis, spark }) {
   const cards = [
-    { id: 'patients', label: "Today's Patients", value: fmt(kpis.patients.today), change: pct(kpis.patients.change), icon: '👥', color: '#1a56db', spark: spark.tests },
-    { id: 'tests', label: "Tests Done Today", value: fmt(kpis.tests.today), change: pct(kpis.tests.change), icon: '🧪', color: '#0d9488', spark: spark.tests },
-    { id: 'pending', label: "Pending Tests", value: fmt(kpis.pending.value), change: null, icon: '⏳', color: '#d97706', spark: null },
-    { id: 'revenue', label: "Today's Revenue", value: fmtRs(kpis.revenue.today), sub: `Month: ${fmtRs(kpis.revenue.month)}`, icon: '💰', color: '#16a34a', spark: spark.revenue },
+    { id: 'patients', label: "Today's Patients", value: fmt(kpis.patients.today), change: pct(kpis.patients.change), icon: <Users size={20} />, color: '#1a56db', spark: spark.tests },
+    { id: 'tests', label: "Tests Done Today", value: fmt(kpis.tests.today), change: pct(kpis.tests.change), icon: <FlaskConical size={20} />, color: '#0d9488', spark: spark.tests },
+    { id: 'pending', label: "Pending Tests", value: fmt(kpis.pending.value), change: null, icon: <Clock size={20} />, color: '#d97706', spark: null },
+    { id: 'revenue', label: "Today's Revenue", value: fmtRs(kpis.revenue.today), sub: `Month: ${fmtRs(kpis.revenue.month)}`, icon: <IndianRupee size={20} />, color: '#16a34a', spark: spark.revenue },
   ];
   return (
     <div className="dash-kpi-row">
       {cards.map(card => (
         <div className="dash-kpi-card" key={card.id}>
           <div className="dash-kpi-top">
-            <div className="dash-kpi-icon" style={{ background: card.color + '18' }}>{card.icon}</div>
-            {card.change && <span className={`dash-kpi-badge ${card.change.up ? 'up' : 'down'}`}>{card.change.up ? '↑' : '↓'} {card.change.val}%</span>}
+            <div className="dash-kpi-icon" style={{ background: card.color + '18', color: card.color }}>{card.icon}</div>
+            {card.change && (
+              <span className={`dash-kpi-badge ${card.change.up ? 'up' : 'down'}`}>
+                {card.change.up ? <ArrowUpRight size={10} style={{ marginRight: 2 }} /> : <ArrowDownRight size={10} style={{ marginRight: 2 }} />}
+                {card.change.val}%
+              </span>
+            )}
           </div>
           <div className="dash-kpi-value">{card.value}</div>
           <div className="dash-kpi-label">{card.label}</div>
@@ -311,7 +333,7 @@ export default function Dashboard() {
       <header className="dash-topbar">
         <div className="dash-topbar-left">
           <div className="dash-topbar-icon">
-            <svg viewBox="0 0 24 24" fill="white" width="20" height="20"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /></svg>
+            <Home size={20} color="white" />
           </div>
           <div>
             <div className="dash-topbar-title">{meta.title}</div>
@@ -329,10 +351,10 @@ export default function Dashboard() {
         {roleLevel === 'Central' && network && (
           <div className="dash-network-strip">
             {[
-              { label: 'Total Facilities', val: network.total, icon: '🏥', sub: 'State-wide' },
-              { label: 'Central Hubs', val: network.central, icon: '🔵', sub: 'Top-tier' },
-              { label: 'Sub-Central Hubs', val: network.subCentral, icon: '🔷', sub: 'District-level' },
-              { label: 'Centers & Labs', val: network.centers, icon: '🔹', sub: 'Primary care' },
+              { label: 'Total Facilities', val: network.total, icon: <Hospital size={22} color="#0d2554" />, sub: 'State-wide' },
+              { label: 'Central Hubs', val: network.central, icon: <ShieldCheck size={22} color="#0d2554" />, sub: 'Top-tier' },
+              { label: 'Sub-Central Hubs', val: network.subCentral, icon: <Map size={22} color="#1a56db" />, sub: 'District-level' },
+              { label: 'Centers & Labs', val: network.centers, icon: <Microscope size={22} color="#0ea5e9" />, sub: 'Primary care' },
             ].map(s => (
               <div className="dash-net-cell" key={s.label}>
                 <div className="dash-net-icon">{s.icon}</div>
@@ -349,10 +371,10 @@ export default function Dashboard() {
         {roleLevel === 'Sub-Central' && network && (
           <div className="dash-network-strip">
             {[
-              { label: 'Facilities in District', val: network.total, icon: '🏥', sub: 'Your jurisdiction' },
-              { label: 'Patients Today', val: kpis.patients.today, icon: '👥', sub: 'Across district' },
-              { label: 'Tests Completed', val: kpis.tests.today, icon: '🧪', sub: 'Today' },
-              { label: 'Pending Tests', val: kpis.pending.value, icon: '⏳', sub: 'Action required' },
+              { label: 'Facilities in District', val: network.total, icon: <Hospital size={22} color="#0d2554" />, sub: 'Your jurisdiction' },
+              { label: 'Patients Today', val: kpis.patients.today, icon: <Users size={22} color="#1a56db" />, sub: 'Across district' },
+              { label: 'Tests Completed', val: kpis.tests.today, icon: <FlaskConical size={22} color="#0d9488" />, sub: 'Today' },
+              { label: 'Pending Tests', val: kpis.pending.value, icon: <Clock size={22} color="#d97706" />, sub: 'Action required' },
             ].map(s => (
               <div className="dash-net-cell" key={s.label}>
                 <div className="dash-net-icon">{s.icon}</div>
@@ -369,7 +391,7 @@ export default function Dashboard() {
         {/* Branch — show facility info strip */}
         {roleLevel === 'Branch' && branch && (
           <div className="dash-branch-strip">
-            <div className="dash-branch-icon">🏥</div>
+            <div className="dash-branch-icon"><Hospital size={28} color="#0d2554" /></div>
             <div className="dash-branch-info">
               <div className="dash-branch-name">{branch.branch_name}</div>
               <div className="dash-branch-meta">
