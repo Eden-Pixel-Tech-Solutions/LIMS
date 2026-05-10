@@ -106,6 +106,7 @@ const LabVerification = () => {
   const getStatusBadge = (status) => {
     const colors = {
       'Test Done': '#06b6d4',
+      'Completed': '#22c55e',
       'Verified': '#8b5cf6',
       'Approved': '#22c55e'
     };
@@ -163,7 +164,7 @@ const LabVerification = () => {
                     <td>{formatDateTime(test.tested_at)}</td>
                     <td>{getStatusBadge(test.status)}</td>
                     <td>
-                      {test.status === 'Test Done' && (
+                      {(test.status === 'Test Done' || test.status === 'Completed') && (
                         <button
                           className="verify-btn"
                           onClick={() => setSelectedTest(test)}

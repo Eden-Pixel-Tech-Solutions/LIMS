@@ -1,6 +1,7 @@
 import db from '../config/db.js';
 import QRCode from 'qrcode';
 import http from 'http';
+import { generateInvoicePDFStream } from '../utils/invoiceGenerator.js';
 
 // Generate unique bill number using the branch's hospital code
 const generateBillNumber = (hospital_code = 'BILL') => {
@@ -34,6 +35,7 @@ export const createBill = async (req, res) => {
       discount_amount = 0,
       payment_method = 'Cash',
       payment_status = 'Pending',
+      paid_amount = 0,
       notes,
       branch_id = 1,
       hospital_code = 'BILL',
@@ -80,8 +82,8 @@ export const createBill = async (req, res) => {
     const [billResult] = await connection.query(
       `INSERT INTO bills (
         bill_number, patient_id, patient_name, patient_phone, total_amount, discount_amount, 
-        net_amount, payment_method, payment_status, status, notes, branch_id
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        net_amount, payment_method, payment_status, paid_amount, status, notes, branch_id
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         bill_number,
         patient_id,
@@ -92,6 +94,7 @@ export const createBill = async (req, res) => {
         net_amount,
         payment_method,
         payment_status,
+        paid_amount,
         'Active',
         notes || null,
         branch_id
@@ -115,7 +118,7 @@ export const createBill = async (req, res) => {
     // Check for existing pending tests if we are not explicitly overwriting
     if (hasLabItems) {
       const labServiceIds = uniqueItems.filter(i => i.service_type === 'Laboratory' && i.service_id).map(i => i.service_id);
-      
+
       if (labServiceIds.length > 0) {
         if (!overwrite_duplicates) {
           const [pendingTests] = await connection.query(
@@ -161,7 +164,7 @@ export const createBill = async (req, res) => {
           service_code, lab_id, quantity, unit_price, total_price)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [bill_id, item.service_type, item.service_id, item.service_name,
-         item.service_code, item.lab_id || null, item.quantity || 1, item.unit_price, item.total_price]
+          item.service_code, item.lab_id || null, item.quantity || 1, item.unit_price, item.total_price]
       );
     }
 
@@ -450,7 +453,7 @@ export const generateInvoice = async (req, res) => {
 export const sendWhatsApp = async (req, res) => {
   try {
     const { phone, message } = req.body;
-    
+
     if (!phone || !message) {
       return res.status(400).json({ success: false, message: 'Phone and message are required' });
     }
@@ -460,7 +463,7 @@ export const sendWhatsApp = async (req, res) => {
     const targetPhone = cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone;
 
     // Call the WhatsApp bot
-    const botRes = await fetch('http://localhost:3000/send-message', {
+    const botRes = await fetch('http://172.16.11.160:3000/send-message', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -478,5 +481,176 @@ export const sendWhatsApp = async (req, res) => {
   } catch (error) {
     console.error('WhatsApp send error:', error);
     res.status(500).json({ success: false, message: 'Server error calling WhatsApp bot' });
+  }
+};
+
+export const downloadInvoicePdf = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [bills] = await db.query('SELECT * FROM bills WHERE bill_number = ? OR id = ?', [id, id]);
+    if (bills.length === 0) return res.status(404).json({ success: false, message: 'Bill not found' });
+    const bill = bills[0];
+
+    const [items] = await db.query('SELECT service_name as name, quantity, unit_price as amount, total_price FROM bill_items WHERE bill_id = ? AND status != "Inactive"', [bill.id]);
+
+    let patientRegNo = 'N/A', age = '', gender = '';
+    if (bill.patient_id) {
+      const [patients] = await db.query('SELECT reg_no, dob, gender FROM patients WHERE id = ?', [bill.patient_id]);
+      if (patients.length > 0) {
+        patientRegNo = patients[0].reg_no;
+        if (patients[0].dob) {
+          const birthDate = new Date(patients[0].dob);
+          const diffMs = Date.now() - birthDate.getTime();
+          const ageDate = new Date(diffMs);
+          age = Math.abs(ageDate.getUTCFullYear() - 1970).toString();
+        }
+        gender = patients[0].gender;
+      }
+    }
+
+    const invoiceData = {
+      bill_number: bill.bill_number,
+      date: new Date(bill.created_at).toLocaleString(),
+      patient_name: bill.patient_name,
+      patient_reg_no: patientRegNo,
+      age, gender, doctor_name: '', payment_method: bill.payment_method,
+      discount_amount: bill.discount_amount, items
+    };
+
+    const doc = await generateInvoicePDFStream(invoiceData);
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="Invoice-${invoiceData.bill_number}.pdf"`);
+    doc.pipe(res);
+  } catch (error) {
+    console.error('Error generating PDF:', error);
+    res.status(500).json({ success: false, message: 'Server error generating PDF' });
+  }
+};
+
+export const updateBill = async (req, res) => {
+  const connection = await db.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    const { id } = req.params; // this is the bill_number or id
+    const {
+      patient_id,
+      items,
+      discount_amount = 0,
+      payment_method = 'Cash',
+      payment_status = 'Pending',
+      paid_amount = 0,
+      notes,
+      overwrite_duplicates = false
+    } = req.body;
+
+    if (!items || items.length === 0) {
+      return res.status(400).json({ success: false, message: 'At least one service item is required' });
+    }
+
+    // Get the bill
+    const [billRows] = await connection.query('SELECT id, bill_number FROM bills WHERE bill_number = ? OR id = ?', [id, id]);
+    if (billRows.length === 0) {
+      await connection.rollback();
+      return res.status(404).json({ success: false, message: 'Bill not found' });
+    }
+    const internal_bill_id = billRows[0].id;
+    const bill_number = billRows[0].bill_number;
+
+    const total_amount = items.reduce((sum, item) => sum + (item.total_price || 0), 0);
+    const net_amount = total_amount - discount_amount;
+
+    // Update bill
+    await connection.query(
+      'UPDATE bills SET total_amount = ?, discount_amount = ?, net_amount = ?, payment_method = ?, payment_status = ?, paid_amount = ?, notes = ? WHERE id = ?',
+      [total_amount, discount_amount, net_amount, payment_method, payment_status, paid_amount, notes || null, internal_bill_id]
+    );
+
+    // Delete existing items
+    await connection.query('DELETE FROM bill_items WHERE bill_id = ?', [internal_bill_id]);
+
+    // Insert new items
+    // Deduplicate lab tests
+    const uniqueItems = [];
+    const seenLabTests = new Set();
+    for (const item of items) {
+      if (item.service_type === 'Laboratory') {
+        if (seenLabTests.has(item.service_id)) continue;
+        seenLabTests.add(item.service_id);
+      }
+      uniqueItems.push(item);
+    }
+
+    for (const item of uniqueItems) {
+      await connection.query(
+        `INSERT INTO bill_items (bill_id, service_type, service_id, service_name,
+          service_code, lab_id, quantity, unit_price, total_price)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [internal_bill_id, item.service_type, item.service_id, item.service_name,
+          item.service_code, item.lab_id || null, item.quantity || 1, item.unit_price, item.total_price]
+      );
+    }
+
+    const hasLabItems = uniqueItems.some(item => item.service_type === 'Laboratory');
+
+    let lab_qr_code = null;
+    const labBarcodes = [];
+
+    if (hasLabItems) {
+      const labItems = uniqueItems.filter(item => item.service_type === 'Laboratory');
+      for (const item of labItems) {
+        const barcode = generateLabBarcode(item.lab_name, item.service_name);
+        labBarcodes.push({
+          service_id: item.service_id,
+          barcode: barcode,
+          lab_name: item.lab_name,
+          test_name: item.service_name
+        });
+        await connection.query(
+          'UPDATE bill_items SET lab_barcode = ? WHERE bill_id = ? AND service_id = ? AND service_type = ?',
+          [barcode, internal_bill_id, item.service_id, 'Laboratory']
+        );
+      }
+
+      const qrData = JSON.stringify({
+        bill_number,
+        patient_id,
+        type: 'LAB_BILL',
+        lab_barcodes: labBarcodes
+      });
+
+      lab_qr_code = await QRCode.toDataURL(qrData, { width: 256, margin: 2, color: { dark: '#000000', light: '#ffffff' } });
+
+      await connection.query(
+        'UPDATE bills SET lab_barcode = ?, lab_qr_code = ? WHERE id = ?',
+        [labBarcodes[0]?.barcode || null, lab_qr_code, internal_bill_id]
+      );
+    } else {
+      await connection.query('UPDATE bills SET lab_barcode = NULL, lab_qr_code = NULL WHERE id = ?', [internal_bill_id]);
+    }
+
+    await connection.commit();
+
+    res.status(200).json({
+      success: true,
+      message: 'Bill updated successfully',
+      data: {
+        bill_id: internal_bill_id,
+        bill_number,
+        lab_barcode: hasLabItems ? labBarcodes[0]?.barcode : null,
+        lab_barcode_details: hasLabItems ? labBarcodes : null,
+        lab_qr_code,
+        total_amount,
+        net_amount,
+        payment_status
+      }
+    });
+
+  } catch (error) {
+    await connection.rollback();
+    console.error('Error updating bill:', error);
+    res.status(500).json({ success: false, message: 'Server error updating bill' });
+  } finally {
+    connection.release();
   }
 };

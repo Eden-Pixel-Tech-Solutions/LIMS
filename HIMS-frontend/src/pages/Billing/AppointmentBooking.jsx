@@ -649,7 +649,7 @@ function AppointmentBooking({ regNo, onSaveSuccess }) {
                     color: '#1f2937',
                     textAlign: 'right'
                   }}>
-                    Total: ₹{selectedLabTests.reduce((sum, t) => sum + (t.price || t.selling_price || 0), 0)}
+                    Total: ₹{selectedLabTests.reduce((sum, t) => sum + (parseFloat(t.price || t.selling_price) || 0), 0).toFixed(2)}
                   </div>
                 </div>
               )}

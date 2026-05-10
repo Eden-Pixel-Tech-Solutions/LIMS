@@ -10,22 +10,22 @@ import { JHARKHAND_DATA, getRiskLevel } from "../../data/disasterMockData";
 // GeoJSON URL for Jharkhand districts
 const geoUrl = "https://raw.githubusercontent.com/shuklaneerajdev/IndiaStateTopojsonFiles/master/Jharkhand.geojson";
 
-const MapChart = ({ onDistrictClick }) => {
+const MapChart = ({ data = [], onDistrictClick }) => {
   const [tooltip, setTooltip] = useState(null);
 
   const handleMouseEnter = (geo) => {
     const districtName = geo.properties.district || geo.properties.NAME_2 || geo.properties.dist_name;
-    const districtData = JHARKHAND_DATA.find(d => 
-      d.district.toLowerCase() === (districtName || "").toLowerCase() ||
-      (d.districtKey && d.districtKey.toLowerCase() === (districtName || "").toLowerCase())
+    const districtData = data.find(d => 
+      d.district.toLowerCase() === (districtName || "").toLowerCase()
     );
 
     if (districtData) {
+      const riskColor = districtData.risk_level === 'HIGH' ? '#ef4444' : (districtData.risk_level === 'MEDIUM' ? '#eab308' : '#22c55e');
       setTooltip({
         name: districtData.district,
         disease: districtData.disease,
         cases: districtData.cases,
-        risk: getRiskLevel(districtData.cases)
+        risk: { label: districtData.risk_level, color: riskColor }
       });
     } else {
       setTooltip({
@@ -38,9 +38,8 @@ const MapChart = ({ onDistrictClick }) => {
 
   const handleGeographyClick = (geo) => {
     const districtName = geo.properties.district || geo.properties.NAME_2 || geo.properties.dist_name;
-    const districtData = JHARKHAND_DATA.find(d => 
-      d.district.toLowerCase() === (districtName || "").toLowerCase() ||
-      (d.districtKey && d.districtKey.toLowerCase() === (districtName || "").toLowerCase())
+    const districtData = data.find(d => 
+      d.district.toLowerCase() === (districtName || "").toLowerCase()
     );
     if (districtData && onDistrictClick) {
       onDistrictClick(districtData);
@@ -63,11 +62,10 @@ const MapChart = ({ onDistrictClick }) => {
               {({ geographies }) =>
                 geographies.map((geo) => {
                   const districtName = geo.properties.district || geo.properties.NAME_2 || geo.properties.dist_name;
-                  const d = JHARKHAND_DATA.find(item => 
-                    item.district.toLowerCase() === (districtName || "").toLowerCase() ||
-                    (item.districtKey && item.districtKey.toLowerCase() === (districtName || "").toLowerCase())
+                  const d = data.find(item => 
+                    item.district.toLowerCase() === (districtName || "").toLowerCase()
                   );
-                  const risk = d ? getRiskLevel(d.cases) : { color: "#f1f5f9" }; // slate-100
+                  const riskColor = d ? (d.risk_level === 'HIGH' ? '#ef4444' : (d.risk_level === 'MEDIUM' ? '#eab308' : '#22c55e')) : "#f1f5f9"; 
 
                   return (
                     <Geography
@@ -78,7 +76,7 @@ const MapChart = ({ onDistrictClick }) => {
                       onClick={() => handleGeographyClick(geo)}
                       style={{
                         default: {
-                          fill: risk.color,
+                          fill: riskColor,
                           stroke: "#cbd5e1", // slate-300
                           strokeWidth: 1,
                           outline: "none",

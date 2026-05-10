@@ -17,7 +17,7 @@ const Worklist = () => {
   const [selectedParams, setSelectedParams] = useState([]);
   const [isFetchingParams, setIsFetchingParams] = useState(false);
   const barcodeRef = useRef(null);
-  
+
   const API_BASE = 'http://172.16.11.160:7005';
 
   useEffect(() => {
@@ -65,12 +65,15 @@ const Worklist = () => {
       const dateStr = today.toISOString().slice(0, 10).replace(/-/g, '');
       const resId = await axios.post(`${API_BASE}/api/lab/generate-sample-id`, { date: dateStr });
       if (resId.data.success) {
-        const sampleId = `LAB-${dateStr}-${resId.data.sequence.toString().padStart(4, '0')}`;
+        const { sampleId, shortId } = resId.data;
         const resAck = await axios.post(`${API_BASE}/api/lab/acknowledge-test`, {
-          bill_item_id: item.bill_item_id, sample_id: sampleId, status: 'Collected'
+          bill_item_id: item.bill_item_id, 
+          sample_id: sampleId, 
+          short_id: shortId,
+          status: 'Collected'
         });
         if (resAck.data.success) {
-          setPrintLabel({ sampleId, patientName: item.patient_name, testName: item.test_name, sampleType: item.sample_type });
+          setPrintLabel({ sampleId, shortId, patientName: item.patient_name, testName: item.test_name, sampleType: item.sample_type });
           fetchWorklist();
         }
       }
@@ -103,17 +106,17 @@ const Worklist = () => {
       // 2. FETCH TEST PARAMETERS FROM CLOUD
       const res = await axios.get(`${API_BASE}/api/lab/tests/${item.test_id}`);
       if (res.data.success && res.data.parameters) {
-        
+
         // 3. INTELLIGENT MAPPING: 
         // Match Cloud Parameter Name against Machine Protocol IDs
         const mappedParams = res.data.parameters.map(p => {
           let machineId = null;
-          
+
           if (protocol && protocol.frame_structure["2"] && protocol.frame_structure["2"].tests) {
             // Try matching by name (case-insensitive)
             const match = protocol.frame_structure["2"].tests.find(
-              mt => mt.name.toLowerCase() === p.parameter_name.toLowerCase() || 
-                    mt.name.toLowerCase().replace('-', ' ') === p.parameter_name.toLowerCase().replace('-', ' ')
+              mt => mt.name.toLowerCase() === p.parameter_name.toLowerCase() ||
+                mt.name.toLowerCase().replace('-', ' ') === p.parameter_name.toLowerCase().replace('-', ' ')
             );
             if (match) machineId = match.id;
           }
@@ -144,6 +147,7 @@ const Worklist = () => {
           model: machine.model,
           machineId: machine.unique_id,
           sampleId: item.sample_id,
+          shortId: item.short_id,
           testId: item.bill_item_id,
           parameters: mappedParams
         });
@@ -220,17 +224,20 @@ const Worklist = () => {
           <tbody>
             {worklist.map((item) => (
               <tr key={item.bill_item_id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                <td style={{ padding: '20px 24px', fontWeight: '800' }}>{item.sample_id || '---'}</td>
                 <td style={{ padding: '20px 24px' }}>
-                   <div style={{ fontWeight: '700' }}>{item.patient_name}</div>
-                   <div style={{ fontSize: '12px', color: '#64748b' }}>{item.patient_reg_no}</div>
+                  <div style={{ fontWeight: '800' }}>{item.sample_id || '---'}</div>
+                  {item.short_id && <div style={{ fontSize: '11px', color: '#2563eb', fontWeight: '700' }}>Short ID: {item.short_id}</div>}
                 </td>
                 <td style={{ padding: '20px 24px' }}>
-                   <div style={{ fontWeight: '600' }}>{item.test_name}</div>
-                   <div style={{ fontSize: '12px', color: '#94a3b8' }}>{item.sample_type}</div>
+                  <div style={{ fontWeight: '700' }}>{item.patient_name}</div>
+                  <div style={{ fontSize: '12px', color: '#64748b' }}>{item.patient_reg_no}</div>
                 </td>
                 <td style={{ padding: '20px 24px' }}>
-                  <span style={{ 
+                  <div style={{ fontWeight: '600' }}>{item.test_name}</div>
+                  <div style={{ fontSize: '12px', color: '#94a3b8' }}>{item.sample_type}</div>
+                </td>
+                <td style={{ padding: '20px 24px' }}>
+                  <span style={{
                     padding: '6px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: '800',
                     background: getStatusStyle(item.status).bg, color: getStatusStyle(item.status).color, border: `1px solid ${getStatusStyle(item.status).border}`
                   }}>{item.status}</span>
@@ -305,19 +312,19 @@ const Worklist = () => {
               <div>
                 <h3 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '16px' }}>Live Result Stream</h3>
                 <div style={{ background: '#0f172a', borderRadius: '16px', padding: '20px', height: '350px', overflowY: 'auto', color: '#38bdf8', fontFamily: 'monospace' }}>
-                   {incomingResults.length === 0 ? (
-                     <div style={{ textAlign: 'center', padding: '100px 0', opacity: 0.4 }}>
-                        <div style={{ fontSize: '32px', marginBottom: '16px' }}>🛰️</div>
-                        Waiting for data from {currentMachine?.unique_id}...
-                     </div>
-                   ) : (
-                     incomingResults.map((res, i) => (
-                       <div key={i} style={{ padding: '8px 0', borderBottom: '1px solid #1e293b', display: 'flex', justifyContent: 'space-between' }}>
-                          <span>{res.test_name}</span>
-                          <span style={{ color: '#fff', fontWeight: '800' }}>{res.result_value} {res.unit}</span>
-                       </div>
-                     ))
-                   )}
+                  {incomingResults.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '100px 0', opacity: 0.4 }}>
+                      <div style={{ fontSize: '32px', marginBottom: '16px' }}>🛰️</div>
+                      Waiting for data from {currentMachine?.unique_id}...
+                    </div>
+                  ) : (
+                    incomingResults.map((res, i) => (
+                      <div key={i} style={{ padding: '8px 0', borderBottom: '1px solid #1e293b', display: 'flex', justifyContent: 'space-between' }}>
+                        <span>{res.test_name}</span>
+                        <span style={{ color: '#fff', fontWeight: '800' }}>{res.result_value} {res.unit}</span>
+                      </div>
+                    ))
+                  )}
                 </div>
                 <button onClick={handleCloseProcess} style={{ width: '100%', marginTop: '20px', padding: '16px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '16px', fontWeight: '800', cursor: 'pointer' }}>
                   Complete & Close Session
@@ -335,6 +342,9 @@ const Worklist = () => {
             <h3>Sample Label</h3>
             <div id="barcode-label" style={{ padding: '20px', border: '1px dashed #cbd5e1', marginBottom: '20px' }}>
               <div style={{ fontWeight: '800', marginBottom: '4px' }}>{printLabel.patientName}</div>
+              <div style={{ fontSize: '24px', fontWeight: '900', color: '#2563eb', marginBottom: '8px' }}>
+                ID: {printLabel.shortId}
+              </div>
               <svg ref={barcodeRef}></svg>
             </div>
             <div style={{ display: 'flex', gap: '12px' }}>

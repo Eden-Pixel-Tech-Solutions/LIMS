@@ -57,9 +57,14 @@ function Login() {
         throw new Error(data.message || 'Login failed');
       }
 
-      // Store token and Multi-Branch context
+      // Clear any stale session data from a previous user before writing new values
+      ['hims_token', 'branch_id', 'hospital_code', 'role_level', 'role', 'district_id'].forEach(
+        key => localStorage.removeItem(key)
+      );
+
+      // Store fresh session context
       if (data.token) localStorage.setItem('hims_token', data.token);
-      if (data.branch_id) localStorage.setItem('branch_id', data.branch_id);
+      if (data.branch_id !== undefined && data.branch_id !== null) localStorage.setItem('branch_id', data.branch_id);
       if (data.hospital_code) localStorage.setItem('hospital_code', data.hospital_code);
       if (data.role_level) localStorage.setItem('role_level', data.role_level);
       if (data.role) localStorage.setItem('role', data.role);
@@ -79,8 +84,8 @@ function Login() {
       <aside className="auth-aside" aria-hidden="true">
         <div className="carousel-container">
           {slides.map((slide, index) => (
-            <div 
-              key={index} 
+            <div
+              key={index}
               className={`carousel-slide ${index === currentSlide ? 'active' : ''}`}
               style={{ backgroundImage: `url(${slide.image})` }}
             >
@@ -95,8 +100,8 @@ function Login() {
           ))}
           <div className="carousel-indicators">
             {slides.map((_, index) => (
-              <div 
-                key={index} 
+              <div
+                key={index}
                 className={`indicator ${index === currentSlide ? 'active' : ''}`}
                 onClick={() => setCurrentSlide(index)}
               />
@@ -153,8 +158,8 @@ function Login() {
                     onChange={handleChange}
                     required
                   />
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     className="toggle-eye"
                     onClick={() => setShowPassword(!showPassword)}
                   >

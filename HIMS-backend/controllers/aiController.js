@@ -66,7 +66,7 @@ CONSIDERATIONS:
 Return ONLY the JSON array without any additional text or explanation.`;
 
     // Call Ollama API
-    const ollamaResponse = await fetch('http://localhost:11434/api/generate', {
+    const ollamaResponse = await fetch('http://172.16.11.160:11434/api/generate', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

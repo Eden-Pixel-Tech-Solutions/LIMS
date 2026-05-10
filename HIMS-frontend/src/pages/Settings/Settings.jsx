@@ -16,7 +16,7 @@ function Settings() {
   const [newCategoryName, setNewCategoryName] = useState('');
   const [editDistrict, setEditDistrict] = useState(null);
   const [editDistrictName, setEditDistrictName] = useState('');
-  
+
   const roleLevel = localStorage.getItem('role_level') || 'Branch';
 
   const [form, setForm] = useState({
@@ -30,7 +30,8 @@ function Settings() {
     smtp_port: 587,
     smtp_user: '',
     smtp_pass: '',
-    smtp_from_name: 'HIMS Procurement'
+    smtp_from_name: 'HIMS Procurement',
+    registration_fee: 15.00
   });
 
   const fetchSettings = async () => {
@@ -50,7 +51,8 @@ function Settings() {
           smtp_port: data.data.smtp_port || 587,
           smtp_user: data.data.smtp_user || '',
           smtp_pass: data.data.smtp_pass || '',
-          smtp_from_name: data.data.smtp_from_name || 'HIMS Procurement'
+          smtp_from_name: data.data.smtp_from_name || 'HIMS Procurement',
+          registration_fee: data.data.registration_fee || 15.00
         });
       }
     } catch {
@@ -174,7 +176,7 @@ function Settings() {
   return (
     <div style={{ flex: 1, padding: '32px', overflowY: 'auto', background: 'var(--sys-bg)', fontFamily: 'Outfit, sans-serif' }}>
       {alert && <Alert type={alert.type} message={alert.message} onClose={hideAlert} />}
-      
+
       <div style={{ marginBottom: '24px' }}>
         <h1 style={{ fontSize: '28px', fontWeight: 700, margin: 0, color: 'var(--text-dark)' }}>System Settings</h1>
         <p style={{ fontSize: '14px', color: 'var(--text-soft)', marginTop: '4px' }}>Configure hospital-wide configurations and preferences.</p>
@@ -183,38 +185,38 @@ function Settings() {
       <div style={{ display: 'flex', gap: '24px' }}>
         {/* Settings Sidebar Tabs */}
         <div style={{ width: '250px', background: 'white', borderRadius: 'var(--radius-lg)', padding: '16px', boxShadow: 'var(--shadow-sm)', alignSelf: 'flex-start' }}>
-          <button 
+          <button
             onClick={() => setActiveTab('about')}
             style={{ width: '100%', textAlign: 'left', padding: '12px 16px', border: 'none', background: activeTab === 'about' ? 'var(--blue-pale)' : 'transparent', color: activeTab === 'about' ? 'var(--blue-primary)' : 'var(--text-mid)', fontWeight: 600, borderRadius: '8px', cursor: 'pointer', marginBottom: '8px', transition: 'all 0.2s' }}
           >
             🏢 About (Hospital Profile)
           </button>
-          <button 
+          <button
             onClick={() => setActiveTab('email')}
             style={{ width: '100%', textAlign: 'left', padding: '12px 16px', border: 'none', background: activeTab === 'email' ? 'var(--blue-pale)' : 'transparent', color: activeTab === 'email' ? 'var(--blue-primary)' : 'var(--text-mid)', fontWeight: 600, borderRadius: '8px', cursor: 'pointer', marginBottom: '8px', transition: 'all 0.2s' }}
           >
             📧 Email & SMTP
           </button>
-          <button 
+          <button
             onClick={() => setActiveTab('billing')}
             style={{ width: '100%', textAlign: 'left', padding: '12px 16px', border: 'none', background: activeTab === 'billing' ? 'var(--blue-pale)' : 'transparent', color: activeTab === 'billing' ? 'var(--blue-primary)' : 'var(--text-mid)', fontWeight: 600, borderRadius: '8px', cursor: 'pointer', marginBottom: '8px', transition: 'all 0.2s' }}
           >
             💳 Billing & Taxes
           </button>
-          <button 
+          <button
             onClick={() => setActiveTab('notifications')}
             style={{ width: '100%', textAlign: 'left', padding: '12px 16px', border: 'none', background: activeTab === 'notifications' ? 'var(--blue-pale)' : 'transparent', color: activeTab === 'notifications' ? 'var(--blue-primary)' : 'var(--text-mid)', fontWeight: 600, borderRadius: '8px', cursor: 'pointer', marginBottom: '8px', transition: 'all 0.2s' }}
           >
             🔔 Notifications
           </button>
-          <button 
+          <button
             onClick={() => setActiveTab('localization')}
             style={{ width: '100%', textAlign: 'left', padding: '12px 16px', border: 'none', background: activeTab === 'localization' ? 'var(--blue-pale)' : 'transparent', color: activeTab === 'localization' ? 'var(--blue-primary)' : 'var(--text-mid)', fontWeight: 600, borderRadius: '8px', cursor: 'pointer', marginBottom: '8px', transition: 'all 0.2s' }}
           >
             🌍 Localization
           </button>
           {(roleLevel === 'Central' || roleLevel === 'Sub-Central') && (
-            <button 
+            <button
               onClick={() => setActiveTab('facilities')}
               style={{ width: '100%', textAlign: 'left', padding: '12px 16px', border: 'none', background: activeTab === 'facilities' ? 'var(--blue-pale)' : 'transparent', color: activeTab === 'facilities' ? 'var(--blue-primary)' : 'var(--text-mid)', fontWeight: 600, borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s' }}
             >
@@ -228,25 +230,25 @@ function Settings() {
           {activeTab === 'about' && (
             <form onSubmit={handleSave}>
               <h2 style={{ fontSize: '20px', margin: '0 0 24px 0', borderBottom: '1px solid var(--border-light)', paddingBottom: '16px' }}>Hospital Profile Configuration</h2>
-              
+
               {loading ? (
                 <p>Loading settings...</p>
               ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-                  
+
                   {/* Left Column */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                     <div>
                       <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-label)', marginBottom: '8px' }}>Hospital Name *</label>
-                      <input 
-                        type="text" 
-                        required 
-                        value={form.hospital_name} 
-                        onChange={e => setForm({...form, hospital_name: e.target.value})}
+                      <input
+                        type="text"
+                        required
+                        value={form.hospital_name}
+                        onChange={e => setForm({ ...form, hospital_name: e.target.value })}
                         style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-light)', borderRadius: '6px', background: 'var(--bg-input)' }}
                       />
                     </div>
-                    
+
                     <div>
                       <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-label)', marginBottom: '8px' }}>Hospital Logo</label>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
@@ -256,8 +258,8 @@ function Settings() {
                           </div>
                         )}
                         <div style={{ flex: 1 }}>
-                          <input 
-                            type="file" 
+                          <input
+                            type="file"
                             accept="image/*"
                             onChange={handleLogoUpload}
                             style={{ width: '100%', padding: '8px', border: '1px dashed var(--border-light)', borderRadius: '6px', background: 'var(--bg-input)', cursor: 'pointer' }}
@@ -269,10 +271,10 @@ function Settings() {
 
                     <div>
                       <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-label)', marginBottom: '8px' }}>Official Email</label>
-                      <input 
-                        type="email" 
-                        value={form.email} 
-                        onChange={e => setForm({...form, email: e.target.value})}
+                      <input
+                        type="email"
+                        value={form.email}
+                        onChange={e => setForm({ ...form, email: e.target.value })}
                         style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-light)', borderRadius: '6px', background: 'var(--bg-input)' }}
                       />
                     </div>
@@ -282,30 +284,30 @@ function Settings() {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                     <div>
                       <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-label)', marginBottom: '8px' }}>Phone Number</label>
-                      <input 
-                        type="text" 
-                        value={form.phone} 
-                        onChange={e => setForm({...form, phone: e.target.value})}
+                      <input
+                        type="text"
+                        value={form.phone}
+                        onChange={e => setForm({ ...form, phone: e.target.value })}
                         style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-light)', borderRadius: '6px', background: 'var(--bg-input)' }}
                       />
                     </div>
 
                     <div>
                       <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-label)', marginBottom: '8px' }}>Website</label>
-                      <input 
-                        type="text" 
-                        value={form.website} 
-                        onChange={e => setForm({...form, website: e.target.value})}
+                      <input
+                        type="text"
+                        value={form.website}
+                        onChange={e => setForm({ ...form, website: e.target.value })}
                         style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-light)', borderRadius: '6px', background: 'var(--bg-input)' }}
                       />
                     </div>
 
                     <div>
                       <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-label)', marginBottom: '8px' }}>Full Address</label>
-                      <textarea 
+                      <textarea
                         rows="4"
-                        value={form.address} 
-                        onChange={e => setForm({...form, address: e.target.value})}
+                        value={form.address}
+                        onChange={e => setForm({ ...form, address: e.target.value })}
                         style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-light)', borderRadius: '6px', background: 'var(--bg-input)', resize: 'vertical' }}
                       />
                     </div>
@@ -314,8 +316,8 @@ function Settings() {
                 </div>
               )}
               <div style={{ marginTop: '32px', paddingTop: '24px', borderTop: '1px solid var(--border-light)', display: 'flex', justifyContent: 'flex-end' }}>
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   disabled={saving || loading}
                   style={{ background: 'var(--blue-primary)', color: 'white', padding: '10px 24px', border: 'none', borderRadius: '6px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
                 >
@@ -332,29 +334,29 @@ function Settings() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-label)', marginBottom: '8px' }}>SMTP Host</label>
-                  <input type="text" placeholder="smtp.gmail.com" value={form.smtp_host} onChange={e => setForm({...form, smtp_host: e.target.value})}
+                  <input type="text" placeholder="smtp.gmail.com" value={form.smtp_host} onChange={e => setForm({ ...form, smtp_host: e.target.value })}
                     style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-light)', borderRadius: '6px', background: 'var(--bg-input)' }} />
                 </div>
                 <div>
                   <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-label)', marginBottom: '8px' }}>SMTP Port</label>
-                  <input type="number" placeholder="587" value={form.smtp_port} onChange={e => setForm({...form, smtp_port: e.target.value})}
+                  <input type="number" placeholder="587" value={form.smtp_port} onChange={e => setForm({ ...form, smtp_port: e.target.value })}
                     style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-light)', borderRadius: '6px', background: 'var(--bg-input)' }} />
                   <small style={{ color: 'var(--text-soft)' }}>Use 587 for TLS, 465 for SSL</small>
                 </div>
                 <div>
                   <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-label)', marginBottom: '8px' }}>SMTP Username (Email)</label>
-                  <input type="text" placeholder="yourmail@gmail.com" value={form.smtp_user} onChange={e => setForm({...form, smtp_user: e.target.value})}
+                  <input type="text" placeholder="yourmail@gmail.com" value={form.smtp_user} onChange={e => setForm({ ...form, smtp_user: e.target.value })}
                     style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-light)', borderRadius: '6px', background: 'var(--bg-input)' }} />
                 </div>
                 <div>
                   <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-label)', marginBottom: '8px' }}>SMTP Password / App Password</label>
-                  <input type="password" placeholder="••••••••••••" value={form.smtp_pass} onChange={e => setForm({...form, smtp_pass: e.target.value})}
+                  <input type="password" placeholder="••••••••••••" value={form.smtp_pass} onChange={e => setForm({ ...form, smtp_pass: e.target.value })}
                     style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-light)', borderRadius: '6px', background: 'var(--bg-input)' }} />
                   <small style={{ color: 'var(--text-soft)' }}>For Gmail: use an App Password, not your login password</small>
                 </div>
                 <div style={{ gridColumn: '1 / -1' }}>
                   <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-label)', marginBottom: '8px' }}>From Display Name</label>
-                  <input type="text" placeholder="HIMS Procurement" value={form.smtp_from_name} onChange={e => setForm({...form, smtp_from_name: e.target.value})}
+                  <input type="text" placeholder="HIMS Procurement" value={form.smtp_from_name} onChange={e => setForm({ ...form, smtp_from_name: e.target.value })}
                     style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-light)', borderRadius: '6px', background: 'var(--bg-input)' }} />
                   <small style={{ color: 'var(--text-soft)' }}>This name appears as the sender in vendor emails</small>
                 </div>
@@ -374,7 +376,7 @@ function Settings() {
           {activeTab === 'facilities' && (roleLevel === 'Central' || roleLevel === 'Sub-Central') && (
             <div>
               <h2 style={{ fontSize: '20px', margin: '0 0 24px 0', borderBottom: '1px solid var(--border-light)', paddingBottom: '16px' }}>Facility & Network Setup</h2>
-              
+
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
                 {/* Categories */}
                 <div>
@@ -426,10 +428,10 @@ function Settings() {
             <div>
               <h2 style={{ fontSize: '20px', margin: '0 0 8px 0', borderBottom: '1px solid var(--border-light)', paddingBottom: '16px' }}>System Language & Localization</h2>
               <p style={{ fontSize: '13px', color: 'var(--text-soft)', marginBottom: '24px' }}>Choose your preferred language. The system will automatically translate the entire interface.</p>
-              
+
               <div style={{ maxWidth: '400px' }}>
                 <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-label)', marginBottom: '8px' }}>Select Display Language</label>
-                <select 
+                <select
                   className="notranslate"
                   style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-light)', borderRadius: '6px', background: 'var(--bg-input)', fontSize: '14px' }}
                   onChange={(e) => {
@@ -472,7 +474,38 @@ function Settings() {
             </div>
           )}
 
-          {activeTab !== 'about' && activeTab !== 'email' && activeTab !== 'facilities' && activeTab !== 'localization' && (
+          {activeTab === 'billing' && (
+            <form onSubmit={handleSave}>
+              <h2 style={{ fontSize: '20px', margin: '0 0 8px 0', borderBottom: '1px solid var(--border-light)', paddingBottom: '16px' }}>Billing & Financial Settings</h2>
+              <p style={{ fontSize: '13px', color: 'var(--text-soft)', marginBottom: '24px' }}>Configure default fees and billing-related parameters.</p>
+
+              <div style={{ maxWidth: '400px' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-label)', marginBottom: '8px' }}>Patient Registration Fee (₹)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  required
+                  value={form.registration_fee}
+                  onChange={e => setForm({ ...form, registration_fee: e.target.value ? parseFloat(e.target.value) : '' })}
+                  style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-light)', borderRadius: '6px', background: 'var(--bg-input)' }}
+                />
+                <small style={{ color: 'var(--text-soft)', marginTop: '4px', display: 'block' }}>This fee is automatically applied in the Billing tab for new patient registrations.</small>
+              </div>
+
+              <div style={{ marginTop: '32px', paddingTop: '24px', borderTop: '1px solid var(--border-light)', display: 'flex', justifyContent: 'flex-end' }}>
+                <button
+                  type="submit"
+                  disabled={saving || loading}
+                  style={{ background: 'var(--blue-primary)', color: 'white', padding: '10px 24px', border: 'none', borderRadius: '6px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
+                >
+                  {saving ? 'Saving...' : 'Save Settings'}
+                </button>
+              </div>
+            </form>
+          )}
+
+          {activeTab !== 'about' && activeTab !== 'email' && activeTab !== 'facilities' && activeTab !== 'localization' && activeTab !== 'billing' && (
             <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--text-soft)' }}>
               <h3>Module Under Construction</h3>
               <p>Additional configuration options will be available soon.</p>

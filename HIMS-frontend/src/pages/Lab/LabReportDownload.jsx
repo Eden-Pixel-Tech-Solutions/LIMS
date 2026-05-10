@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import '../../assets/CSS/LabReportDownload.css';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://172.16.11.160:5000';
 
 const LabReportDownload = () => {
   const [reports, setReports] = useState([]);
@@ -355,7 +355,7 @@ const LabReportDownload = () => {
                     <span className="info-value">{reportDetails.patient_name}</span>
                   </div>
                   <div className="info-row">
-                    <span className="info-label">Registration No</span>
+                    <span className="info-label">CRN No</span>
                     <span className="info-value">{reportDetails.patient_reg_no}</span>
                   </div>
                   <div className="info-row">

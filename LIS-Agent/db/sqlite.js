@@ -19,7 +19,31 @@ db.serialize(() => {
       manufacturer TEXT
     )
   `);
+  db.run(`
+    CREATE TABLE IF NOT EXISTS settings (
+      key TEXT PRIMARY KEY,
+      value TEXT
+    )
+  `);
 });
+
+function saveSetting(key, value) {
+  return new Promise((resolve, reject) => {
+    db.run(`INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)`, [key, value], (err) => {
+      if (err) reject(err);
+      else resolve(true);
+    });
+  });
+}
+
+function getSetting(key) {
+  return new Promise((resolve, reject) => {
+    db.get(`SELECT value FROM settings WHERE key = ?`, [key], (err, row) => {
+      if (err) reject(err);
+      else resolve(row ? row.value : null);
+    });
+  });
+}
 
 function saveConfig(config) {
   return new Promise((resolve, reject) => {
@@ -65,4 +89,4 @@ function deleteConfig(id) {
   });
 }
 
-module.exports = { saveConfig, getConfig, deleteConfig };
+module.exports = { saveConfig, getConfig, deleteConfig, saveSetting, getSetting };

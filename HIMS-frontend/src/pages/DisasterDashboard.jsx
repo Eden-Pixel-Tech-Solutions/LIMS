@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import SummaryCards from '../components/DisasterDashboard/SummaryCards';
 import MapChart from '../components/DisasterDashboard/MapChart';
 import DistrictList from '../components/DisasterDashboard/DistrictList';
@@ -11,10 +11,39 @@ import '../assets/CSS/DisasterDashboard.css';
 const DisasterDashboard = () => {
   const [timeFilter, setTimeFilter] = useState('7D');
   const [selectedDistrict, setSelectedDistrict] = useState(null);
+  const [surveillanceData, setSurveillanceData] = useState([]);
+  const [alerts, setAlerts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const API_URL = import.meta.env.VITE_API_URL || 'http://172.16.11.160:7005';
+
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const [survRes, alertRes] = await Promise.all([
+        fetch(`${API_URL}/api/disaster/surveillance?timeFilter=${timeFilter}`),
+        fetch(`${API_URL}/api/disaster/alerts`)
+      ]);
+
+      const survData = await survRes.json();
+      const alertData = await alertRes.json();
+
+      if (survData.success) setSurveillanceData(survData.data);
+      if (alertData.success) setAlerts(alertData.data);
+    } catch (error) {
+      console.error('Error fetching disaster data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, [timeFilter]);
 
   return (
     <div className="disaster-page">
-      
+
       {/* Header Section */}
       <header className="disaster-header">
         <div className="header-left">
@@ -26,13 +55,13 @@ const DisasterDashboard = () => {
             <p>State Level Monitoring • Jharkhand Health Department</p>
           </div>
         </div>
-        
+
         <div className="header-actions">
           <div className="time-filters">
             {['Today', '3 Days', '7 Days'].map((label, idx) => {
               const id = ['1D', '3D', '7D'][idx];
               return (
-                <button 
+                <button
                   key={id}
                   onClick={() => setTimeFilter(id)}
                   className={`btn-filter ${timeFilter === id ? 'active' : ''}`}
@@ -50,31 +79,31 @@ const DisasterDashboard = () => {
 
       {/* Main Layout */}
       <main className="disaster-main">
-        
+
         {/* Main Column */}
         <div className="main-content">
-          <SummaryCards />
-          
+          <SummaryCards data={surveillanceData} />
+
           <div className="map-district-grid">
             <div className="map-card">
               <div className="map-header">
                 <h3>Geospatial Risk Heatmap</h3>
                 <div className="map-legend">
-                   <div className="legend-item"><div className="legend-dot dot-high"></div> HIGH RISK</div>
-                   <div className="legend-item"><div className="legend-dot dot-med"></div> MEDIUM</div>
-                   <div className="legend-item"><div className="legend-dot dot-low"></div> STABLE</div>
+                  <div className="legend-item"><div className="legend-dot dot-high"></div> HIGH RISK</div>
+                  <div className="legend-item"><div className="legend-dot dot-med"></div> MEDIUM</div>
+                  <div className="legend-item"><div className="legend-dot dot-low"></div> STABLE</div>
                 </div>
               </div>
               <div className="map-container">
-                <MapChart onDistrictClick={setSelectedDistrict} />
+                <MapChart data={surveillanceData} onDistrictClick={setSelectedDistrict} />
               </div>
             </div>
             <div>
-              <DistrictList />
+              <DistrictList data={surveillanceData} />
             </div>
           </div>
 
-          <Charts />
+          <Charts data={surveillanceData} />
         </div>
 
         {/* Sidebar Column */}
@@ -89,15 +118,15 @@ const DisasterDashboard = () => {
             </p>
           </div>
 
-          <AlertPanel />
+          <AlertPanel alerts={alerts} />
         </div>
       </main>
 
       {/* Drill Down Portal */}
       {selectedDistrict && (
-        <DrillDownModal 
-          district={selectedDistrict} 
-          onClose={() => setSelectedDistrict(null)} 
+        <DrillDownModal
+          district={selectedDistrict}
+          onClose={() => setSelectedDistrict(null)}
         />
       )}
 

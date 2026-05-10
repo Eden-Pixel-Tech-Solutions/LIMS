@@ -16,20 +16,20 @@ export const getSettings = async (req, res) => {
 
 export const updateSettings = async (req, res) => {
   try {
-    const { hospital_name, logo_url, address, phone, website, email, smtp_host, smtp_port, smtp_user, smtp_pass, smtp_from_name } = req.body;
+    const { hospital_name, logo_url, address, phone, website, email, smtp_host, smtp_port, smtp_user, smtp_pass, smtp_from_name, registration_fee } = req.body;
     
     const [existing] = await db.query(`SELECT id FROM hospital_settings LIMIT 1`);
     if (existing.length > 0) {
       await db.query(
         `UPDATE hospital_settings SET hospital_name=?, logo_url=?, address=?, phone=?, website=?, email=?,
-         smtp_host=?, smtp_port=?, smtp_user=?, smtp_pass=?, smtp_from_name=? WHERE id=?`,
+         smtp_host=?, smtp_port=?, smtp_user=?, smtp_pass=?, smtp_from_name=?, registration_fee=? WHERE id=?`,
         [hospital_name, logo_url, address, phone, website, email,
-         smtp_host, smtp_port || 587, smtp_user, smtp_pass, smtp_from_name, existing[0].id]
+         smtp_host, smtp_port || 587, smtp_user, smtp_pass, smtp_from_name, registration_fee || 15.00, existing[0].id]
       );
     } else {
       await db.query(
-        `INSERT INTO hospital_settings (hospital_name, logo_url, address, phone, website, email, smtp_host, smtp_port, smtp_user, smtp_pass, smtp_from_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [hospital_name, logo_url, address, phone, website, email, smtp_host, smtp_port || 587, smtp_user, smtp_pass, smtp_from_name]
+        `INSERT INTO hospital_settings (hospital_name, logo_url, address, phone, website, email, smtp_host, smtp_port, smtp_user, smtp_pass, smtp_from_name, registration_fee) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [hospital_name, logo_url, address, phone, website, email, smtp_host, smtp_port || 587, smtp_user, smtp_pass, smtp_from_name, registration_fee || 15.00]
       );
     }
     

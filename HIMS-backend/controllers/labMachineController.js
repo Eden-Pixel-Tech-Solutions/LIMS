@@ -15,6 +15,53 @@ export const getLabMachines = async (req, res) => {
   }
 };
 
+// Get network machines for dashboard (grouped by branch)
+export const getNetworkMachines = async (req, res) => {
+  try {
+    const query = `
+      SELECT
+        i.name AS branchName,
+        lm.id AS db_id,
+        lm.machine_id AS id,
+        CONCAT(lm.manufacturer, ' ', lm.model) AS name,
+        lm.model AS type,
+        lm.status AS status,
+        lm.serial_number,
+        (
+          SELECT COUNT(*) FROM lab_test_result ltr
+          WHERE ltr.machine_no = lm.machine_id
+          AND ltr.tested_at >= NOW() - INTERVAL 1 DAY
+        ) AS testsDone
+      FROM lab_machines lm
+      LEFT JOIN infrastructure i ON lm.lab_id = i.id
+      ORDER BY i.name ASC, lm.machine_id ASC
+    `;
+    const [rows] = await db.query(query);
+
+    // Group by branchName
+    const grouped = rows.reduce((acc, curr) => {
+      let branch = acc.find(b => b.branchName === curr.branchName);
+      if (!branch) {
+        branch = { branchName: curr.branchName || 'Unassigned Lab', machines: [] };
+        acc.push(branch);
+      }
+      branch.machines.push({
+        id: curr.id || curr.serial_number,
+        name: curr.name,
+        type: curr.type || 'Unknown Analyzer',
+        status: curr.status || 'Offline',
+        testsDone: curr.testsDone || 0
+      });
+      return acc;
+    }, []);
+
+    res.json({ success: true, data: grouped });
+  } catch (error) {
+    console.error('Error fetching network machines:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
 // Get machine by Serial Number
 export const getMachineBySerial = async (req, res) => {
   try {

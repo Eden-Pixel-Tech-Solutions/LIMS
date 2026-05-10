@@ -27,6 +27,7 @@ import settingsRoutes from './routes/settingsRoutes.js';
 import branchRoutes from './routes/branchRoutes.js';
 import inventoryNetworkRoutes from './routes/inventoryNetworkRoutes.js';
 import hl7Routes from './routes/hl7Routes.js';
+import disasterRoutes from './routes/disasterRoutes.js';
 import db from './config/db.js';
 
 dotenv.config();
@@ -71,6 +72,7 @@ app.use('/api/settings', settingsRoutes);
 app.use('/api/branches', branchRoutes);
 app.use('/api/inventory-network', inventoryNetworkRoutes);
 app.use('/api/hl7', hl7Routes);
+app.use('/api/disaster', disasterRoutes);
 
 // Health check route
 app.get('/', (req, res) => {

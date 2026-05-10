@@ -16,6 +16,7 @@ function InventoryItemMaster() {
   const [categoryFilter, setCategoryFilter] = useState('');
 
   const initialFormState = {
+    item_code: '',
     item_name: '',
     category: 'Consumable',
     unit: 'pcs',
@@ -35,7 +36,7 @@ function InventoryItemMaster() {
       const params = new URLSearchParams();
       if (searchQuery) params.append('search', searchQuery);
       if (categoryFilter) params.append('category', categoryFilter);
-      
+
       const response = await fetch(`${API_URL}/api/v2/inventory/items?${params}`);
       const data = await response.json();
       if (data.success) {
@@ -72,7 +73,7 @@ function InventoryItemMaster() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const url = editingItem 
+      const url = editingItem
         ? `${API_URL}/api/v2/inventory/items/${editingItem.id}`
         : `${API_URL}/api/v2/inventory/items`;
       const method = editingItem ? 'PUT' : 'POST';
@@ -106,7 +107,7 @@ function InventoryItemMaster() {
 
   const handleDelete = async (id) => {
     if (!confirm('Are you sure you want to remove this item?')) return;
-    
+
     try {
       const response = await fetch(`${API_URL}/api/v2/inventory/items/${id}`, {
         method: 'DELETE'
@@ -126,6 +127,7 @@ function InventoryItemMaster() {
   const handleEdit = (item) => {
     setEditingItem(item);
     setFormData({
+      item_code: item.item_code,
       item_name: item.item_name,
       category: item.category,
       unit: item.unit,
@@ -181,15 +183,15 @@ function InventoryItemMaster() {
   return (
     <div className="inv-vendor-page">
       {alert && <Alert type={alert.type} message={alert.message} onClose={hideAlert} />}
-      
+
       <div className="inv-header">
         <div>
           <h1 className="inv-title">Item Master Catalog</h1>
           <p className="inv-subtitle">Manage hospital consumables, reagents, and equipment</p>
         </div>
         <div style={{ display: 'flex', gap: '10px' }}>
-          <button 
-            className="btn-primary" 
+          <button
+            className="btn-primary"
             onClick={handleExportCSV}
             style={{ background: '#10b981', borderColor: '#10b981' }}
           >
@@ -207,16 +209,16 @@ function InventoryItemMaster() {
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-soft)" strokeWidth="2">
               <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
             </svg>
-            <input 
-              type="text" 
-              placeholder="Search items by name, code..." 
+            <input
+              type="text"
+              placeholder="Search items by name, code..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </form>
-          
-          <select 
-            className="inv-select" 
+
+          <select
+            className="inv-select"
             style={{ width: '200px', background: 'var(--bg-white)' }}
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
@@ -245,14 +247,14 @@ function InventoryItemMaster() {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan="12" style={{textAlign: 'center'}}>Loading items...</td></tr>
+              <tr><td colSpan="12" style={{ textAlign: 'center' }}>Loading items...</td></tr>
             ) : items.length === 0 ? (
-              <tr><td colSpan="12" style={{textAlign: 'center'}}>No items found.</td></tr>
+              <tr><td colSpan="12" style={{ textAlign: 'center' }}>No items found.</td></tr>
             ) : (
               items.map(item => (
                 <tr key={item.id}>
                   <td><strong>{item.item_code}</strong></td>
-                  <td style={{fontWeight: 600, color: 'var(--text-dark)'}}>{item.item_name}</td>
+                  <td style={{ fontWeight: 600, color: 'var(--text-dark)' }}>{item.item_name}</td>
                   <td>
                     <span style={{
                       padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 600,
@@ -265,17 +267,17 @@ function InventoryItemMaster() {
                   <td>{item.unit}</td>
                   <td>
                     {item.default_vendor_name ? (
-                      <span style={{color: 'var(--text-dark)', fontWeight: 500}}>
+                      <span style={{ color: 'var(--text-dark)', fontWeight: 500 }}>
                         {item.default_vendor_name}
                       </span>
                     ) : (
-                      <span style={{color: 'var(--text-soft)', fontStyle: 'italic', fontSize: '12px'}}>
+                      <span style={{ color: 'var(--text-soft)', fontStyle: 'italic', fontSize: '12px' }}>
                         Not Assigned
                       </span>
                     )}
                   </td>
-                  <td style={{fontWeight: 600, color: 'var(--text-dark)'}}>
-                    ₹{parseFloat(item.unit_price || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}
+                  <td style={{ fontWeight: 600, color: 'var(--text-dark)' }}>
+                    ₹{parseFloat(item.unit_price || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                   </td>
                   <td>
                     <span style={{
@@ -286,8 +288,8 @@ function InventoryItemMaster() {
                     </span>
                   </td>
                   <td>
-                    <div style={{color: 'var(--text-dark)'}}>{item.min_stock_level} {item.unit}</div>
-                    <div style={{fontSize: '11px', color: 'var(--text-soft)'}}>Reorder at: {item.reorder_level}</div>
+                    <div style={{ color: 'var(--text-dark)' }}>{item.min_stock_level} {item.unit}</div>
+                    <div style={{ fontSize: '11px', color: 'var(--text-soft)' }}>Reorder at: {item.reorder_level}</div>
                   </td>
                   <td>
                     <span className={`inv-badge ${item.status.toLowerCase()}`}>
@@ -298,7 +300,7 @@ function InventoryItemMaster() {
                     <button className="action-btn" onClick={() => handleEdit(item)} title="Edit">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                     </button>
-                    <button className="action-btn" onClick={() => handleDelete(item.id)} title="Delete" style={{marginLeft: '8px'}}>
+                    <button className="action-btn" onClick={() => handleDelete(item.id)} title="Delete" style={{ marginLeft: '8px' }}>
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                     </button>
                   </td>
@@ -319,17 +321,23 @@ function InventoryItemMaster() {
             </div>
             <div className="inv-drawer-body">
               <form id="item-form" onSubmit={handleSubmit}>
-                
-                <h4 style={{marginBottom: '12px', color: 'var(--text-dark)'}}>Basic Information</h4>
-                <div className="inv-form-group">
-                  <label>Item Name *</label>
-                  <input className="inv-input" required value={formData.item_name} onChange={e => setFormData({...formData, item_name: e.target.value})} placeholder="e.g., EDTA Tube" />
+
+                <h4 style={{ marginBottom: '12px', color: 'var(--text-dark)' }}>Basic Information</h4>
+                <div className="inv-grid-2">
+                  <div className="inv-form-group">
+                    <label>Item Code (Auto if blank)</label>
+                    <input className="inv-input" value={formData.item_code} onChange={e => setFormData({ ...formData, item_code: e.target.value })} placeholder="e.g., REAG-001" />
+                  </div>
+                  <div className="inv-form-group">
+                    <label>Item Name *</label>
+                    <input className="inv-input" required value={formData.item_name} onChange={e => setFormData({ ...formData, item_name: e.target.value })} placeholder="e.g., EDTA Tube" />
+                  </div>
                 </div>
-                
+
                 <div className="inv-grid-2">
                   <div className="inv-form-group">
                     <label>Category *</label>
-                    <select className="inv-select" required value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})}>
+                    <select className="inv-select" required value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })}>
                       <option value="Consumable">Consumable</option>
                       <option value="Reagent">Reagent</option>
                       <option value="Equipment">Equipment</option>
@@ -337,18 +345,18 @@ function InventoryItemMaster() {
                   </div>
                   <div className="inv-form-group">
                     <label>Unit of Measure *</label>
-                    <input className="inv-input" required value={formData.unit} onChange={e => setFormData({...formData, unit: e.target.value})} placeholder="e.g., pcs, box, ml" />
+                    <input className="inv-input" required value={formData.unit} onChange={e => setFormData({ ...formData, unit: e.target.value })} placeholder="e.g., pcs, box, ml" />
                   </div>
                 </div>
 
-                <h4 style={{marginTop: '24px', marginBottom: '12px', color: 'var(--text-dark)'}}>Procurement Settings</h4>
+                <h4 style={{ marginTop: '24px', marginBottom: '12px', color: 'var(--text-dark)' }}>Procurement Settings</h4>
                 <div className="inv-grid-2">
                   <div className="inv-form-group">
                     <label>Default Vendor</label>
-                    <select 
-                      className="inv-select" 
-                      value={formData.default_vendor_id} 
-                      onChange={e => setFormData({...formData, default_vendor_id: e.target.value})}
+                    <select
+                      className="inv-select"
+                      value={formData.default_vendor_id}
+                      onChange={e => setFormData({ ...formData, default_vendor_id: e.target.value })}
                     >
                       <option value="">Select a preferred vendor...</option>
                       {vendors.map(vendor => (
@@ -360,51 +368,51 @@ function InventoryItemMaster() {
                   </div>
                   <div className="inv-form-group">
                     <label>Per Unit Price (₹)</label>
-                    <input 
-                      className="inv-input" 
-                      type="number" 
-                      step="0.01" 
-                      min="0" 
-                      value={formData.unit_price} 
-                      onChange={e => setFormData({...formData, unit_price: e.target.value})} 
+                    <input
+                      className="inv-input"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={formData.unit_price}
+                      onChange={e => setFormData({ ...formData, unit_price: e.target.value })}
                       placeholder="e.g., 45.00"
                     />
                   </div>
                 </div>
-                <p style={{fontSize: '11px', color: 'var(--text-soft)', marginTop: '-8px', marginBottom: '16px'}}>
+                <p style={{ fontSize: '11px', color: 'var(--text-soft)', marginTop: '-8px', marginBottom: '16px' }}>
                   Standard price used for automated purchase orders and financial tracking.
                 </p>
 
-                <h4 style={{marginTop: '24px', marginBottom: '12px', color: 'var(--text-dark)'}}>Inventory Controls</h4>
+                <h4 style={{ marginTop: '24px', marginBottom: '12px', color: 'var(--text-dark)' }}>Inventory Controls</h4>
                 <div className="inv-grid-2">
                   <div className="inv-form-group">
                     <label>Minimum Stock Level</label>
-                    <input className="inv-input" type="number" min="0" value={formData.min_stock_level} onChange={e => setFormData({...formData, min_stock_level: e.target.value})} />
+                    <input className="inv-input" type="number" min="0" value={formData.min_stock_level} onChange={e => setFormData({ ...formData, min_stock_level: e.target.value })} />
                   </div>
                   <div className="inv-form-group">
                     <label>Reorder Level</label>
-                    <input className="inv-input" type="number" min="0" value={formData.reorder_level} onChange={e => setFormData({...formData, reorder_level: e.target.value})} />
+                    <input className="inv-input" type="number" min="0" value={formData.reorder_level} onChange={e => setFormData({ ...formData, reorder_level: e.target.value })} />
                   </div>
                 </div>
 
-                <div className="inv-form-group" style={{marginTop: '16px'}}>
+                <div className="inv-form-group" style={{ marginTop: '16px' }}>
                   <label>Max Delivery Days (Lead Time)</label>
-                  <input 
-                    className="inv-input" 
-                    type="number" 
-                    min="1" 
-                    value={formData.delivery_lead_time_days} 
-                    onChange={e => setFormData({...formData, delivery_lead_time_days: e.target.value})} 
+                  <input
+                    className="inv-input"
+                    type="number"
+                    min="1"
+                    value={formData.delivery_lead_time_days}
+                    onChange={e => setFormData({ ...formData, delivery_lead_time_days: e.target.value })}
                   />
-                  <p style={{fontSize: '11px', color: 'var(--text-soft)', marginTop: '4px'}}>
+                  <p style={{ fontSize: '11px', color: 'var(--text-soft)', marginTop: '4px' }}>
                     Estimated days for delivery after placing a purchase order.
                   </p>
                 </div>
 
-                <h4 style={{marginTop: '24px', marginBottom: '12px', color: 'var(--text-dark)'}}>System Status</h4>
+                <h4 style={{ marginTop: '24px', marginBottom: '12px', color: 'var(--text-dark)' }}>System Status</h4>
                 <div className="inv-form-group">
                   <label>Item Status</label>
-                  <select className="inv-select" value={formData.status} onChange={e => setFormData({...formData, status: e.target.value})}>
+                  <select className="inv-select" value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value })}>
                     <option value="Active">Active</option>
                     <option value="Inactive">Inactive</option>
                   </select>
@@ -413,7 +421,7 @@ function InventoryItemMaster() {
               </form>
             </div>
             <div className="inv-drawer-footer">
-              <button type="button" className="action-btn" onClick={() => setIsDrawerOpen(false)} style={{padding: '10px 20px', color: 'var(--text-mid)'}}>Cancel</button>
+              <button type="button" className="action-btn" onClick={() => setIsDrawerOpen(false)} style={{ padding: '10px 20px', color: 'var(--text-mid)' }}>Cancel</button>
               <button type="submit" form="item-form" className="btn-primary">
                 {editingItem ? 'Save Changes' : 'Create Item'}
               </button>

@@ -28,13 +28,13 @@ function InventoryDashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  if (loading) return <div style={{padding: '40px', textAlign: 'center'}}>Loading Smart Analytics...</div>;
-  if (!data) return <div style={{padding: '40px', textAlign: 'center'}}>Failed to load dashboard.</div>;
+  if (loading) return <div style={{ padding: '40px', textAlign: 'center' }}>Loading Smart Analytics...</div>;
+  if (!data) return <div style={{ padding: '40px', textAlign: 'center' }}>Failed to load dashboard.</div>;
 
   return (
     <div className="inv-vendor-page">
       {alert && <Alert type={alert.type} message={alert.message} onClose={hideAlert} />}
-      
+
       <div className="inv-header">
         <div>
           <h1 className="inv-title">Smart Consumption Analytics</h1>
@@ -64,9 +64,9 @@ function InventoryDashboard() {
       <div className="inv-grid-2" style={{ gridTemplateColumns: 'repeat(4, 1fr)', marginTop: '24px' }}>
         <div className="inv-card" style={{ textAlign: 'center', padding: '24px 15px' }}>
           <div style={{ fontSize: '13px', color: 'var(--text-soft)', textTransform: 'uppercase', letterSpacing: '1px' }}>Total Available Stock</div>
-          <div style={{ fontSize: '28px', fontWeight: 700, color: 'var(--text-dark)', marginTop: '8px' }}>{data.total_value.toLocaleString()} <span style={{fontSize: '16px'}}>Units</span></div>
+          <div style={{ fontSize: '28px', fontWeight: 700, color: 'var(--text-dark)', marginTop: '8px' }}>{data.total_value.toLocaleString()} <span style={{ fontSize: '16px' }}>Units</span></div>
         </div>
-        
+
         <div className="inv-card" style={{ textAlign: 'center', padding: '24px 15px' }}>
           <div style={{ fontSize: '13px', color: 'var(--text-soft)', textTransform: 'uppercase', letterSpacing: '1px' }}>Weekly Trend</div>
           <div style={{ fontSize: '28px', fontWeight: 700, color: data.trend.percentage > 0 ? '#dc2626' : '#059669', marginTop: '8px' }}>
@@ -87,7 +87,7 @@ function InventoryDashboard() {
       </div>
 
       <div className="inv-grid-2" style={{ marginTop: '24px' }}>
-        
+
         {/* Test-wise Consumption */}
         <div className="inv-card" style={{ padding: '0' }}>
           <div style={{ padding: '20px', borderBottom: '1px solid var(--border-light)' }}>

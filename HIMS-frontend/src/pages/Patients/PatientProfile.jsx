@@ -96,7 +96,7 @@ function PatientProfile() {
             <h2 className="section-title">Registration Details</h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px' }}>
               <div className="info-field">
-                <label>Registration Number</label>
+                <label>CRN No</label>
                 <div className="value">{profile.reg_no || '-'}</div>
               </div>
               <div className="info-field">

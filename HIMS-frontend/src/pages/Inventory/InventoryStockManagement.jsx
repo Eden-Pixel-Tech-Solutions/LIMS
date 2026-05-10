@@ -13,7 +13,7 @@ function InventoryStockManagement() {
   const [items, setItems] = useState([]);
   const [vendors, setVendors] = useState([]);
   const [branches, setBranches] = useState([]);
-  
+
   const [loading, setLoading] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [editingBatch, setEditingBatch] = useState(null);
@@ -41,7 +41,7 @@ function InventoryStockManagement() {
       if (searchQuery) params.append('search', searchQuery);
       if (statusFilter) params.append('status', statusFilter);
       if (branchFilter) params.append('branch_id', branchFilter);
-      
+
       const url = appendBranchContext(`/api/inventory/batches?${params}`);
       const response = await fetch(`${API_URL}${url}`);
       const data = await response.json();
@@ -59,12 +59,12 @@ function InventoryStockManagement() {
       const [itemsRes, vendorsRes, branchesRes] = await Promise.all([
         fetch(`${API_URL}/api/v2/inventory/items`),
         fetch(`${API_URL}/api/v2/inventory/vendors`),
-        fetch(`${API_URL}/api/branches`) 
+        fetch(`${API_URL}/api/branches`)
       ]);
       const itemsData = await itemsRes.json();
       const vendorsData = await vendorsRes.json();
       const branchesData = await branchesRes.json();
-      
+
       if (itemsData.success) setItems(itemsData.data);
       if (vendorsData.success) setVendors(vendorsData.data);
       if (branchesData.success) {
@@ -94,7 +94,7 @@ function InventoryStockManagement() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const url = editingBatch 
+      const url = editingBatch
         ? `${API_URL}/api/v2/inventory/batches/${editingBatch.id}`
         : `${API_URL}/api/v2/inventory/batches`;
       const method = editingBatch ? 'PUT' : 'POST';
@@ -128,7 +128,7 @@ function InventoryStockManagement() {
 
   const handleDelete = async (id) => {
     if (!confirm('Are you sure you want to remove this batch?')) return;
-    
+
     try {
       const response = await fetch(`${API_URL}/api/v2/inventory/batches/${id}`, {
         method: 'DELETE'
@@ -200,15 +200,15 @@ function InventoryStockManagement() {
   return (
     <div className="inv-vendor-page">
       {alert && <Alert type={alert.type} message={alert.message} onClose={hideAlert} />}
-      
+
       <div className="inv-header">
         <div>
           <h1 className="inv-title">Batch & Stock Management</h1>
           <p className="inv-subtitle">Track multiple batches, expiry dates, and current stock</p>
         </div>
         <div style={{ display: 'flex', gap: '10px' }}>
-          <button 
-            className="btn-primary" 
+          <button
+            className="btn-primary"
             onClick={handleExportCSV}
             style={{ background: '#10b981', borderColor: '#10b981' }}
           >
@@ -221,22 +221,22 @@ function InventoryStockManagement() {
       </div>
 
       <div className="inv-card">
-        <div className="inv-toolbar" style={{flexWrap: 'wrap'}}>
+        <div className="inv-toolbar" style={{ flexWrap: 'wrap' }}>
           <form className="inv-search" onSubmit={handleSearch}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-soft)" strokeWidth="2">
               <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
             </svg>
-            <input 
-              type="text" 
-              placeholder="Search batches..." 
+            <input
+              type="text"
+              placeholder="Search batches..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </form>
-          
-          <div style={{display: 'flex', gap: '10px'}}>
-            <select 
-              className="inv-select" 
+
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <select
+              className="inv-select"
               style={{ width: '180px', background: 'var(--bg-white)' }}
               value={branchFilter}
               onChange={(e) => setBranchFilter(e.target.value)}
@@ -247,8 +247,8 @@ function InventoryStockManagement() {
               ))}
             </select>
 
-            <select 
-              className="inv-select" 
+            <select
+              className="inv-select"
               style={{ width: '160px', background: 'var(--bg-white)' }}
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
@@ -277,18 +277,18 @@ function InventoryStockManagement() {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan="7" style={{textAlign: 'center'}}>Loading batches...</td></tr>
+              <tr><td colSpan="7" style={{ textAlign: 'center' }}>Loading batches...</td></tr>
             ) : batches.length === 0 ? (
-              <tr><td colSpan="7" style={{textAlign: 'center'}}>No batches found.</td></tr>
+              <tr><td colSpan="7" style={{ textAlign: 'center' }}>No batches found.</td></tr>
             ) : (
               batches.map(batch => (
                 <tr key={batch.id}>
                   <td>
-                    <div style={{fontWeight: 600, color: 'var(--text-dark)'}}>{batch.item_name}</div>
-                    <div style={{fontSize: '12px', color: 'var(--text-soft)'}}>{batch.item_code} • {batch.category}</div>
+                    <div style={{ fontWeight: 600, color: 'var(--text-dark)' }}>{batch.item_name}</div>
+                    <div style={{ fontSize: '12px', color: 'var(--text-soft)' }}>{batch.item_code} • {batch.category}</div>
                   </td>
                   <td>
-                    <span style={{background: '#f1f5f9', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 600, color: '#475569'}}>
+                    <span style={{ background: '#f1f5f9', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 600, color: '#475569' }}>
                       {batch.branch_name || 'Main'}
                     </span>
                   </td>
@@ -303,7 +303,7 @@ function InventoryStockManagement() {
                     </div>
                   </td>
                   <td>
-                    <div style={{fontSize: '16px', fontWeight: 600}}>{batch.quantity_available} <span style={{fontSize: '12px', fontWeight: 400}}>{batch.unit}</span></div>
+                    <div style={{ fontSize: '16px', fontWeight: 600 }}>{batch.quantity_available} <span style={{ fontSize: '12px', fontWeight: 400 }}>{batch.unit}</span></div>
                   </td>
                   <td>
                     <span className={`inv-badge ${batch.status.toLowerCase()}`}>
@@ -314,7 +314,7 @@ function InventoryStockManagement() {
                     <button className="action-btn" onClick={() => handleEdit(batch)} title="Edit">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                     </button>
-                    <button className="action-btn" onClick={() => handleDelete(batch.id)} title="Delete" style={{marginLeft: '8px'}}>
+                    <button className="action-btn" onClick={() => handleDelete(batch.id)} title="Delete" style={{ marginLeft: '8px' }}>
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                     </button>
                   </td>
@@ -335,17 +335,17 @@ function InventoryStockManagement() {
             </div>
             <div className="inv-drawer-body">
               <form id="batch-form" onSubmit={handleSubmit}>
-                
-                <h4 style={{marginBottom: '12px', color: 'var(--text-dark)'}}>Location & Item Details</h4>
+
+                <h4 style={{ marginBottom: '12px', color: 'var(--text-dark)' }}>Location & Item Details</h4>
                 <div className="inv-form-group">
                   <label>Receiving Branch *</label>
                   <Select
                     options={branches.map(b => ({ value: b.id, label: b.name }))}
-                    value={formData.branch_id ? { 
-                      value: formData.branch_id, 
-                      label: branches.find(b => b.id == formData.branch_id)?.name 
+                    value={formData.branch_id ? {
+                      value: formData.branch_id,
+                      label: branches.find(b => b.id == formData.branch_id)?.name
                     } : null}
-                    onChange={(selected) => setFormData({...formData, branch_id: selected ? selected.value : ''})}
+                    onChange={(selected) => setFormData({ ...formData, branch_id: selected ? selected.value : '' })}
                     placeholder="Search Branch..."
                     isClearable
                     required
@@ -368,11 +368,11 @@ function InventoryStockManagement() {
                   <label>Select Item *</label>
                   <Select
                     options={items.map(i => ({ value: i.id, label: `${i.item_name} (${i.item_code})` }))}
-                    value={formData.item_id ? { 
-                      value: formData.item_id, 
-                      label: items.find(i => i.id == formData.item_id)?.item_name + ' (' + items.find(i => i.id == formData.item_id)?.item_code + ')' 
+                    value={formData.item_id ? {
+                      value: formData.item_id,
+                      label: items.find(i => i.id == formData.item_id)?.item_name + ' (' + items.find(i => i.id == formData.item_id)?.item_code + ')'
                     } : null}
-                    onChange={(selected) => setFormData({...formData, item_id: selected ? selected.value : ''})}
+                    onChange={(selected) => setFormData({ ...formData, item_id: selected ? selected.value : '' })}
                     placeholder="Search Item from Catalog..."
                     isClearable
                     required
@@ -392,16 +392,16 @@ function InventoryStockManagement() {
                     }}
                   />
                 </div>
-                
+
                 <div className="inv-form-group">
                   <label>Supplier (Vendor)</label>
                   <Select
                     options={vendors.map(v => ({ value: v.id, label: `${v.vendor_name} (${v.vendor_code})` }))}
-                    value={formData.vendor_id ? { 
-                      value: formData.vendor_id, 
-                      label: vendors.find(v => v.id == formData.vendor_id)?.vendor_name + ' (' + vendors.find(v => v.id == formData.vendor_id)?.vendor_code + ')' 
+                    value={formData.vendor_id ? {
+                      value: formData.vendor_id,
+                      label: vendors.find(v => v.id == formData.vendor_id)?.vendor_name + ' (' + vendors.find(v => v.id == formData.vendor_id)?.vendor_code + ')'
                     } : null}
-                    onChange={(selected) => setFormData({...formData, vendor_id: selected ? selected.value : ''})}
+                    onChange={(selected) => setFormData({ ...formData, vendor_id: selected ? selected.value : '' })}
                     placeholder="Search Supplier..."
                     isClearable
                     styles={{
@@ -421,33 +421,33 @@ function InventoryStockManagement() {
                   />
                 </div>
 
-                <h4 style={{marginTop: '24px', marginBottom: '12px', color: 'var(--text-dark)'}}>Batch Details</h4>
+                <h4 style={{ marginTop: '24px', marginBottom: '12px', color: 'var(--text-dark)' }}>Batch Details</h4>
                 <div className="inv-grid-2">
                   <div className="inv-form-group">
                     <label>Batch Number / Lot *</label>
-                    <input className="inv-input" required value={formData.batch_number} onChange={e => setFormData({...formData, batch_number: e.target.value})} placeholder="e.g., LOT-2023-A" />
+                    <input className="inv-input" required value={formData.batch_number} onChange={e => setFormData({ ...formData, batch_number: e.target.value })} placeholder="e.g., LOT-2023-A" />
                   </div>
                   <div className="inv-form-group">
                     <label>Quantity Available *</label>
-                    <input className="inv-input" type="number" min="0" required value={formData.quantity_available} onChange={e => setFormData({...formData, quantity_available: e.target.value})} />
+                    <input className="inv-input" type="number" min="0" required value={formData.quantity_available} onChange={e => setFormData({ ...formData, quantity_available: e.target.value })} />
                   </div>
                 </div>
 
                 <div className="inv-grid-2">
                   <div className="inv-form-group">
                     <label>Quantity Received</label>
-                    <input className="inv-input" type="number" min="0" value={formData.quantity_received} onChange={e => setFormData({...formData, quantity_received: e.target.value})} />
+                    <input className="inv-input" type="number" min="0" value={formData.quantity_received} onChange={e => setFormData({ ...formData, quantity_received: e.target.value })} />
                   </div>
                   <div className="inv-form-group">
                     <label>Expiry Date</label>
-                    <input className="inv-input" type="date" value={formData.expiry_date} onChange={e => setFormData({...formData, expiry_date: e.target.value})} />
+                    <input className="inv-input" type="date" value={formData.expiry_date} onChange={e => setFormData({ ...formData, expiry_date: e.target.value })} />
                   </div>
                 </div>
 
-                <h4 style={{marginTop: '24px', marginBottom: '12px', color: 'var(--text-dark)'}}>Stock Status</h4>
+                <h4 style={{ marginTop: '24px', marginBottom: '12px', color: 'var(--text-dark)' }}>Stock Status</h4>
                 <div className="inv-form-group">
                   <label>Current Status</label>
-                  <select className="inv-select" value={formData.status} onChange={e => setFormData({...formData, status: e.target.value})}>
+                  <select className="inv-select" value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value })}>
                     <option value="Active">Active (Ready to Use)</option>
                     <option value="Quarantine">Quarantine (Under Testing)</option>
                     <option value="Expired">Expired</option>
@@ -458,7 +458,7 @@ function InventoryStockManagement() {
               </form>
             </div>
             <div className="inv-drawer-footer">
-              <button type="button" className="action-btn" onClick={() => setIsDrawerOpen(false)} style={{padding: '10px 20px', color: 'var(--text-mid)'}}>Cancel</button>
+              <button type="button" className="action-btn" onClick={() => setIsDrawerOpen(false)} style={{ padding: '10px 20px', color: 'var(--text-mid)' }}>Cancel</button>
               <button type="submit" form="batch-form" className="btn-primary">
                 {editingBatch ? 'Save Changes' : 'Receive Batch'}
               </button>

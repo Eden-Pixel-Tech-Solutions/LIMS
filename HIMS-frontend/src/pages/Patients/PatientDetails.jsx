@@ -54,11 +54,22 @@ function PatientDetails({ onSaveSuccess }) {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
 
-  const [showSearchModal, setShowSearchModal] = useState(false);
-  const [searchType, setSearchType] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const searchRef = useRef(null);
+
+  // Close dropdown if clicked outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (searchRef.current && !searchRef.current.contains(e.target)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     if (!data.dob) return;
@@ -169,14 +180,21 @@ function PatientDetails({ onSaveSuccess }) {
     }
   };
 
-  const handleSearchExecute = async (e) => {
-    e.preventDefault();
-    if (!searchQuery.trim()) return;
+  const handleSearchChange = async (e) => {
+    const val = e.target.value;
+    setSearchQuery(val);
+
+    if (!val.trim()) {
+      setSearchResults([]);
+      setShowDropdown(false);
+      return;
+    }
+
     setIsSearching(true);
+    setShowDropdown(true);
     try {
-      const typeParam = searchType !== 'ALL' ? `&type=${searchType}` : '';
       const API_BASE = import.meta.env.VITE_API_URL || 'http://172.16.11.160:7005';
-      const res = await fetch(`${API_BASE}/api/patients/search?q=${encodeURIComponent(searchQuery)}${typeParam}`);
+      const res = await fetch(`${API_BASE}/api/patients/search?q=${encodeURIComponent(val)}`);
       const result = await res.json();
       if (result.success) {
         setSearchResults(result.patients || []);
@@ -185,14 +203,14 @@ function PatientDetails({ onSaveSuccess }) {
       }
     } catch (err) {
       console.error(err);
-      showAlert('Network error while searching.', 'error');
     } finally {
       setIsSearching(false);
     }
   };
 
   const selectPatient = (patient) => {
-    setShowSearchModal(false);
+    setShowDropdown(false);
+    setSearchQuery('');
     showAlert(`Returning patient selected: ${patient.first_name} ${patient.last_name}`, 'success');
     if (onSaveSuccess) onSaveSuccess(patient.reg_no);
   };
@@ -223,14 +241,53 @@ function PatientDetails({ onSaveSuccess }) {
                 <Input type="date" name="regDate" value={data.regDate} onChange={ch} />
               </div>
 
-              <button
-                type="button"
-                className="btn-ghost"
-                style={{ marginLeft: 16 }}
-                onClick={() => setShowSearchModal(true)}
-              >
-                Search Existing Patient
-              </button>
+              <div style={{ marginLeft: 24, position: 'relative', flex: 1, maxWidth: '300px' }} ref={searchRef}>
+                <div style={{ position: 'relative' }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" style={{ position: 'absolute', left: 12, top: 11 }}>
+                    <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                  </svg>
+                  <input
+                    type="text"
+                    className="preg-input"
+                    placeholder="Search patient by name, phone..."
+                    value={searchQuery}
+                    onChange={handleSearchChange}
+                    onFocus={() => { if (searchQuery.trim()) setShowDropdown(true); }}
+                    style={{ paddingLeft: '36px', width: '100%', boxSizing: 'border-box', background: '#f8fafc' }}
+                  />
+                  {isSearching && (
+                    <div style={{ position: 'absolute', right: 12, top: 12, width: 14, height: 14, border: '2px solid #e2e8f0', borderTop: '2px solid var(--blue-primary)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+                  )}
+                </div>
+
+                {showDropdown && (
+                  <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, marginTop: '8px', background: '#fff', borderRadius: '12px', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)', border: '1px solid #e2e8f0', zIndex: 100, overflow: 'hidden' }}>
+                    {searchResults.length > 0 ? (
+                      <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                        {searchResults.map((p) => (
+                          <div
+                            key={p.id}
+                            onClick={() => selectPatient(p)}
+                            style={{ padding: '12px 16px', borderBottom: '1px solid #f1f5f9', cursor: 'pointer', transition: 'background 0.2s', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                            onMouseEnter={(e) => e.currentTarget.style.background = '#f8fafc'}
+                            onMouseLeave={(e) => e.currentTarget.style.background = '#fff'}
+                          >
+                            <div>
+                              <div style={{ fontWeight: 600, color: '#0f172a', fontSize: '13px' }}>{p.first_name} {p.last_name}</div>
+                              <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>{p.reg_no} • {p.telephone || 'No phone'}</div>
+                            </div>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue-primary)" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div style={{ padding: '16px', textAlign: 'center', fontSize: '13px', color: '#64748b' }}>
+                        No patients found matching "{searchQuery}"
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
 
               {/* Avatar */}
               <div className="preg-avatar" onClick={openCam} title="Add Photo (Alt + C)">
@@ -464,72 +521,7 @@ function PatientDetails({ onSaveSuccess }) {
           </div>
         </div>
       )}
-      {/* ── Search Existing Patient Modal ── */}
-      {showSearchModal && (
-        <div className="camera-overlay">
-          <div className="search-modal-box">
-            <h3>Search Existing Patient</h3>
-            <form onSubmit={handleSearchExecute} className="search-form">
-              <select
-                className="preg-select search-type-select"
-                value={searchType}
-                onChange={e => setSearchType(e.target.value)}
-              >
-                <option value="ALL">All Fields</option>
-                <option value="telephone">Phone</option>
-                <option value="email_id">Email</option>
-                <option value="aadhar_number">Aadhar</option>
-                <option value="abha_id">ABHA ID</option>
-              </select>
-              <input
-                type="text"
-                className="preg-input search-query-input"
-                placeholder="Search query (Phone, Email, Aadhar, etc...)"
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-              />
-              <button type="submit" className="btn-primary search-execute-btn" disabled={isSearching}>
-                {isSearching ? '...' : 'Search'}
-              </button>
-            </form>
 
-            <div className="search-results-container">
-              {searchResults.length > 0 ? (
-                <table className="search-results-table">
-                  <thead>
-                    <tr>
-                      <th>Reg No</th>
-                      <th>Name</th>
-                      <th>Phone</th>
-                      <th style={{ textAlign: 'right' }}>Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {searchResults.map((p) => (
-                      <tr key={p.id}>
-                        <td>{p.reg_no}</td>
-                        <td style={{ fontWeight: 600 }}>{p.first_name} {p.last_name}</td>
-                        <td>{p.telephone || '-'}</td>
-                        <td style={{ textAlign: 'right' }}>
-                          <button type="button" className="select-btn-primary" style={{ height: 28, fontSize: 11 }} onClick={() => selectPatient(p)}>Select</button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              ) : (
-                <div style={{ padding: 20, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
-                  No matches found yet. Enter details above and click Search.
-                </div>
-              )}
-            </div>
-
-            <div className="camera-actions" style={{ marginTop: 24 }}>
-              <button type="button" className="btn-ghost" onClick={() => setShowSearchModal(false)}>Close</button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 }

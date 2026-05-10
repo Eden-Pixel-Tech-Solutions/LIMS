@@ -47,6 +47,7 @@ CREATE TABLE `bill_items` (
   `lab_id` int DEFAULT NULL,
   `lab_barcode` varchar(100) DEFAULT NULL,
   `sample_id` varchar(50) DEFAULT NULL,
+  `short_id` varchar(10) DEFAULT NULL,
   `quantity` int DEFAULT '1',
   `unit_price` decimal(10,2) NOT NULL,
   `total_price` decimal(10,2) NOT NULL,

@@ -69,9 +69,14 @@ export const updateInfra = async (req, res) => {
     const query = `
       UPDATE infrastructure 
       SET name = ?, type = ?, block = ?, floor = ?, capacity = ?, status = ?
-      WHERE id = ?
+      WHERE id = ? ${req.query.role_level !== '1' ? 'AND branch_id = ?' : ''}
     `;
-    const values = [name, type, block, floor, capacity && capacity !== '' ? parseInt(capacity) : null, status, id];
+    const values = [
+      name, type, block, floor, 
+      capacity && capacity !== '' ? parseInt(capacity) : null, 
+      status, id
+    ];
+    if (req.query.role_level !== '1') values.push(req.query.branch_id);
 
     const [result] = await db.query(query, values);
 
@@ -90,7 +95,15 @@ export const updateInfra = async (req, res) => {
 export const deleteInfra = async (req, res) => {
   try {
     const { id } = req.params;
-    const [result] = await db.query('DELETE FROM infrastructure WHERE id = ?', [id]);
+    let query = 'DELETE FROM infrastructure WHERE id = ?';
+    let values = [id];
+    
+    if (req.query.role_level !== '1') {
+      query += ' AND branch_id = ?';
+      values.push(req.query.branch_id);
+    }
+
+    const [result] = await db.query(query, values);
 
     if (result.affectedRows === 0) {
       return res.status(404).json({ success: false, message: 'Infrastructure item not found' });

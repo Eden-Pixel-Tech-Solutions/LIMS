@@ -20,6 +20,7 @@ import {
   getLabs,
   getSuggestedLab,
   getWorklist,
+  getWorklistById,
   generateSampleId,
   acknowledgeTest,
   updateTestStatus,
@@ -37,6 +38,7 @@ import {
 } from '../controllers/labController.js';
 import {
   getLabMachines,
+  getNetworkMachines,
   getMachineBySerial,
   addLabMachine,
   syncLabMachine,
@@ -81,6 +83,7 @@ router.post('/generate-parameters', generateTestParameters);
 
 // Lab Worklist & Sample Collection Routes
 router.get('/worklist', getWorklist);
+router.get('/worklist-by-id/:id', getWorklistById);
 router.post('/generate-sample-id', generateSampleId);
 router.post('/acknowledge-test', acknowledgeTest);
 router.post('/update-test-status', updateTestStatus);
@@ -108,6 +111,7 @@ router.get('/generate-report-pdf/:sampleId', generateLabReportPDF);
 router.get('/hospital-code/:userId', getHospitalCode);
 
 // Lab Machines Routes
+router.get('/network-machines', getNetworkMachines);
 router.get('/machines/:labId', getLabMachines);
 router.get('/machine-by-serial/:serialNumber', getMachineBySerial);
 router.post('/machines', addLabMachine);

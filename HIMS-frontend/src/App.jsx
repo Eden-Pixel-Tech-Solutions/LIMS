@@ -8,6 +8,7 @@ import DutyScheduler from './pages/Staff/DutyScheduler';
 import BillingPackages from './pages/Billing/BillingPackages';
 import LabTestManagement from './pages/Lab/LabTestManagement';
 import LabWorklist from './pages/Lab/LabWorklist';
+import SampleList from './pages/Lab/SampleList';
 import LabVerification from './pages/Lab/LabVerification';
 import LabReportDownload from './pages/Lab/LabReportDownload';
 import Billings from './pages/Billing/Billings';
@@ -61,6 +62,7 @@ function App() {
           <Route path="/billing-overview" element={<BillingOverview />} />
           <Route path="/lab-test-management" element={<LabTestManagement />} />
           <Route path="/lab-worklist" element={<LabWorklist />} />
+          <Route path="/lab-sample-list" element={<SampleList />} />
           <Route path="/lab-verification" element={<LabVerification />} />
           <Route path="/lab-reports" element={<LabReportDownload />} />
           <Route path="/billings" element={<Billings />} />

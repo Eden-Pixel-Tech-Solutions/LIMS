@@ -1,6 +1,7 @@
 import express from 'express';
 import {
   createBill,
+  updateBill,
   getAllBills,
   getBillById,
   processPayment,
@@ -8,16 +9,19 @@ import {
   getPatients,
   deleteBill,
   generateInvoice,
-  sendWhatsApp
+  sendWhatsApp,
+  downloadInvoicePdf
 } from '../controllers/billingController.js';
 
 const router = express.Router();
 
 // Bill CRUD operations
 router.post('/create', createBill);
+router.put('/:id', updateBill);
 router.get('/all', getAllBills);
 router.get('/:id', getBillById);
 router.delete('/:id', deleteBill);
+router.get('/:id/pdf', downloadInvoicePdf);
 
 // Payment processing
 router.post('/:id/payment', processPayment);

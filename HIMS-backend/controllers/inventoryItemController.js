@@ -65,22 +65,26 @@ export const getItemById = async (req, res) => {
 
 export const createItem = async (req, res) => {
   try {
-    const itemCode = await generateItemCode();
     const {
-      item_name, category, unit, min_stock_level, reorder_level, status, default_vendor_id, lead_time_days, unit_price
+      item_code, item_name, category, unit, min_stock_level, reorder_level, status, default_vendor_id, delivery_lead_time_days, unit_price
     } = req.body;
+
+    // Use provided item_code or generate one
+    const finalItemCode = item_code && item_code.trim() !== '' 
+      ? item_code 
+      : await generateItemCode();
 
     const [result] = await db.execute(
       `INSERT INTO inventory_item_master (
-        item_code, item_name, category, unit, min_stock_level, reorder_level, status, default_vendor_id, lead_time_days, unit_price
+        item_code, item_name, category, unit, min_stock_level, reorder_level, status, default_vendor_id, delivery_lead_time_days, unit_price
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [itemCode, item_name, category, unit, min_stock_level || 0, reorder_level || 0, status || 'Active', default_vendor_id || null, lead_time_days || 3, unit_price || 0]
+      [finalItemCode, item_name, category, unit, min_stock_level || 0, reorder_level || 0, status || 'Active', default_vendor_id || null, delivery_lead_time_days || 3, unit_price || 0]
     );
 
     res.status(201).json({ 
       success: true, 
       message: 'Item created successfully', 
-      data: { id: result.insertId, item_code: itemCode } 
+      data: { id: result.insertId, item_code: finalItemCode } 
     });
   } catch (error) {
     console.error('Error adding item:', error);
@@ -92,14 +96,14 @@ export const updateItem = async (req, res) => {
   try {
     const { id } = req.params;
     const {
-      item_name, category, unit, min_stock_level, reorder_level, status, default_vendor_id, lead_time_days, unit_price
+      item_code, item_name, category, unit, min_stock_level, reorder_level, status, default_vendor_id, delivery_lead_time_days, unit_price
     } = req.body;
 
     await db.execute(
       `UPDATE inventory_item_master SET
-        item_name = ?, category = ?, unit = ?, min_stock_level = ?, reorder_level = ?, status = ?, default_vendor_id = ?, lead_time_days = ?, unit_price = ?
+        item_code = ?, item_name = ?, category = ?, unit = ?, min_stock_level = ?, reorder_level = ?, status = ?, default_vendor_id = ?, delivery_lead_time_days = ?, unit_price = ?
       WHERE id = ?`,
-      [item_name, category, unit, min_stock_level, reorder_level, status, default_vendor_id || null, lead_time_days || 3, unit_price || 0, id]
+      [item_code, item_name, category, unit, min_stock_level, reorder_level, status, default_vendor_id || null, delivery_lead_time_days || 3, unit_price || 0, id]
     );
 
     res.json({ success: true, message: 'Item updated successfully' });

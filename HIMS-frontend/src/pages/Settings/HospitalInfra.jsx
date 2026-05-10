@@ -45,7 +45,15 @@ function HospitalInfra() {
     setLoading(true);
     try {
       const API_BASE = import.meta.env.VITE_API_URL || 'http://172.16.11.160:7005';
-      const res = await fetch(`${API_BASE}/api/infra?type=${activeTab}`);
+      const branchId = localStorage.getItem('branch_id');
+      const roleLevel = localStorage.getItem('role_level');
+
+      let url = `${API_BASE}/api/infra?type=${activeTab}`;
+      if (roleLevel !== '1' && branchId) {
+        url += `&branch_id=${branchId}`;
+      }
+
+      const res = await fetch(url);
       const data = await res.json();
       if (data.success) setItems(data.items);
     } catch (err) {
@@ -89,7 +97,11 @@ function HospitalInfra() {
     if (!window.confirm('Are you sure you want to delete this facility?')) return;
     try {
       const API_BASE = import.meta.env.VITE_API_URL || 'http://172.16.11.160:7005';
-      const res = await fetch(`${API_BASE}/api/infra/delete/${id}`, { method: 'DELETE' });
+      const branchId = localStorage.getItem('branch_id');
+      const roleLevel = localStorage.getItem('role_level');
+      const url = `${API_BASE}/api/infra/delete/${id}?branch_id=${branchId}&role_level=${roleLevel}`;
+
+      const res = await fetch(url, { method: 'DELETE' });
       const data = await res.json();
       if (data.success) fetchInfra();
     } catch (err) { console.error(err); }
@@ -168,16 +180,25 @@ function HospitalInfra() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const API_BASE = import.meta.env.VITE_API_URL || 'http://172.16.11.160:7005';
+    const branchId = localStorage.getItem('branch_id');
+    const roleLevel = localStorage.getItem('role_level');
+
     const url = editingItem
-      ? `${API_BASE}/api/infra/update/${editingItem.id}`
+      ? `${API_BASE}/api/infra/update/${editingItem.id}?branch_id=${branchId}&role_level=${roleLevel}`
       : `${API_BASE}/api/infra/add`;
     const method = editingItem ? 'PUT' : 'POST';
 
     try {
+      const branchId = localStorage.getItem('branch_id');
+      const payload = {
+        ...formData,
+        branch_id: branchId ? parseInt(branchId) : null
+      };
+
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(payload)
       });
       const data = await res.json();
       if (data.success) {

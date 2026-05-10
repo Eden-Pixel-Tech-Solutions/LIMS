@@ -228,20 +228,56 @@
 /* Avatar */
 .preg-avatar {
   margin-left: auto;
-  width: 64px;
-  height: 64px;
-  border: 1px solid var(--border-field);
-  border-radius: var(--radius-sm);
+  width: 76px;
+  height: 76px;
+  border: 2px dashed #cbd5e1;
+  border-radius: 50%;
   cursor: pointer;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: var(--field-bg-ro);
-  color: var(--text-muted);
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  color: #64748b;
   overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), inset 0 2px 4px rgba(255, 255, 255, 0.8);
+  position: relative;
+  flex-shrink: 0;
 }
-.preg-avatar:hover { border-color: var(--brand-blue); color: var(--brand-blue); }
-.preg-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+.preg-avatar:hover {
+  border: 2px solid var(--brand-blue);
+  color: var(--brand-blue);
+  background: #eff6ff;
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 10px 20px -3px rgba(0, 94, 184, 0.2), 0 4px 6px -2px rgba(0, 94, 184, 0.1);
+}
+
+.preg-avatar svg {
+  margin-bottom: 3px;
+  transition: transform 0.3s ease;
+}
+
+.preg-avatar:hover svg {
+  transform: scale(1.15) translateY(-1px);
+}
+
+.preg-avatar span {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  text-align: center;
+  line-height: 1.1;
+  transition: opacity 0.3s ease;
+}
+
+.preg-avatar img { 
+  width: 100%; 
+  height: 100%; 
+  object-fit: cover; 
+}
 
 /* ── Dense Form Grid ─────────────────────────────────────── */
 .preg-grid {
@@ -1378,14 +1414,121 @@
 
 /* ══ PRINT STYLES ═══════════════════════════════════════════ */
 @media print {
+  @page { size: auto; margin: 0mm; }
+  
+  body, html { 
+    background: white !important; 
+    margin: 0 !important; 
+    padding: 0 !important; 
+  }
+
+  /* Hide the application shell, sidebars, tabs, and action bars */
+  .sidebar,
+  header,
+  .preg-appbar,
+  .preg-tabs,
+  .preg-action-bar,
   .bil-action-bar,
   .bil-card-actions,
   .bil-del-btn,
-  .bil-confirmed-banner { display: none !important; }
+  .bil-confirmed-banner { 
+    display: none !important; 
+  }
 
-  .bil-page { padding: 0; background: white; }
-  .bil-card { box-shadow: none; border: 1px solid #ccc; }
-  .bil-layout { grid-template-columns: 1fr 280px; }
+  .main-content, .preg-page, .preg-body {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+  }
+
+  .bil-layout { 
+    display: flex !important;
+    flex-direction: column-reverse !important; /* Put reference card (patient info) at top */
+    gap: 30px;
+    padding: 40px;
+    max-width: 100%;
+    margin: 0 auto !important;
+  }
+  
+  /* Add Hospital Print Header */
+  .bil-layout::after {
+    content: 'MERIL ENTERPRISE HIMS - OFFICIAL PAYMENT RECEIPT';
+    display: block;
+    text-align: center;
+    font-size: 22px;
+    font-weight: 800;
+    color: #000;
+    border-bottom: 4px double #000;
+    padding-bottom: 16px;
+    margin-bottom: 30px;
+    order: -2; /* Force to absolute top */
+  }
+
+  .bil-ref-card {
+    border: none !important;
+    box-shadow: none !important;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    order: -1;
+    padding: 20px;
+    background: #f8fafc !important;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0 !important;
+  }
+
+  .bil-card { 
+    border: none !important; 
+    box-shadow: none !important; 
+    padding: 0 !important;
+  }
+
+  .bil-items-table {
+    border-collapse: collapse;
+    width: 100%;
+  }
+
+  .bil-items-table th {
+    background: #f1f5f9 !important;
+    color: #000 !important;
+    border-bottom: 2px solid #000 !important;
+    border-top: 2px solid #000 !important;
+    -webkit-print-color-adjust: exact;
+  }
+  
+  .bil-items-table td {
+    border-bottom: 1px solid #cbd5e1 !important;
+    padding: 12px 8px !important;
+  }
+
+  .bil-total-box {
+    background: #fff !important;
+    border: 2px solid #000 !important;
+    color: #000 !important;
+    box-shadow: none !important;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .bil-inline-input {
+    border: none !important;
+    background: transparent !important;
+    pointer-events: none;
+    padding: 0 !important;
+    color: #000 !important;
+  }
+
+  select.bil-inline-input {
+    display: none !important; /* Hide dropdown arrow UI */
+  }
+
+  /* Force print background colors */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
 }
 
 /* ══ RESPONSIVE ═════════════════════════════════════════════ */

@@ -79,7 +79,7 @@ const Verification = () => {
                     </span>
                   </td>
                   <td style={{ padding: '16px' }}>
-                    <button 
+                    <button
                       onClick={() => setSelectedTest(test)}
                       style={{ padding: '6px 12px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}
                     >
@@ -115,13 +115,13 @@ const Verification = () => {
             </div>
 
             <div style={{ display: 'flex', gap: '12px' }}>
-              <button 
+              <button
                 onClick={() => handleAction('Verified')}
                 style={{ flex: 1, padding: '12px', background: '#8b5cf6', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '700', cursor: 'pointer' }}
               >
                 Verify Test
               </button>
-              <button 
+              <button
                 onClick={() => handleAction('Approved')}
                 style={{ flex: 1, padding: '12px', background: '#22c55e', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '700', cursor: 'pointer' }}
               >

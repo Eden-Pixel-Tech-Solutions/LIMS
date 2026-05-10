@@ -3,36 +3,11 @@ import Alert from '../../components/Alert';
 import { useAlert } from '../../hooks/useAlert';
 import '../../assets/CSS/MachineNetwork.css';
 
-const MACHINE_DATA = [
-  {
-    branchName: 'Central Hospital - Main Lab',
-    machines: [
-      { id: 'M-101', name: 'Merilyzer CliniQuant Micro', type: 'Semi automatic Biochemistry analyser', status: 'Online', testsDone: 1450 },
-      { id: 'M-102', name: 'Merilyzer CelQuant Edge', type: '3 part hematology Analyser', status: 'Online', testsDone: 2340 },
-      { id: 'M-103', name: 'Merilyzer CelQuant 5 Plus', type: '5 part Hematology Analyser', status: 'Maintenance', testsDone: 890 },
-      { id: 'M-104', name: 'Merilyzer CliniQuant Micro', type: 'Semi automatic Biochemistry analyser', status: 'Online', testsDone: 1120 },
-    ]
-  },
-  {
-    branchName: 'South City Clinic',
-    machines: [
-      { id: 'S-201', name: 'Merilyzer CliniQuant Micro', type: 'Semi automatic Biochemistry analyser', status: 'Online', testsDone: 450 },
-      { id: 'S-202', name: 'Merilyzer CelQuant Edge', type: '3 part hematology Analyser', status: 'Offline', testsDone: 120 },
-    ]
-  },
-  {
-    branchName: 'North Wing Specialty',
-    machines: [
-      { id: 'N-301', name: 'Merilyzer CelQuant 5 Plus', type: '5 part Hematology Analyser', status: 'Online', testsDone: 1850 },
-      { id: 'N-302', name: 'Merilyzer CelQuant Edge', type: '3 part hematology Analyser', status: 'Online', testsDone: 1560 },
-      { id: 'N-303', name: 'Merilyzer CliniQuant Micro', type: 'Semi automatic Biochemistry analyser', status: 'Online', testsDone: 920 },
-    ]
-  }
-];
+const API_URL = import.meta.env.VITE_API_URL || 'http://172.16.11.160:7005';
 
 const MachineNetwork = () => {
   const { alert, showAlert, hideAlert } = useAlert();
-  
+
   // Support Modal State
   const [showSupportModal, setShowSupportModal] = useState(false);
   const [selectedMachine, setSelectedMachine] = useState(null);
@@ -40,6 +15,26 @@ const MachineNetwork = () => {
     issueType: 'Machine Fault',
     description: ''
   });
+
+  const [machineData, setMachineData] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  React.useEffect(() => {
+    const fetchMachines = async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/lab/network-machines`);
+        const data = await res.json();
+        if (data.success) {
+          setMachineData(data.data || []);
+        }
+      } catch (err) {
+        console.error('Failed to fetch machines', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchMachines();
+  }, []);
 
   const [supportLogs, setSupportLogs] = useState([
     { id: 'TKT-1001', machineId: 'M-103', machineName: 'Merilyzer CelQuant 5 Plus', branch: 'Central Hospital - Main Lab', category: 'Maintenance Required', status: 'Pending', date: '2026-04-29', description: 'Monthly preventive calibration required.' }
@@ -50,7 +45,7 @@ const MachineNetwork = () => {
   let onlineMachines = 0;
   let totalTests = 0;
 
-  MACHINE_DATA.forEach(branch => {
+  machineData.forEach(branch => {
     branch.machines.forEach(m => {
       totalMachines++;
       if (m.status === 'Online') onlineMachines++;
@@ -122,7 +117,7 @@ const MachineNetwork = () => {
     const headers = ['Branch Name', 'Machine ID', 'Model Name', 'Analyzer Type', 'Status', 'Tests Done (24h)'];
     const csvRows = [headers.join(',')];
 
-    MACHINE_DATA.forEach(branch => {
+    machineData.forEach(branch => {
       branch.machines.forEach(m => {
         csvRows.push(`"${branch.branchName}",${m.id},"${m.name}","${m.type}",${m.status},${m.testsDone}`);
       });
@@ -163,7 +158,7 @@ const MachineNetwork = () => {
       <div className="stats-grid">
         <div className="stat-card">
           <span className="stat-label">Total Connected Branches</span>
-          <span className="stat-value">{MACHINE_DATA.length}</span>
+          <span className="stat-value">{machineData.length}</span>
         </div>
         <div className="stat-card">
           <span className="stat-label">Total Analyzers</span>
@@ -180,71 +175,76 @@ const MachineNetwork = () => {
       </div>
 
       <div className="machine-list">
-        {MACHINE_DATA.map((branch, index) => (
-          <div key={index} className="branch-section">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-              <h3 className="branch-title" style={{ margin: 0 }}>{branch.branchName}</h3>
-              <button 
-                className="btn-ghost" 
-                onClick={() => exportBranchAnalyzers(branch.branchName, branch.machines)}
-                style={{ padding: '6px 12px', borderRadius: '6px', fontSize: '12px', border: '1px solid var(--border-light)', cursor: 'pointer', background: 'white' }}
-              >
-                📥 Branch CSV
-              </button>
-            </div>
-            <table className="machine-table">
-              <thead>
-                <tr>
-                  <th>Machine ID</th>
-                  <th>Model Name</th>
-                  <th>Analyzer Type</th>
-                  <th>Status</th>
-                  <th>Tests Done (24h)</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {branch.machines.map(machine => (
-                  <tr key={machine.id}>
-                    <td style={{ fontWeight: 'bold' }}>{machine.id}</td>
-                    <td>{machine.name}</td>
-                    <td>{machine.type}</td>
-                    <td>
-                      <span className={`status-badge status-${machine.status.toLowerCase()}`}>
-                        {machine.status}
-                      </span>
-                    </td>
-                    <td style={{ fontWeight: 'bold', color: 'var(--text-main)' }}>
-                      {machine.testsDone.toLocaleString()}
-                    </td>
-                    <td>
-                      <button 
-                        onClick={() => handleOpenSupport(machine, branch.branchName)}
-                        style={{ background: 'var(--blue-pale)', color: 'var(--blue-primary)', border: 'none', padding: '6px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', transition: '0.2s' }}
-                      >
-                        Create Support
-                      </button>
-                    </td>
+        {isLoading ? (
+          <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-soft)' }}>Loading analyzers...</div>
+        ) : machineData.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-soft)' }}>No connected analyzers found in the network.</div>
+        ) : (
+          machineData.map((branch, index) => (
+            <div key={index} className="branch-section">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                <h3 className="branch-title" style={{ margin: 0 }}>{branch.branchName}</h3>
+                <button
+                  className="btn-ghost"
+                  onClick={() => exportBranchAnalyzers(branch.branchName, branch.machines)}
+                  style={{ padding: '6px 12px', borderRadius: '6px', fontSize: '12px', border: '1px solid var(--border-light)', cursor: 'pointer', background: 'white' }}
+                >
+                  📥 Branch CSV
+                </button>
+              </div>
+              <table className="machine-table">
+                <thead>
+                  <tr>
+                    <th>Machine ID</th>
+                    <th>Model Name</th>
+                    <th>Analyzer Type</th>
+                    <th>Status</th>
+                    <th>Tests Done (24h)</th>
+                    <th>Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ))}
+                </thead>
+                <tbody>
+                  {branch.machines.map(machine => (
+                    <tr key={machine.id}>
+                      <td style={{ fontWeight: 'bold' }}>{machine.id}</td>
+                      <td>{machine.name}</td>
+                      <td>{machine.type}</td>
+                      <td>
+                        <span className={`status-badge status-${machine.status.toLowerCase()}`}>
+                          {machine.status}
+                        </span>
+                      </td>
+                      <td style={{ fontWeight: 'bold', color: 'var(--text-main)' }}>
+                        {machine.testsDone.toLocaleString()}
+                      </td>
+                      <td>
+                        <button
+                          onClick={() => handleOpenSupport(machine, branch.branchName)}
+                          style={{ background: 'var(--blue-pale)', color: 'var(--blue-primary)', border: 'none', padding: '6px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', transition: '0.2s' }}
+                        >
+                          Create Support
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )))}
       </div>
 
       <div className="branch-section" style={{ marginTop: '32px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
           <h3 className="branch-title" style={{ margin: 0 }}>Recent Support Logs</h3>
-          <button 
-            className="btn-primary" 
+          <button
+            className="btn-primary"
             onClick={handleExportCSV}
             style={{ padding: '6px 12px', borderRadius: '6px', fontSize: '13px', background: '#10b981', border: 'none', color: 'white', fontWeight: 'bold', cursor: 'pointer' }}
           >
             📥 Export CSV
           </button>
         </div>
-        
+
         {supportLogs.length > 0 ? (
           <table className="machine-table">
             <thead>
@@ -266,7 +266,7 @@ const MachineNetwork = () => {
                   <td>{log.machineId} - {log.machineName}</td>
                   <td>{log.category}</td>
                   <td>
-                    <span style={{ 
+                    <span style={{
                       padding: '4px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold',
                       background: log.status === 'Open' ? '#fee2e2' : '#fef3c7',
                       color: log.status === 'Open' ? '#991b1b' : '#92400e'
@@ -306,10 +306,10 @@ const MachineNetwork = () => {
                   <p style={{ margin: 0, fontSize: '14px', color: 'var(--text-mid)' }}><strong>Machine:</strong> {selectedMachine.name} ({selectedMachine.id})</p>
                   <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: 'var(--text-soft)' }}><strong>Branch:</strong> {selectedMachine.branchName}</p>
                 </div>
-                
+
                 <div style={{ marginBottom: '16px' }}>
                   <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-label)', marginBottom: '8px' }}>Support Category *</label>
-                  <select 
+                  <select
                     style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid var(--border-light)', background: 'var(--bg-input)' }}
                     value={supportForm.issueType}
                     onChange={(e) => setSupportForm(p => ({ ...p, issueType: e.target.value }))}
@@ -324,7 +324,7 @@ const MachineNetwork = () => {
 
                 <div style={{ marginBottom: '16px' }}>
                   <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-label)', marginBottom: '8px' }}>Detailed Description *</label>
-                  <textarea 
+                  <textarea
                     rows="4"
                     required
                     style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid var(--border-light)', background: 'var(--bg-input)', resize: 'vertical' }}

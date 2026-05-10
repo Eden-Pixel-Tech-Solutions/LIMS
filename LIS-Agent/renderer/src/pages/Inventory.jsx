@@ -135,13 +135,13 @@ const Inventory = () => {
                         <td style={{ padding: '16px 24px', fontWeight: '800', color: item.current_stock <= item.min_stock_level ? '#ef4444' : '#0f172a' }}>{item.current_stock} {item.unit}</td>
                         <td style={{ padding: '16px 24px', color: '#94a3b8' }}>{item.min_stock_level}</td>
                         <td style={{ padding: '16px 24px' }}>
-                           <span style={{ 
-                             padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '800', 
-                             background: item.current_stock <= item.min_stock_level ? '#fef2f2' : '#f0fdf4',
-                             color: item.current_stock <= item.min_stock_level ? '#ef4444' : '#16a34a'
-                           }}>
-                             {item.current_stock <= item.min_stock_level ? 'LOW STOCK' : 'IN STOCK'}
-                           </span>
+                          <span style={{
+                            padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '800',
+                            background: item.current_stock <= item.min_stock_level ? '#fef2f2' : '#f0fdf4',
+                            color: item.current_stock <= item.min_stock_level ? '#ef4444' : '#16a34a'
+                          }}>
+                            {item.current_stock <= item.min_stock_level ? 'LOW STOCK' : 'IN STOCK'}
+                          </span>
                         </td>
                       </>
                     )}
@@ -166,16 +166,16 @@ const Inventory = () => {
                         <td style={{ padding: '16px 24px' }}>{item.item_count} Items</td>
                         <td style={{ padding: '16px 24px', color: '#64748b' }}>{new Date(item.transfer_date).toLocaleDateString()}</td>
                         <td style={{ padding: '16px 24px' }}>
-                           <span style={{ padding: '4px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: '800', background: '#fef3c7', color: '#92400e' }}>{item.status}</span>
+                          <span style={{ padding: '4px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: '800', background: '#fef3c7', color: '#92400e' }}>{item.status}</span>
                         </td>
                       </>
                     )}
                     {activeTab === 'transactions' && (
                       <>
                         <td style={{ padding: '16px 24px' }}>
-                           <span style={{ padding: '4px 8px', borderRadius: '6px', fontSize: '10px', fontWeight: '800', background: item.transaction_type === 'IN' ? '#f0fdf4' : '#fef2f2', color: item.transaction_type === 'IN' ? '#16a34a' : '#ef4444' }}>
-                             {item.transaction_type}
-                           </span>
+                          <span style={{ padding: '4px 8px', borderRadius: '6px', fontSize: '10px', fontWeight: '800', background: item.transaction_type === 'IN' ? '#f0fdf4' : '#fef2f2', color: item.transaction_type === 'IN' ? '#16a34a' : '#ef4444' }}>
+                            {item.transaction_type}
+                          </span>
                         </td>
                         <td style={{ padding: '16px 24px', fontWeight: '600' }}>{item.item_name}</td>
                         <td style={{ padding: '16px 24px', fontWeight: '800' }}>{item.quantity}</td>

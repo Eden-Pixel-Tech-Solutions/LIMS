@@ -19,6 +19,30 @@ function PatientRegistration() {
   const [isPatientSaved, setIsPatientSaved] = useState(false);
   const [patientRegNo, setPatientRegNo] = useState(null);
   const [bookingData, setBookingData] = useState(null);
+  const [labName, setLabName] = useState('Loading...');
+
+  const branchId = localStorage.getItem('branch_id');
+
+  const fetchLabName = async () => {
+    try {
+      const API_BASE = import.meta.env.VITE_API_URL || 'http://172.16.11.160:7005';
+      const res = await fetch(`${API_BASE}/api/infra?type=Lab&branch_id=${branchId}`);
+      const data = await res.json();
+      if (data.success && data.items.length > 0) {
+        setLabName(data.items[0].name);
+      } else {
+        setLabName(localStorage.getItem('hospital_code') || 'General Hospital');
+      }
+    } catch (err) {
+      console.error('Error fetching lab name:', err);
+      setLabName(localStorage.getItem('hospital_code') || 'General Hospital');
+    }
+  };
+
+  useEffect(() => {
+    if (branchId) fetchLabName();
+    else setLabName('General Hospital');
+  }, [branchId]);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
@@ -88,7 +112,20 @@ function PatientRegistration() {
           <br />
           <div className="preg-appbar-top">
             <div className="preg-title-group">
-              <h1>Patient Registration & Context {patientRegNo && <span style={{ color: 'var(--brand-blue)', fontWeight: 'bold' }}>{patientRegNo}</span>}</h1>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <h1>Patient Registration & Context {patientRegNo && <span style={{ color: 'var(--brand-blue)', fontWeight: 'bold' }}>{patientRegNo}</span>}</h1>
+                <span style={{
+                  background: '#e0f2fe',
+                  color: '#0369a1',
+                  padding: '4px 12px',
+                  borderRadius: '20px',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  border: '1px solid #bae6fd'
+                }}>
+                  📍 {labName}
+                </span>
+              </div>
               <span>Complete sections or search for an existing patient</span>
             </div>
 
@@ -122,7 +159,7 @@ function PatientRegistration() {
           <PatientDetails onSaveSuccess={handlePatientSaved} />
         </div>
         {activeTab === 'appointment' && <AppointmentBooking regNo={patientRegNo} onSaveSuccess={handleAppointmentSaved} />}
-        {activeTab === 'billing' && <Billing regNo={patientRegNo} bookingData={bookingData} onFinish={() => window.location.reload()} />}
+        {activeTab === 'billing' && <Billing regNo={patientRegNo} bookingData={bookingData} />}
 
       </div>
     </>

@@ -347,6 +347,21 @@ export const addLabTest = async (req, res) => {
     await connection.beginTransaction();
 
     try {
+      // Check if test code exists
+      const [existing] = await connection.query(
+        'SELECT id FROM lab_tests WHERE test_code = ?',
+        [test_code]
+      );
+
+      if (existing.length > 0) {
+        await connection.rollback();
+        connection.release();
+        return res.status(400).json({
+          success: false,
+          message: `Test code '${test_code}' already exists.`
+        });
+      }
+
       // Insert lab test
       const [testResult] = await connection.query(
         `INSERT INTO lab_tests
@@ -666,10 +681,12 @@ export const getWorklist = async (req, res) => {
           ELSE bi.status
         END as status,
         bi.sample_id,
+        bi.short_id,
         bi.lab_barcode,
         i.name as lab_name,
         b.created_at as bill_date,
         tr.id as result_id,
+        tr.results_json,
         tr.tested_at as result_tested_at
       FROM bill_items bi
       JOIN bills b ON bi.bill_id = b.id
@@ -709,15 +726,37 @@ export const getWorklist = async (req, res) => {
     let currentQueueNo = 1;
     const billQueueMap = {};
 
-    const formattedWorklist = worklist.map(item => {
+    const formattedWorklist = await Promise.all(worklist.map(async (item) => {
       if (!billQueueMap[item.bill_id]) {
         billQueueMap[item.bill_id] = currentQueueNo++;
       }
+
+      let pending_params = [];
+      if (item.status === 'In Progress' || item.status === 'Test Done') {
+        // Fetch all required parameters for this specific test
+        const [allParams] = await db.query(
+          `SELECT parameter_name FROM lab_test_parameters WHERE test_id = ?`,
+          [item.test_id]
+        );
+
+        let receivedNames = [];
+        try {
+          receivedNames = JSON.parse(item.results_json || '[]').map(r => r.parameter_name.toLowerCase());
+        } catch (e) {
+          receivedNames = [];
+        }
+
+        pending_params = allParams
+          .filter(p => !receivedNames.includes(p.parameter_name.toLowerCase()))
+          .map(p => p.parameter_name);
+      }
+
       return {
         ...item,
-        lab_queue_number: billQueueMap[item.bill_id]
+        lab_queue_number: billQueueMap[item.bill_id],
+        pending_params
       };
-    });
+    }));
 
     res.json({
       success: true,
@@ -727,6 +766,40 @@ export const getWorklist = async (req, res) => {
   } catch (error) {
     console.error('Error fetching worklist:', error);
     res.status(500).json({ success: false, message: 'Server error fetching worklist' });
+  }
+};
+
+export const getWorklistById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [rows] = await db.query(`
+      SELECT 
+        bi.id as bill_item_id,
+        b.id as bill_id,
+        p.id as patient_id,
+        CONCAT(p.first_name, ' ', p.last_name) as patient_name,
+        lt.id as test_id,
+        lt.test_name,
+        bi.sample_id,
+        bi.short_id,
+        bi.status
+      FROM bill_items bi
+      JOIN bills b ON bi.bill_id = b.id
+      JOIN patients p ON b.patient_id = p.id
+      JOIN lab_tests lt ON bi.service_id = lt.id
+      WHERE (bi.sample_id = ? OR bi.short_id = ? OR bi.short_id LIKE ?)
+      AND bi.status IN ('Pending', 'Collected', 'In Progress')
+      LIMIT 1
+    `, [id, id, `%${id.slice(-4)}`]);
+
+    if (rows.length === 0) {
+      return res.json({ success: false, message: 'No active test found' });
+    }
+
+    res.json({ success: true, test: rows[0] });
+  } catch (error) {
+    console.error('Error fetching worklist by id:', error);
+    res.status(500).json({ success: false });
   }
 };
 
@@ -746,11 +819,15 @@ export const generateSampleId = async (req, res) => {
 
     const count = rows[0]?.count || 0;
     const sequence = count + 1;
+    
+    const day = date.slice(-2); // Last 2 chars of date (DD)
+    const shortId = `${day}${sequence.toString().padStart(4, '0')}`;
 
     res.json({
       success: true,
       sequence: sequence,
-      sampleId: `LAB-${date}-${sequence.toString().padStart(4, '0')}`
+      sampleId: `LAB-${date}-${sequence.toString().padStart(4, '0')}`,
+      shortId: shortId
     });
   } catch (error) {
     console.error('Error generating sample ID:', error);
@@ -926,7 +1003,7 @@ export const bookLabTests = async (req, res) => {
 // Acknowledge test and update status
 export const acknowledgeTest = async (req, res) => {
   try {
-    const { bill_item_id, sample_id, status } = req.body;
+    const { bill_item_id, sample_id, short_id, status } = req.body;
 
     if (!bill_item_id || !sample_id) {
       return res.status(400).json({
@@ -938,9 +1015,9 @@ export const acknowledgeTest = async (req, res) => {
     // Update bill item with sample ID and status
     const [result] = await db.query(
       `UPDATE bill_items 
-       SET sample_id = ?, status = ?, updated_at = NOW()
+       SET sample_id = ?, short_id = ?, status = ?, updated_at = NOW()
        WHERE id = ?`,
-      [sample_id, status || 'Collected', bill_item_id]
+      [sample_id, short_id || null, status || 'Collected', bill_item_id]
     );
 
     if (result.affectedRows === 0) {
@@ -1339,7 +1416,7 @@ export const getPendingVerifications = async (req, res) => {
   try {
     const { status } = req.query;
 
-    let statusFilter = "tr.status IN ('Test Done', 'Verified')";
+    let statusFilter = "tr.status IN ('Test Done', 'Verified', 'Completed')";
     if (status && status !== 'all') {
       statusFilter = "tr.status = ?";
     }

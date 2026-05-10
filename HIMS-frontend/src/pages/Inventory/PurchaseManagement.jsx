@@ -54,7 +54,7 @@ function PurchaseManagement() {
       if (itData.success) setItems(itData.data);
       if (vData.success) setVendors(vData.data);
       if (sData.success) setHospitalSettings(sData.data);
-    } catch {}
+    } catch { }
   };
 
   const fetchPRs = async () => {
@@ -65,7 +65,7 @@ function PurchaseManagement() {
       const res = await fetch(`${API_URL}/api/v2/inventory/procurement/requisitions?branch_id=${branchId}&role_level=${roleLevel}`);
       const data = await res.json();
       if (data.success) setPRs(data.data);
-    } catch {}
+    } catch { }
     setLoading(false);
   };
 
@@ -77,7 +77,7 @@ function PurchaseManagement() {
       const res = await fetch(`${API_URL}/api/v2/inventory/procurement/orders?branch_id=${branchId}&role_level=${roleLevel}`);
       const data = await res.json();
       if (data.success) setPOs(data.data);
-    } catch {}
+    } catch { }
     setLoading(false);
   };
 
@@ -87,7 +87,7 @@ function PurchaseManagement() {
       const res = await fetch(`${API_URL}/api/v2/inventory/suggestions`);
       const data = await res.json();
       if (data.success) setSuggestions(data.data);
-    } catch {}
+    } catch { }
     setLoading(false);
   };
 
@@ -135,7 +135,7 @@ function PurchaseManagement() {
         showAlert('success', 'PO created successfully');
         setIsPOModalOpen(false);
         setPoForm({ vendor_id: '', expected_delivery_date: '', items: [{ item_id: '', quantity: '', unit_price: '' }], pr_id: null });
-        
+
         // Refresh PO list
         await fetchPOs();
 
@@ -181,7 +181,7 @@ function PurchaseManagement() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ pdf_base64: pdfBase64 })
               });
-              
+
               showAlert('success', `📧 PO Document sent to Vendor via Email & WhatsApp`);
             } catch (err) {
               console.error('Notification failed:', err);
@@ -203,7 +203,7 @@ function PurchaseManagement() {
         body: JSON.stringify({ status })
       });
       fetchPRs();
-    } catch {}
+    } catch { }
   };
 
   const convertPRtoPO = (pr) => {
@@ -223,7 +223,7 @@ function PurchaseManagement() {
       await res.json();
       fetchSuggestions();
       showAlert('success', 'AI Suggestions generated');
-    } catch {}
+    } catch { }
     setLoading(false);
   };
 
@@ -272,18 +272,18 @@ function PurchaseManagement() {
 
   const getBadge = (status) => {
     const s = {
-      PENDING: {bg:'#fefce8', color:'#ca8a04'}, APPROVED: {bg:'#dbeafe', color:'#2563eb'},
-      REJECTED: {bg:'#fee2e2', color:'#dc2626'}, PO_CREATED: {bg:'#dcfce7', color:'#166534'},
-      DRAFT: {bg:'#f1f5f9', color:'#475569'}, ISSUED: {bg:'#dbeafe', color:'#2563eb'},
-      COMPLETED: {bg:'#dcfce7', color:'#166534'}
-    }[status] || {bg:'#f1f5f9', color:'#475569'};
+      PENDING: { bg: '#fefce8', color: '#ca8a04' }, APPROVED: { bg: '#dbeafe', color: '#2563eb' },
+      REJECTED: { bg: '#fee2e2', color: '#dc2626' }, PO_CREATED: { bg: '#dcfce7', color: '#166534' },
+      DRAFT: { bg: '#f1f5f9', color: '#475569' }, ISSUED: { bg: '#dbeafe', color: '#2563eb' },
+      COMPLETED: { bg: '#dcfce7', color: '#166534' }
+    }[status] || { bg: '#f1f5f9', color: '#475569' };
     return <span style={{ padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 600, background: s.bg, color: s.color }}>{status}</span>;
   };
 
   return (
     <div className="inv-vendor-page">
       {alert && <Alert type={alert.type} message={alert.message} onClose={hideAlert} />}
-      
+
       <div className="inv-header">
         <div>
           <h1 className="inv-title">Procurement Management</h1>
@@ -298,14 +298,14 @@ function PurchaseManagement() {
       </div>
 
       <div className="inv-card">
-        
+
         {/* REQUISITIONS TAB */}
         {activeTab === 'requisitions' && (
           <div>
-            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0', padding: '24px 24px 16px', borderBottom: '1.5px solid #f1f5f9'}}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0', padding: '24px 24px 16px', borderBottom: '1.5px solid #f1f5f9' }}>
               <div>
-                <h3 style={{margin: 0, color: '#1e293b', fontSize: '18px', fontWeight: 700}}>Purchase Requisitions (From Labs)</h3>
-                <p style={{margin: '4px 0 0 0', fontSize: '13px', color: '#64748b'}}>Review and process supply requests from laboratory departments</p>
+                <h3 style={{ margin: 0, color: '#1e293b', fontSize: '18px', fontWeight: 700 }}>Purchase Requisitions (From Labs)</h3>
+                <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#64748b' }}>Review and process supply requests from laboratory departments</p>
               </div>
               <button className="btn-primary" style={{ background: '#0d2554' }} onClick={() => setIsPRModalOpen(true)}>+ Create PR</button>
             </div>
@@ -314,28 +314,28 @@ function PurchaseManagement() {
               <tbody>
                 {loading ? <tr><td colSpan="5">Loading...</td></tr> : prs.filter(pr => pr.status !== 'PO_CREATED').map(pr => (
                   <tr key={pr.id}>
-                    <td style={{fontWeight: 600}}>
-                      <span 
+                    <td style={{ fontWeight: 600 }}>
+                      <span
                         style={{ color: 'var(--blue-primary)', cursor: 'pointer', textDecoration: 'underline' }}
                         onClick={() => setViewPR(pr)}
                       >
                         {pr.pr_number}
                       </span>
-                      <div style={{fontSize: '12px', color: 'var(--text-soft)'}}>{new Date(pr.created_at).toLocaleDateString()}</div>
+                      <div style={{ fontSize: '12px', color: 'var(--text-soft)' }}>{new Date(pr.created_at).toLocaleDateString()}</div>
                     </td>
                     <td>{pr.branch_name}</td>
-                    <td>{pr.items.length} items <span style={{fontSize:'12px', color:'var(--text-soft)'}}>({pr.items.map(i=>i.item_name).join(', ')})</span></td>
+                    <td>{pr.items.length} items <span style={{ fontSize: '12px', color: 'var(--text-soft)' }}>({pr.items.map(i => i.item_name).join(', ')})</span></td>
                     <td>{getBadge(pr.status)}</td>
                     <td>
-                      <div style={{display: 'flex', gap: '8px'}}>
+                      <div style={{ display: 'flex', gap: '8px' }}>
                         {pr.status === 'PENDING' && (
                           <>
-                            <button onClick={() => updatePRStatus(pr.id, 'APPROVED')} className="btn-primary" style={{padding:'4px 8px', fontSize:'12px'}}>Approve</button>
-                            <button onClick={() => updatePRStatus(pr.id, 'REJECTED')} className="btn-secondary" style={{padding:'4px 8px', fontSize:'12px', color:'red'}}>Reject</button>
+                            <button onClick={() => updatePRStatus(pr.id, 'APPROVED')} className="btn-primary" style={{ padding: '4px 8px', fontSize: '12px' }}>Approve</button>
+                            <button onClick={() => updatePRStatus(pr.id, 'REJECTED')} className="btn-secondary" style={{ padding: '4px 8px', fontSize: '12px', color: 'red' }}>Reject</button>
                           </>
                         )}
                         {pr.status === 'APPROVED' && (
-                          <button onClick={() => convertPRtoPO(pr)} className="btn-primary" style={{padding:'4px 8px', fontSize:'12px', background: '#9333ea'}}>Generate PO</button>
+                          <button onClick={() => convertPRtoPO(pr)} className="btn-primary" style={{ padding: '4px 8px', fontSize: '12px', background: '#9333ea' }}>Generate PO</button>
                         )}
                       </div>
                     </td>
@@ -349,10 +349,10 @@ function PurchaseManagement() {
         {/* ORDERS TAB */}
         {activeTab === 'orders' && (
           <div>
-            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0', padding: '24px 24px 16px', borderBottom: '1.5px solid #f1f5f9'}}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0', padding: '24px 24px 16px', borderBottom: '1.5px solid #f1f5f9' }}>
               <div>
-                <h3 style={{margin: 0, color: '#1e293b', fontSize: '18px', fontWeight: 700}}>Purchase Orders (To Vendors)</h3>
-                <p style={{margin: '4px 0 0 0', fontSize: '13px', color: '#64748b'}}>Generate and track official orders sent to registered suppliers</p>
+                <h3 style={{ margin: 0, color: '#1e293b', fontSize: '18px', fontWeight: 700 }}>Purchase Orders (To Vendors)</h3>
+                <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#64748b' }}>Generate and track official orders sent to registered suppliers</p>
               </div>
               <button className="btn-primary" style={{ background: '#0d2554' }} onClick={() => { setPoForm({ vendor_id: '', expected_delivery_date: '', items: [{ item_id: '', quantity: '', unit_price: '' }], pr_id: null }); setIsPOModalOpen(true); }}>+ Create Direct PO</button>
             </div>
@@ -361,24 +361,24 @@ function PurchaseManagement() {
               <tbody>
                 {loading ? <tr><td colSpan="6">Loading...</td></tr> : pos.map(po => (
                   <tr key={po.id}>
-                    <td style={{fontWeight: 600}}>
-                      <span 
+                    <td style={{ fontWeight: 600 }}>
+                      <span
                         style={{ color: 'var(--blue-primary)', cursor: 'pointer', textDecoration: 'underline' }}
                         onClick={() => setViewPO(po)}
                       >
                         {po.po_number}
                       </span>
-                      <div style={{fontSize: '12px', color: 'var(--text-soft)'}}>{new Date(po.created_at).toLocaleDateString()}</div>
+                      <div style={{ fontSize: '12px', color: 'var(--text-soft)' }}>{new Date(po.created_at).toLocaleDateString()}</div>
                     </td>
-                    <td style={{color: 'var(--blue-primary)'}}>{po.vendor_name}</td>
+                    <td style={{ color: 'var(--blue-primary)' }}>{po.vendor_name}</td>
                     <td>{po.expected_delivery_date ? new Date(po.expected_delivery_date).toLocaleDateString() : '-'}</td>
-                    <td style={{fontWeight: 600}}>₹{parseFloat(po.total_amount).toLocaleString()}</td>
+                    <td style={{ fontWeight: 600 }}>₹{parseFloat(po.total_amount).toLocaleString()}</td>
                     <td>{getBadge(po.status)}</td>
                     <td>
-                      <button 
-                        className="btn-primary" 
+                      <button
+                        className="btn-primary"
                         disabled={pdfLoading}
-                        style={{ padding: '6px 12px', fontSize: '12px', background: '#475569', display: 'flex', alignItems: 'center', gap: '4px' }} 
+                        style={{ padding: '6px 12px', fontSize: '12px', background: '#475569', display: 'flex', alignItems: 'center', gap: '4px' }}
                         onClick={() => downloadPO(po)}
                       >
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
@@ -395,22 +395,22 @@ function PurchaseManagement() {
         {/* SUGGESTIONS TAB */}
         {activeTab === 'suggestions' && (
           <div>
-            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0', padding: '24px 24px 16px', borderBottom: '1.5px solid #f1f5f9'}}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0', padding: '24px 24px 16px', borderBottom: '1.5px solid #f1f5f9' }}>
               <div>
-                <h3 style={{margin: 0, color: '#1e293b', fontSize: '18px', fontWeight: 700}}>AI Purchase Suggestions</h3>
-                <p style={{margin: '4px 0 0 0', fontSize: '13px', color: '#64748b'}}>Smart inventory optimization based on ADU and Lead Times</p>
+                <h3 style={{ margin: 0, color: '#1e293b', fontSize: '18px', fontWeight: 700 }}>AI Purchase Suggestions</h3>
+                <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#64748b' }}>Smart inventory optimization based on ADU and Lead Times</p>
               </div>
-              <button className="btn-primary" onClick={generateAI} disabled={loading} style={{background:'#10b981'}}>🔮 Run AI Scan</button>
+              <button className="btn-primary" onClick={generateAI} disabled={loading} style={{ background: '#10b981' }}>🔮 Run AI Scan</button>
             </div>
             <table className="inv-table">
               <thead><tr><th>Item Details</th><th>Preferred Vendor</th><th>Suggested Qty</th><th>Estimated Cost</th><th>Status</th></tr></thead>
               <tbody>
                 {loading ? <tr><td colSpan="5">Loading...</td></tr> : suggestions.map(s => (
                   <tr key={s.id}>
-                    <td><div style={{fontWeight:600}}>{s.item_name}</div><div style={{fontSize:'12px'}}>{s.item_code}</div></td>
+                    <td><div style={{ fontWeight: 600 }}>{s.item_name}</div><div style={{ fontSize: '12px' }}>{s.item_code}</div></td>
                     <td>{s.vendor_name || 'No vendor'}</td>
-                    <td style={{fontWeight:600, color:'#059669'}}>{s.suggested_qty} {s.unit}</td>
-                    <td style={{fontWeight:600}}>₹{parseFloat(s.estimated_cost).toLocaleString()}</td>
+                    <td style={{ fontWeight: 600, color: '#059669' }}>{s.suggested_qty} {s.unit}</td>
+                    <td style={{ fontWeight: 600 }}>₹{parseFloat(s.estimated_cost).toLocaleString()}</td>
                     <td>{getBadge(s.status)}</td>
                   </tr>
                 ))}
@@ -424,23 +424,23 @@ function PurchaseManagement() {
       {/* PR Modal */}
       {isPRModalOpen && (
         <div className="inv-modal-overlay" onClick={() => setIsPRModalOpen(false)}>
-          <div className="inv-drawer" style={{width:'800px'}} onClick={e=>e.stopPropagation()}>
+          <div className="inv-drawer" style={{ width: '800px' }} onClick={e => e.stopPropagation()}>
             <div className="inv-drawer-header"><h2>Create Purchase Requisition</h2><button className="inv-drawer-close" onClick={() => setIsPRModalOpen(false)}>&times;</button></div>
             <form onSubmit={handleCreatePR} className="inv-drawer-body">
               <div className="inv-form-group"><label>Requesting Department/Branch *</label>
-                <Select options={branches.map(b=>({value:b.id, label:b.name}))} onChange={s=>setPrForm({...prForm, branch_id:s?.value})} required />
+                <Select options={branches.map(b => ({ value: b.id, label: b.name }))} onChange={s => setPrForm({ ...prForm, branch_id: s?.value })} required />
               </div>
-              <h4 style={{marginTop:'20px'}}>Items</h4>
+              <h4 style={{ marginTop: '20px' }}>Items</h4>
               {prForm.items.map((it, idx) => (
-                <div key={idx} style={{display:'flex', gap:'10px', marginBottom:'10px'}}>
-                  <div style={{flex:2}}><Select placeholder="Item" options={items.map(i=>({value:i.id, label:i.item_name}))} onChange={s=>{const n=[...prForm.items]; n[idx].item_id=s?.value; setPrForm({...prForm, items:n});}} required /></div>
-                  <div style={{flex:1}}><input type="number" placeholder="Qty" className="inv-input" required value={it.quantity} onChange={e=>{const n=[...prForm.items]; n[idx].quantity=e.target.value; setPrForm({...prForm, items:n});}} /></div>
-                  <div style={{flex:2}}><input type="text" placeholder="Remarks (optional)" className="inv-input" value={it.remarks} onChange={e=>{const n=[...prForm.items]; n[idx].remarks=e.target.value; setPrForm({...prForm, items:n});}} /></div>
+                <div key={idx} style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+                  <div style={{ flex: 2 }}><Select placeholder="Item" options={items.map(i => ({ value: i.id, label: i.item_name }))} onChange={s => { const n = [...prForm.items]; n[idx].item_id = s?.value; setPrForm({ ...prForm, items: n }); }} required /></div>
+                  <div style={{ flex: 1 }}><input type="number" placeholder="Qty" className="inv-input" required value={it.quantity} onChange={e => { const n = [...prForm.items]; n[idx].quantity = e.target.value; setPrForm({ ...prForm, items: n }); }} /></div>
+                  <div style={{ flex: 2 }}><input type="text" placeholder="Remarks (optional)" className="inv-input" value={it.remarks} onChange={e => { const n = [...prForm.items]; n[idx].remarks = e.target.value; setPrForm({ ...prForm, items: n }); }} /></div>
                 </div>
               ))}
-              <button type="button" onClick={()=>setPrForm({...prForm, items:[...prForm.items, {item_id:'', quantity:'', remarks:''}]})} style={{background:'#e0e7ff', color:'#4338ca', border:'none', padding:'6px 12px', borderRadius:'4px', cursor:'pointer'}}>+ Add Item</button>
+              <button type="button" onClick={() => setPrForm({ ...prForm, items: [...prForm.items, { item_id: '', quantity: '', remarks: '' }] })} style={{ background: '#e0e7ff', color: '#4338ca', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer' }}>+ Add Item</button>
             </form>
-            <div className="inv-drawer-footer"><button className="action-btn" onClick={()=>setIsPRModalOpen(false)}>Cancel</button><button onClick={handleCreatePR} className="btn-primary">Submit PR</button></div>
+            <div className="inv-drawer-footer"><button className="action-btn" onClick={() => setIsPRModalOpen(false)}>Cancel</button><button onClick={handleCreatePR} className="btn-primary">Submit PR</button></div>
           </div>
         </div>
       )}
@@ -448,28 +448,28 @@ function PurchaseManagement() {
       {/* PO Modal */}
       {isPOModalOpen && (
         <div className="inv-modal-overlay" onClick={() => setIsPOModalOpen(false)}>
-          <div className="inv-drawer" style={{width:'800px'}} onClick={e=>e.stopPropagation()}>
+          <div className="inv-drawer" style={{ width: '800px' }} onClick={e => e.stopPropagation()}>
             <div className="inv-drawer-header"><h2>Generate Purchase Order</h2><button className="inv-drawer-close" onClick={() => setIsPOModalOpen(false)}>&times;</button></div>
             <form onSubmit={handleCreatePO} className="inv-drawer-body">
               <div className="inv-grid-2">
                 <div className="inv-form-group"><label>Vendor *</label>
-                  <Select options={vendors.map(v=>({value:v.id, label:v.vendor_name}))} onChange={s=>setPoForm({...poForm, vendor_id:s?.value})} required />
+                  <Select options={vendors.map(v => ({ value: v.id, label: v.vendor_name }))} onChange={s => setPoForm({ ...poForm, vendor_id: s?.value })} required />
                 </div>
                 <div className="inv-form-group"><label>Expected Delivery Date *</label>
-                  <input type="date" className="inv-input" required value={poForm.expected_delivery_date} onChange={e=>setPoForm({...poForm, expected_delivery_date:e.target.value})} />
+                  <input type="date" className="inv-input" required value={poForm.expected_delivery_date} onChange={e => setPoForm({ ...poForm, expected_delivery_date: e.target.value })} />
                 </div>
               </div>
-              <h4 style={{marginTop:'20px'}}>PO Items</h4>
+              <h4 style={{ marginTop: '20px' }}>PO Items</h4>
               {poForm.items.map((it, idx) => (
-                <div key={idx} style={{display:'flex', gap:'10px', marginBottom:'10px'}}>
-                  <div style={{flex:2}}><Select value={it.item_id ? {value:it.item_id, label:items.find(i=>i.id===it.item_id)?.item_name} : null} placeholder="Item" options={items.map(i=>({value:i.id, label:i.item_name}))} onChange={s=>{const n=[...poForm.items]; n[idx].item_id=s?.value; setPoForm({...poForm, items:n});}} required /></div>
-                  <div style={{flex:1}}><input type="number" placeholder="Qty" className="inv-input" required value={it.quantity} onChange={e=>{const n=[...poForm.items]; n[idx].quantity=e.target.value; setPoForm({...poForm, items:n});}} /></div>
-                  <div style={{flex:1}}><input type="number" step="0.01" placeholder="Unit Price (₹)" className="inv-input" required value={it.unit_price} onChange={e=>{const n=[...poForm.items]; n[idx].unit_price=e.target.value; setPoForm({...poForm, items:n});}} /></div>
+                <div key={idx} style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+                  <div style={{ flex: 2 }}><Select value={it.item_id ? { value: it.item_id, label: items.find(i => i.id === it.item_id)?.item_name } : null} placeholder="Item" options={items.map(i => ({ value: i.id, label: i.item_name }))} onChange={s => { const n = [...poForm.items]; n[idx].item_id = s?.value; setPoForm({ ...poForm, items: n }); }} required /></div>
+                  <div style={{ flex: 1 }}><input type="number" placeholder="Qty" className="inv-input" required value={it.quantity} onChange={e => { const n = [...poForm.items]; n[idx].quantity = e.target.value; setPoForm({ ...poForm, items: n }); }} /></div>
+                  <div style={{ flex: 1 }}><input type="number" step="0.01" placeholder="Unit Price (₹)" className="inv-input" required value={it.unit_price} onChange={e => { const n = [...poForm.items]; n[idx].unit_price = e.target.value; setPoForm({ ...poForm, items: n }); }} /></div>
                 </div>
               ))}
-              <button type="button" onClick={()=>setPoForm({...poForm, items:[...poForm.items, {item_id:'', quantity:'', unit_price:''}]})} style={{background:'#e0e7ff', color:'#4338ca', border:'none', padding:'6px 12px', borderRadius:'4px', cursor:'pointer'}}>+ Add Item</button>
+              <button type="button" onClick={() => setPoForm({ ...poForm, items: [...poForm.items, { item_id: '', quantity: '', unit_price: '' }] })} style={{ background: '#e0e7ff', color: '#4338ca', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer' }}>+ Add Item</button>
             </form>
-            <div className="inv-drawer-footer"><button className="action-btn" onClick={()=>setIsPOModalOpen(false)}>Cancel</button><button onClick={handleCreatePO} className="btn-primary">Generate PO</button></div>
+            <div className="inv-drawer-footer"><button className="action-btn" onClick={() => setIsPOModalOpen(false)}>Cancel</button><button onClick={handleCreatePO} className="btn-primary">Generate PO</button></div>
           </div>
         </div>
       )}
@@ -477,7 +477,7 @@ function PurchaseManagement() {
       {/* PR Details View Modal */}
       {viewPR && (
         <div className="inv-modal-overlay" onClick={() => setViewPR(null)}>
-          <div className="inv-modal" onClick={e=>e.stopPropagation()} style={{ maxWidth: '600px' }}>
+          <div className="inv-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '600px' }}>
             <div className="inv-modal-header">
               <h2>Purchase Requisition Details</h2>
               <button className="inv-modal-close" onClick={() => setViewPR(null)}>&times;</button>
@@ -535,14 +535,14 @@ function PurchaseManagement() {
       {/* PO Details View & Print Modal */}
       {viewPO && (
         <div className="inv-modal-overlay" onClick={() => setViewPO(null)}>
-          <div className="inv-modal" onClick={e=>e.stopPropagation()} style={{ maxWidth: '800px' }}>
+          <div className="inv-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '800px' }}>
             <div className="inv-modal-header">
               <h2>Purchase Order Document</h2>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <button 
-                  onClick={() => downloadPO(viewPO)} 
+                <button
+                  onClick={() => downloadPO(viewPO)}
                   disabled={pdfLoading}
-                  className="btn-primary" 
+                  className="btn-primary"
                   style={{ background: '#2563eb' }}
                 >
                   {pdfLoading ? '⏳ Generating PDF...' : '⬇️ Download A4 PDF'}
@@ -551,7 +551,7 @@ function PurchaseManagement() {
               </div>
             </div>
             <div className="inv-modal-body" id="printable-po" style={{ padding: '40px', background: 'white' }}>
-              
+
               {/* Official PO Header */}
               <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '2px solid #e2e8f0', paddingBottom: '20px', marginBottom: '20px' }}>
                 <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
@@ -561,7 +561,7 @@ function PurchaseManagement() {
                   <div>
                     <h1 style={{ margin: 0, color: '#0f172a', fontSize: '24px' }}>{hospitalSettings?.hospital_name || 'MERIL HIMS'}</h1>
                     <p style={{ margin: '4px 0 0 0', color: '#64748b', fontSize: '13px' }}>
-                      {hospitalSettings?.address && <span>{hospitalSettings.address}<br/></span>}
+                      {hospitalSettings?.address && <span>{hospitalSettings.address}<br /></span>}
                       {hospitalSettings?.phone && <span>Phone: {hospitalSettings.phone} </span>}
                       {hospitalSettings?.email && <span>| Email: {hospitalSettings.email}</span>}
                     </p>
@@ -607,8 +607,8 @@ function PurchaseManagement() {
                         <div style={{ fontSize: '12px', color: '#64748b' }}>Item Code: {item.item_code}</div>
                       </td>
                       <td style={{ padding: '12px', textAlign: 'right', fontWeight: 500 }}>{item.quantity} {item.unit}</td>
-                      <td style={{ padding: '12px', textAlign: 'right' }}>₹{parseFloat(item.unit_price).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-                      <td style={{ padding: '12px', textAlign: 'right', fontWeight: 600 }}>₹{parseFloat(item.subtotal).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                      <td style={{ padding: '12px', textAlign: 'right' }}>₹{parseFloat(item.unit_price).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                      <td style={{ padding: '12px', textAlign: 'right', fontWeight: 600 }}>₹{parseFloat(item.subtotal).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -619,11 +619,11 @@ function PurchaseManagement() {
                 <div style={{ width: '300px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid #e2e8f0', fontWeight: 600 }}>
                     <span>Subtotal</span>
-                    <span>₹{parseFloat(viewPO.total_amount).toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+                    <span>₹{parseFloat(viewPO.total_amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderBottom: '2px solid #cbd5e1', fontWeight: 700, fontSize: '18px', color: 'var(--blue-primary)' }}>
                     <span>Total Order Amount</span>
-                    <span>₹{parseFloat(viewPO.total_amount).toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+                    <span>₹{parseFloat(viewPO.total_amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                   </div>
                 </div>
               </div>

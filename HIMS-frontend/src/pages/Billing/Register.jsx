@@ -401,7 +401,7 @@ function Register() {
                 {formData.branchId === 'NEW' && (
                   <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '8px', marginBottom: '16px', border: '1px solid #e2e8f0' }}>
                     <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', color: '#0f172a' }}>New Facility Details</h4>
-                    
+
                     <div className={wrapperClass('newBranchName')} style={{ marginBottom: '12px' }}>
                       <label className="field-label">Facility Name</label>
                       <input {...fieldProps('newBranchName')} type="text" placeholder="e.g. City General Hospital" required />

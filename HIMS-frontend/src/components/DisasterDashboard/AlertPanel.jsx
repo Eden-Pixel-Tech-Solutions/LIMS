@@ -2,7 +2,7 @@ import React from 'react';
 import { Bell, Info, AlertCircle, Zap } from 'lucide-react';
 import { ALERTS } from '../../data/disasterMockData';
 
-const AlertPanel = () => {
+const AlertPanel = ({ alerts = [] }) => {
   return (
     <div className="alert-panel">
       <div className="alert-header">
@@ -11,7 +11,7 @@ const AlertPanel = () => {
       </div>
       
       <div className="alert-list custom-scrollbar">
-        {ALERTS.map((alert) => (
+        {alerts.map((alert) => (
           <div key={alert.id} className="alert-item">
             <div className="alert-type-header">
               <span className="legend-dot" style={{ backgroundColor: 

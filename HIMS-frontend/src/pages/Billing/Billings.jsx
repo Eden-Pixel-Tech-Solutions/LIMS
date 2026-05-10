@@ -414,7 +414,7 @@ function Billings({ regNo, bookingData, onFinish }) {
               </select>
               {selectedPatient && (
                 <div className="patient-info">
-                  <p><strong>Reg No:</strong> {selectedPatient.reg_no}</p>
+                  <p><strong>CRN No:</strong> {selectedPatient.reg_no}</p>
                   <p><strong>Name:</strong> {selectedPatient.name}</p>
                   {selectedPatient.phone && <p><strong>Phone:</strong> {selectedPatient.phone}</p>}
                   {selectedPatient.email && <p><strong>Email:</strong> {selectedPatient.email}</p>}

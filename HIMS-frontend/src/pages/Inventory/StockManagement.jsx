@@ -3,7 +3,7 @@ import Alert from '../../components/Alert';
 import { useAlert } from '../../hooks/useAlert';
 import '../../assets/CSS/InventoryMaster.css';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_URL = import.meta.env.VITE_API_URL || 'http://172.16.11.160:5000';
 
 const TABS = [
   { id: 'stock', label: 'Current Stock', num: '1' },
@@ -60,7 +60,7 @@ function StockManagement() {
       else if (activeTab === 'batches') endpoint = '/api/inventory/stock/batches';
       else if (activeTab === 'transfers') endpoint = '/api/inventory/transfers';
       else if (activeTab === 'qc') endpoint = '/api/inventory/qc-inventory';
-      
+
       const response = await fetch(`${API_URL}${endpoint}`);
       const data = await response.json();
       if (data.success) setItems(data.data);
@@ -173,7 +173,7 @@ function StockManagement() {
   return (
     <div className="inventory-master">
       {alert && <Alert type={alert.type} message={alert.message} onClose={hideAlert} />}
-      
+
       <div className="page-header">
         <h1>Stock Management</h1>
         <div className="header-actions">
@@ -316,7 +316,7 @@ function StockManagement() {
                       <td>{getExpiryBadge(item.days_until_expiry)}</td>
                       <td>
                         {!item.open_vial_date && (
-                          <button className="btn-primary" onClick={() => handleOpenVial(item)} style={{padding: '4px 12px', fontSize: '12px'}}>
+                          <button className="btn-primary" onClick={() => handleOpenVial(item)} style={{ padding: '4px 12px', fontSize: '12px' }}>
                             Open Vial
                           </button>
                         )}
@@ -343,9 +343,9 @@ function StockManagement() {
                 <div className="form-grid">
                   <div className="form-group full-width">
                     <label>Item *</label>
-                    <select 
+                    <select
                       value={formData.item_id}
-                      onChange={(e) => setFormData({...formData, item_id: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, item_id: e.target.value })}
                       required
                     >
                       <option value="">Select Item</option>
@@ -356,21 +356,21 @@ function StockManagement() {
                   </div>
                   <div className="form-group">
                     <label>Adjustment Quantity *</label>
-                    <input 
-                      type="number" 
+                    <input
+                      type="number"
                       step="0.01"
                       value={formData.quantity}
-                      onChange={(e) => setFormData({...formData, quantity: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
                       required
                       placeholder="Use negative for reduction"
                     />
                   </div>
                   <div className="form-group">
                     <label>Reason *</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       value={formData.reason}
-                      onChange={(e) => setFormData({...formData, reason: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
                       required
                       placeholder="e.g., Damaged, Spillage, Correction"
                     />
@@ -398,9 +398,9 @@ function StockManagement() {
                 <div className="form-grid">
                   <div className="form-group">
                     <label>From Department *</label>
-                    <select 
+                    <select
                       value={formData.from_department}
-                      onChange={(e) => setFormData({...formData, from_department: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, from_department: e.target.value })}
                       required
                     >
                       <option value="">Select</option>
@@ -411,9 +411,9 @@ function StockManagement() {
                   </div>
                   <div className="form-group">
                     <label>To Department *</label>
-                    <select 
+                    <select
                       value={formData.to_department}
-                      onChange={(e) => setFormData({...formData, to_department: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, to_department: e.target.value })}
                       required
                     >
                       <option value="">Select</option>
@@ -424,18 +424,18 @@ function StockManagement() {
                   </div>
                   <div className="form-group">
                     <label>Transfer Date</label>
-                    <input 
-                      type="date" 
+                    <input
+                      type="date"
                       value={formData.transfer_date}
-                      onChange={(e) => setFormData({...formData, transfer_date: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, transfer_date: e.target.value })}
                       required
                     />
                   </div>
                   <div className="form-group full-width">
                     <label>Item *</label>
-                    <select 
+                    <select
                       value={formData.item_id}
-                      onChange={(e) => setFormData({...formData, item_id: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, item_id: e.target.value })}
                       required
                     >
                       <option value="">Select Item</option>
@@ -446,10 +446,10 @@ function StockManagement() {
                   </div>
                   <div className="form-group">
                     <label>Quantity *</label>
-                    <input 
-                      type="number" 
+                    <input
+                      type="number"
                       value={formData.quantity}
-                      onChange={(e) => setFormData({...formData, quantity: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
                       required
                     />
                   </div>
@@ -476,19 +476,19 @@ function StockManagement() {
                 <div className="form-grid">
                   <div className="form-group">
                     <label>Open Vial Date</label>
-                    <input 
-                      type="date" 
+                    <input
+                      type="date"
                       value={formData.open_vial_date}
-                      onChange={(e) => setFormData({...formData, open_vial_date: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, open_vial_date: e.target.value })}
                       required
                     />
                   </div>
                   <div className="form-group">
                     <label>Stability After Opening (days)</label>
-                    <input 
-                      type="number" 
+                    <input
+                      type="number"
                       value={formData.stability_days}
-                      onChange={(e) => setFormData({...formData, stability_days: parseInt(e.target.value)})}
+                      onChange={(e) => setFormData({ ...formData, stability_days: parseInt(e.target.value) })}
                       required
                     />
                   </div>

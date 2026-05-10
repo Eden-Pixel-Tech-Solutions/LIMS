@@ -17,7 +17,7 @@ const initializeAsyncStorage = async () => {
 let inMemoryToken: string | null = null;
 
 // API Configuration
-const API_BASE_URL = "http://10.37.206.248:7005/api/lab"; // Update with your backend URL
+const API_BASE_URL = "http://172.16.11.160:7005/api/lab"; // Update with your backend URL
 
 // Types for API responses
 interface ApiResponse<T = any> {

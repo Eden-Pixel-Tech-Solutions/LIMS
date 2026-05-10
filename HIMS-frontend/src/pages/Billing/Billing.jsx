@@ -7,26 +7,7 @@ import '../../assets/CSS/PatientRegistration.css';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://172.16.11.160:7005';
 
-const QRPlaceholder = ({ value, size = 120 }) => (
-  <svg width={size} height={size} viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg"
-    style={{ imageRendering: 'pixelated', display: 'block' }}>
-    <rect width="21" height="21" fill="white" />
-    {[0, 14].map(ox => [0, 14].map(oy => (
-      <g key={`${ox}-${oy}`}>
-        <rect x={ox} y={oy} width="7" height="7" fill="#1e293b" />
-        <rect x={ox + 1} y={oy + 1} width="5" height="5" fill="white" />
-        <rect x={ox + 2} y={oy + 2} width="3" height="3" fill="#1e293b" />
-      </g>
-    )))}
-    {Array.from({ length: 9 }, (_, r) =>
-      Array.from({ length: 9 }, (_, c) => {
-        const hash = (value.charCodeAt((r * 9 + c) % value.length) + r * 7 + c * 13) % 3;
-        return hash === 0 ? <rect key={`${r}-${c}`} x={8 + c * 1.4} y={r * 1.4} width="1.2" height="1.2" fill="#1e293b" /> : null;
-      })
-    )}
-    <text x="10.5" y="20" textAnchor="middle" fontSize="1.8" fill="#64748b" fontFamily="monospace">{value.slice(-8)}</text>
-  </svg>
-);
+
 
 // ── patientId is needed so we can pass it to /billing/create ──
 function Billing({ regNo, patientId, bookingData, onFinish }) {
@@ -36,16 +17,40 @@ function Billing({ regNo, patientId, bookingData, onFinish }) {
   const [packages, setPackages] = useState([]);
   const [selectedPackage, setSelectedPackage] = useState('');
   const [labs, setLabs] = useState([]); // for lab assignment
+  const [availableServices, setAvailableServices] = useState({ laboratory: [], appointments: [] });
+
+  useEffect(() => {
+    fetch(`${API_BASE}/api/billing/services/available`)
+      .then(r => r.json())
+      .then(d => {
+        if (d.success) setAvailableServices(d.data);
+      })
+      .catch(console.error);
+  }, []);
 
   const [items, setItems] = useState([]);
 
   const [discount, setDiscount] = useState(0);
   const [method, setMethod] = useState('Cash');
-  const [status, setStatus] = useState('Pending');
+  const [amountGiven, setAmountGiven] = useState('');
 
   const [invoice, setInvoice] = useState(null);
   const [showModify, setShowModify] = useState(false);
   const [generating, setGenerating] = useState(false);
+
+  // ── fetch dynamic registration fee ──
+  const [regFee, setRegFee] = useState(15.00);
+
+  useEffect(() => {
+    fetch(`${API_BASE}/api/settings`)
+      .then(r => r.json())
+      .then(d => {
+        if (d.success && d.data && d.data.registration_fee !== undefined) {
+          setRegFee(parseFloat(d.data.registration_fee) || 0);
+        }
+      })
+      .catch(console.error);
+  }, []);
 
   // ── Resolve patient ID: prop → regNo lookup ──
   const [resolvedPatientId, setResolvedPatientId] = useState(patientId || null);
@@ -73,14 +78,19 @@ function Billing({ regNo, patientId, bookingData, onFinish }) {
 
   // ── Fetch labs for workload-aware assignment ──
   useEffect(() => {
-    fetch(`${API_BASE}/api/lab/labs`)
+    const branchId = localStorage.getItem('branch_id');
+    // Fetch only the lab(s) that belong to the current user's branch
+    fetch(`${API_BASE}/api/infra?type=Lab${branchId ? `&branch_id=${branchId}` : ''}`)
       .then(r => r.json())
       .then(d => {
-        if (d.success) {
-          const sorted = (d.labs || []).sort(
-            (a, b) => (parseFloat(a.workload_score) || 0) - (parseFloat(b.workload_score) || 0)
-          );
-          setLabs(sorted);
+        if (d.success && d.items) {
+          // Map infra items to lab shape expected by the rest of the billing UI
+          const branchLabs = d.items.map(item => ({
+            id: item.id,
+            name: item.name,
+            pending_tasks: 0
+          }));
+          setLabs(branchLabs);
         }
       })
       .catch(console.error);
@@ -91,7 +101,7 @@ function Billing({ regNo, patientId, bookingData, onFinish }) {
     if (!bookingData) {
       setItems([
         { id: 1, name: 'Consultation Fee', amount: 35.00, service_type: 'Appointment' },
-        { id: 2, name: 'Registration Fee', amount: 15.00, service_type: 'Other' },
+        { id: 2, name: 'Registration Fee', amount: regFee, service_type: 'Other' },
         { id: 3, name: 'Lab Test', amount: 0.00, service_type: 'Laboratory' },
         { id: 4, name: 'Medication', amount: 0.00, service_type: 'Other' },
       ]);
@@ -105,7 +115,7 @@ function Billing({ regNo, patientId, bookingData, onFinish }) {
     newItems.push({
       id: idCounter++,
       name: 'Registration Fee',
-      amount: 15.00,
+      amount: regFee,
       service_type: 'Other',
       quantity: 1,
     });
@@ -142,7 +152,7 @@ function Billing({ regNo, patientId, bookingData, onFinish }) {
     }
 
     setItems(newItems);
-  }, [bookingData, labs]);
+  }, [bookingData, labs, regFee]);
 
   // ── fetch packages ──
   useEffect(() => {
@@ -164,7 +174,7 @@ function Billing({ regNo, patientId, bookingData, onFinish }) {
   }, []);
 
   // ── computed totals ──
-  const subtotal = items.reduce((s, i) => s + (i.amount || 0), 0);
+  const subtotal = items.reduce((s, i) => s + (parseFloat(i.amount) || 0), 0);
   const discAmt = subtotal * (discount / 100);
   const total = subtotal - discAmt;
 
@@ -194,7 +204,7 @@ function Billing({ regNo, patientId, bookingData, onFinish }) {
   };
   const handleItemChange = (i, field, val) =>
     setItems(p => p.map((it, idx) =>
-      idx === i ? { ...it, [field]: field === 'amount' ? parseFloat(val) || 0 : val } : it
+      idx === i ? { ...it, [field]: field === 'amount' ? val : val } : it
     ));
 
   // ── generate invoice — now calls /billing/create matching lab-billings payload ──
@@ -207,7 +217,7 @@ function Billing({ regNo, patientId, bookingData, onFinish }) {
       return;
     }
     if (!resolvedPatientId) {
-      showAlert('Could not resolve patient — please check the registration number.', 'error');
+      showAlert('Could not resolve patient — please check the CRN No.', 'error');
       return;
     }
 
@@ -218,26 +228,63 @@ function Billing({ regNo, patientId, bookingData, onFinish }) {
         service_id: item.service_id || null,
         service_type: item.service_type || 'Other',
         service_name: item.name,
-        unit_price: item.amount,
-        quantity: item.quantity || 1,
-        total_price: (item.amount) * (item.quantity || 1),
+        unit_price: parseFloat(item.amount) || 0,
+        quantity: parseFloat(item.quantity) || 1,
+        total_price: (parseFloat(item.amount) || 0) * (parseFloat(item.quantity) || 1),
         lab_id: item.lab_id || null,
         lab_name: item.lab_name || null,
       }));
 
-      const res = await fetch(`${API_BASE}/api/billing/create`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          patient_id: resolvedPatientId,
-          patient_name: regNo,          // backend may use this for display
-          items: mappedItems,
-          discount_amount: discAmt,
-          payment_method: method,
-          notes: status,                   // pass payment status as notes or add a dedicated field if your schema supports it
-          overwrite_duplicates: overwriteDuplicates
-        }),
-      });
+      let effectivePaidAmount = 0;
+      let effectiveStatus = 'Pending';
+
+      if (method !== 'Cash') {
+        effectivePaidAmount = total;
+        effectiveStatus = 'Paid';
+      } else {
+        const given = parseFloat(amountGiven);
+        if (isNaN(given)) {
+          effectivePaidAmount = total;
+          effectiveStatus = 'Paid';
+        } else {
+          effectivePaidAmount = given >= total ? total : given;
+          effectiveStatus = given >= total ? 'Paid' : 'Pending';
+        }
+      }
+
+      let res;
+      if (invoice && invoice.billingId && showModify) {
+        res = await fetch(`${API_BASE}/api/billing/${invoice.billingId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            patient_id: resolvedPatientId,
+            items: mappedItems,
+            discount_amount: discAmt,
+            payment_method: method,
+            payment_status: effectiveStatus,
+            paid_amount: effectivePaidAmount,
+            notes: amountGiven ? `Amount Given: ₹${parseFloat(amountGiven).toFixed(2)}` : '',
+            overwrite_duplicates: overwriteDuplicates
+          }),
+        });
+      } else {
+        res = await fetch(`${API_BASE}/api/billing/create`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            patient_id: resolvedPatientId,
+            patient_name: regNo,
+            items: mappedItems,
+            discount_amount: discAmt,
+            payment_method: method,
+            payment_status: effectiveStatus,
+            paid_amount: effectivePaidAmount,
+            notes: amountGiven ? `Amount Given: ₹${parseFloat(amountGiven).toFixed(2)}` : '',
+            overwrite_duplicates: overwriteDuplicates
+          }),
+        });
+      }
 
       if (res.status === 409) {
         const conflictResult = await res.json();
@@ -259,7 +306,7 @@ function Billing({ regNo, patientId, bookingData, onFinish }) {
         const billId = result.data?.bill_id || result.data?.bill_number || result.billingId;
         setInvoice({ billingId: billId, generatedAt: new Date().toLocaleString() });
         setShowModify(false);
-        showAlert(`Invoice #${billId} generated successfully!`, 'success');
+        showAlert(invoice && showModify ? `Invoice #${billId} updated successfully!` : `Invoice #${billId} generated successfully!`, 'success');
         if (onFinish) onFinish(result.data);
       } else {
         showAlert(result.message || 'Error generating invoice.', 'error');
@@ -274,11 +321,16 @@ function Billing({ regNo, patientId, bookingData, onFinish }) {
 
   const handleModify = () => {
     setShowModify(true);
-    setInvoice(null);
     showAlert('Invoice unlocked for editing.', 'info');
   };
 
-  const handlePrintReceipt = () => window.print();
+  const handlePrintReceipt = () => {
+    if (invoice && invoice.billingId) {
+      window.open(`${API_BASE}/api/billing/${invoice.billingId}/pdf`, '_blank');
+    } else {
+      window.print();
+    }
+  };
 
   const handlePrintBarcode = () => {
     const barcodeData = `INV-${invoice?.billingId}-${regNo}`;
@@ -340,7 +392,13 @@ function Billing({ regNo, patientId, bookingData, onFinish }) {
               </div>
             </div>
             <div className="bil-confirmed-qr">
-              <QRPlaceholder value={`${invoice.billingId}-${regNo}`} size={64} />
+              <img
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=64x64&data=${invoice.billingId}-REG-${regNo}`}
+                alt="QR Code"
+                width={64}
+                height={64}
+                style={{ borderRadius: '6px', mixBlendMode: 'multiply' }}
+              />
             </div>
           </div>
         )}
@@ -429,33 +487,59 @@ function Billing({ regNo, patientId, bookingData, onFinish }) {
                           {isLocked ? (
                             <span className="bil-locked-text">{item.name || '—'}</span>
                           ) : (
-                            <input
-                              className="bil-inline-input"
-                              type="text"
-                              value={item.name}
-                              onChange={e => handleItemChange(i, 'name', e.target.value)}
-                              placeholder="Item description…"
-                            />
+                            <div style={{ display: 'flex' }}>
+                              <select
+                                className="bil-inline-input"
+                                style={{ width: '32px', padding: '0 2px', cursor: 'pointer', background: '#f8fafc', borderRight: 'none', borderRadius: '4px 0 0 4px' }}
+                                value=""
+                                onChange={e => {
+                                  if (!e.target.value) return;
+                                  let svc;
+                                  if (e.target.value.startsWith('lab_')) {
+                                    svc = availableServices.laboratory?.find(l => 'lab_' + l.id === e.target.value);
+                                  } else if (e.target.value.startsWith('appt_')) {
+                                    svc = availableServices.appointments?.find(a => 'appt_' + a.id === e.target.value);
+                                  }
+                                  if (svc) {
+                                    handleItemChange(i, 'name', svc.name);
+                                    handleItemChange(i, 'amount', parseFloat(svc.price) || 0);
+                                    handleItemChange(i, 'service_type', svc.service_type);
+                                    handleItemChange(i, 'service_id', svc.id);
+                                  }
+                                  e.target.value = "";
+                                }}
+                                title="Select predefined service"
+                              >
+                                <option value="">🔍</option>
+                                <optgroup label="Consultations">
+                                  {(availableServices.appointments || []).map(a => <option key={`appt_${a.id}`} value={`appt_${a.id}`}>{a.name} (₹{a.price})</option>)}
+                                </optgroup>
+                                <optgroup label="Laboratory Tests">
+                                  {(availableServices.laboratory || []).map(l => <option key={`lab_${l.id}`} value={`lab_${l.id}`}>{l.name} (₹{l.price})</option>)}
+                                </optgroup>
+                              </select>
+                              <input
+                                className="bil-inline-input"
+                                type="text"
+                                value={item.name}
+                                onChange={e => handleItemChange(i, 'name', e.target.value)}
+                                placeholder="Item description…"
+                                style={{ flex: 1, borderRadius: '0 4px 4px 0' }}
+                              />
+                            </div>
                           )}
                         </td>
                         <td style={{ textAlign: 'center' }}>
                           {/* Lab assignment for lab items */}
                           {!isLocked && item.service_type === 'Laboratory' && labs.length > 0 ? (
-                            <select
-                              style={{ fontSize: '11px', padding: '2px 4px', border: '1px solid #d1d5db', borderRadius: '4px', maxWidth: '120px' }}
-                              value={item.lab_id || ''}
-                              onChange={e => {
-                                const lab = labs.find(l => l.id === parseInt(e.target.value));
-                                handleItemChange(i, 'lab_id', lab?.id || null);
-                                handleItemChange(i, 'lab_name', lab?.name || null);
-                              }}
-                            >
-                              {labs.map(lab => (
-                                <option key={lab.id} value={lab.id}>
-                                  {lab.name} ({lab.pending_tasks || 0})
-                                </option>
-                              ))}
-                            </select>
+                            // Show the branch lab as a read-only badge (no selection needed)
+                            <span style={{
+                              fontSize: '11px', padding: '2px 8px', borderRadius: '4px',
+                              background: '#dbeafe', color: '#1d4ed8', fontWeight: 600,
+                              border: '1px solid #bfdbfe', whiteSpace: 'nowrap'
+                            }}>
+                              {labs[0].name}
+                            </span>
                           ) : (
                             <span style={{
                               fontSize: '10px', padding: '2px 6px', borderRadius: '4px',
@@ -537,17 +621,18 @@ function Billing({ regNo, patientId, bookingData, onFinish }) {
                 </div>
 
                 <div className="bil-pay-field">
-                  <label className="bil-pay-label">Status</label>
-                  <select
-                    className={`bil-pay-select bil-status-select bil-status-${status.toLowerCase()}`}
-                    value={status}
-                    onChange={e => setStatus(e.target.value)}
+                  <label className="bil-pay-label">Amount Given (₹)</label>
+                  <input
+                    type="number"
+                    className="bil-pay-select"
+                    value={amountGiven}
+                    onChange={e => setAmountGiven(e.target.value)}
                     disabled={isLocked}
-                  >
-                    <option>Pending</option>
-                    <option>Completed</option>
-                    <option>Waived</option>
-                  </select>
+                    placeholder="Enter amount..."
+                    min="0"
+                    step="1"
+                    style={{ background: '#fff', border: '1px solid #d1d5db', cursor: isLocked ? 'not-allowed' : 'text', paddingLeft: '8px' }}
+                  />
                 </div>
 
                 <div className="bil-divider" />
@@ -564,9 +649,17 @@ function Billing({ regNo, patientId, bookingData, onFinish }) {
                   )}
                 </div>
 
-                <div className="bil-total-box">
-                  <span className="bil-total-label">Total Due</span>
-                  <span className="bil-total-val">₹{total.toFixed(2)}</span>
+                <div className="bil-total-box" style={{ flexDirection: 'column' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                    <span className="bil-total-label">Total Due</span>
+                    <span className="bil-total-val">₹{total.toFixed(2)}</span>
+                  </div>
+                  {method === 'Cash' && amountGiven && (parseFloat(amountGiven) > total) && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginTop: '12px', paddingTop: '12px', borderTop: '2px solid rgba(22, 163, 74, 0.2)' }}>
+                      <span className="bil-total-label" style={{ fontSize: '14px', color: '#16a34a', textTransform: 'uppercase' }}>Balance to Return</span>
+                      <span className="bil-total-val" style={{ fontSize: '20px', color: '#16a34a' }}>₹{(parseFloat(amountGiven) - total).toFixed(2)}</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="bil-method-badge">
@@ -580,12 +673,12 @@ function Billing({ regNo, patientId, bookingData, onFinish }) {
 
             <div className="bil-ref-card">
               <div className="bil-ref-row">
-                <span className="bil-ref-label">Registration No.</span>
+                <span className="bil-ref-label">CRN No</span>
                 <span className="bil-ref-val">{regNo || '—'}</span>
               </div>
               {resolvedPatientId && (
                 <div className="bil-ref-row">
-                  <span className="bil-ref-label">Patient ID</span>
+                  <span className="bil-ref-label">CRN No</span>
                   <span className="bil-ref-val">{resolvedPatientId}</span>
                 </div>
               )}
@@ -604,7 +697,7 @@ function Billing({ regNo, patientId, bookingData, onFinish }) {
               {labs.length > 0 && bookingData?.labTests?.length > 0 && (
                 <div className="bil-ref-row">
                   <span className="bil-ref-label">Lab Assigned</span>
-                  <span className="bil-ref-val" style={{ color: '#166534' }}>⚡ {labs[0].name}</span>
+                  <span className="bil-ref-val" style={{ color: '#166534' }}>📍 {labs[0].name}</span>
                 </div>
               )}
               {invoice && (
@@ -620,7 +713,7 @@ function Billing({ regNo, patientId, bookingData, onFinish }) {
 
       {/* ══ STICKY ACTION BAR ══ */}
       <div className="bil-action-bar">
-        {invoice ? (
+        {invoice && !showModify ? (
           <div className="bil-post-actions">
             <button className="bil-action-btn bil-action-modify" onClick={handleModify}>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -673,7 +766,7 @@ function Billing({ regNo, patientId, bookingData, onFinish }) {
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <polyline points="20 6 9 17 4 12" />
               </svg>
-              {generating ? 'Generating…' : 'Confirm & Generate Invoice'}
+              {generating ? 'Processing…' : invoice && showModify ? 'Save Modified Invoice' : 'Confirm & Generate Invoice'}
             </button>
           </div>
         )}

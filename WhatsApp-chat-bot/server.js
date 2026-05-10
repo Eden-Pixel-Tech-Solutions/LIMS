@@ -94,7 +94,7 @@ app.post('/send-message', async (req, res) => {
         res.send('Message sent successfully!');
     } catch (err) {
         console.error('WhatsApp send error:', err);
-        
+
         // Specific handling for common Puppeteer/WWebJS errors
         if (err.message.includes('detached Frame') || err.message.includes('Session closed')) {
             res.status(503).send('WhatsApp connection lost (Detached Frame). Please restart the bot command (npm start).');
@@ -105,7 +105,7 @@ app.post('/send-message', async (req, res) => {
 });
 
 app.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}`);
+    console.log(`Server running at http://172.16.11.160:${port}`);
 });
 
 client.initialize();

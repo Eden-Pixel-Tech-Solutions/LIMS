@@ -307,12 +307,12 @@ export default function LoginScreen() {
 
         {/* Brand */}
         <Animated.View style={{ opacity: titleAnim, alignItems: 'center', marginTop: 14 }}>
-          <Text style={styles.brandName}>LabTrack</Text>
+          <Text style={styles.brandName}>Meril - LIS</Text>
           <View style={styles.badgeRow}>
             <View style={styles.badge}>
-              <Text style={styles.badgeText}>LIS</Text>
+              <Text style={styles.badgeText}>Meril</Text>
             </View>
-            <Text style={styles.brandSub}>Laboratory Information System</Text>
+            <Text style={styles.brandSub}>Meril's Laboratory Information System</Text>
           </View>
         </Animated.View>
 

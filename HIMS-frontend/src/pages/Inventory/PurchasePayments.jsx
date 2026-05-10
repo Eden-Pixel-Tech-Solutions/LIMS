@@ -13,10 +13,10 @@ function PurchasePayments() {
   const [vendors, setVendors] = useState([]);
   const [ledger, setLedger] = useState([]);
   const [selectedVendorForLedger, setSelectedVendorForLedger] = useState(null);
-  
+
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('invoices'); // invoices, ledger
-  
+
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
@@ -40,7 +40,7 @@ function PurchasePayments() {
       const statsData = await statsRes.json();
       const invData = await invRes.json();
       const vendorsData = await vendorsRes.json();
-      
+
       if (statsData.success) setStats(statsData.data);
       if (invData.success) setInvoices(invData.data);
       if (vendorsData.success) setVendors(vendorsData.data);
@@ -125,7 +125,7 @@ function PurchasePayments() {
     if (activeTab === 'invoices') {
       const headers = ["Invoice No", "Supplier", "Invoice Date", "Due Date", "Total Amount", "Paid", "Balance", "Status"];
       csvContent = headers.join(",") + "\n";
-      
+
       invoices.forEach(inv => {
         const balance = parseFloat(inv.total_amount) - parseFloat(inv.paid_amount);
         const row = [
@@ -146,7 +146,7 @@ function PurchasePayments() {
       const vendorName = vendors.find(v => v.id === selectedVendorForLedger)?.vendor_name || "Supplier";
       const headers = ["Date", "Type", "Reference No", "Debit", "Credit", "Balance"];
       csvContent = headers.join(",") + "\n";
-      
+
       ledger.forEach(entry => {
         const row = [
           new Date(entry.created_at).toLocaleString().replace(/,/g, ''),
@@ -202,7 +202,7 @@ function PurchasePayments() {
   return (
     <div className="ap-page">
       {alert && <Alert type={alert.type} message={alert.message} onClose={hideAlert} />}
-      
+
       <div className="ap-header">
         <div className="ap-title-area">
           <h1>Accounts Payable</h1>
@@ -221,24 +221,24 @@ function PurchasePayments() {
       {/* KPI Stats */}
       <div className="ap-stats-grid">
         <div className="ap-stat-card">
-          <div className="ap-stat-icon" style={{background: '#fee2e2', color: '#dc2626'}}>💸</div>
+          <div className="ap-stat-icon" style={{ background: '#fee2e2', color: '#dc2626' }}>💸</div>
           <div className="ap-stat-info">
             <h3>Overdue Amount</h3>
-            <p className="stat-value" style={{color: '#dc2626'}}>₹{parseFloat(stats.overdue_amount).toLocaleString()}</p>
+            <p className="stat-value" style={{ color: '#dc2626' }}>₹{parseFloat(stats.overdue_amount).toLocaleString()}</p>
           </div>
         </div>
         <div className="ap-stat-card">
-          <div className="ap-stat-icon" style={{background: '#fef3c7', color: '#d97706'}}>⏳</div>
+          <div className="ap-stat-icon" style={{ background: '#fef3c7', color: '#d97706' }}>⏳</div>
           <div className="ap-stat-info">
             <h3>Total Outstanding</h3>
             <p className="stat-value">₹{parseFloat(stats.total_payable).toLocaleString()}</p>
           </div>
         </div>
         <div className="ap-stat-card">
-          <div className="ap-stat-icon" style={{background: '#dcfce7', color: '#10b981'}}>✅</div>
+          <div className="ap-stat-icon" style={{ background: '#dcfce7', color: '#10b981' }}>✅</div>
           <div className="ap-stat-info">
             <h3>Paid This Month</h3>
-            <p className="stat-value" style={{color: '#10b981'}}>₹{parseFloat(stats.paid_this_month).toLocaleString()}</p>
+            <p className="stat-value" style={{ color: '#10b981' }}>₹{parseFloat(stats.paid_this_month).toLocaleString()}</p>
           </div>
         </div>
       </div>
@@ -271,9 +271,9 @@ function PurchasePayments() {
               </thead>
               <tbody>
                 {loading ? (
-                  <tr><td colSpan="9" style={{textAlign: 'center', padding: '40px'}}>Loading invoice records...</td></tr>
+                  <tr><td colSpan="9" style={{ textAlign: 'center', padding: '40px' }}>Loading invoice records...</td></tr>
                 ) : invoices.length === 0 ? (
-                  <tr><td colSpan="9" style={{textAlign: 'center', padding: '40px'}}>No invoices found.</td></tr>
+                  <tr><td colSpan="9" style={{ textAlign: 'center', padding: '40px' }}>No invoices found.</td></tr>
                 ) : (
                   invoices.map(inv => {
                     const isOverdue = new Date(inv.due_date) < new Date() && inv.status !== 'PAID';
@@ -341,7 +341,7 @@ function PurchasePayments() {
                   </thead>
                   <tbody>
                     {ledger.length === 0 ? (
-                      <tr><td colSpan="6" style={{textAlign: 'center', padding: '30px'}}>No transactions found for this supplier.</td></tr>
+                      <tr><td colSpan="6" style={{ textAlign: 'center', padding: '30px' }}>No transactions found for this supplier.</td></tr>
                     ) : (
                       ledger.map(entry => (
                         <tr key={entry.id}>
@@ -379,7 +379,7 @@ function PurchasePayments() {
                 <label>Supplier / Vendor *</label>
                 <Select
                   options={vendors.map(v => ({ value: v.id, label: v.vendor_name }))}
-                  onChange={(selected) => setInvoiceForm({...invoiceForm, vendor_id: selected ? selected.value : ''})}
+                  onChange={(selected) => setInvoiceForm({ ...invoiceForm, vendor_id: selected ? selected.value : '' })}
                   required
                   styles={selectStyles}
                   placeholder="Select a registered supplier"
@@ -388,19 +388,19 @@ function PurchasePayments() {
               <div className="ap-form-grid">
                 <div className="ap-field">
                   <label>Invoice Number *</label>
-                  <input className="ap-input" required value={invoiceForm.invoice_number} onChange={e => setInvoiceForm({...invoiceForm, invoice_number: e.target.value})} placeholder="e.g. INV-10293" />
+                  <input className="ap-input" required value={invoiceForm.invoice_number} onChange={e => setInvoiceForm({ ...invoiceForm, invoice_number: e.target.value })} placeholder="e.g. INV-10293" />
                 </div>
                 <div className="ap-field">
                   <label>Total Amount (₹) *</label>
-                  <input type="number" step="0.01" className="ap-input" required value={invoiceForm.total_amount} onChange={e => setInvoiceForm({...invoiceForm, total_amount: e.target.value})} placeholder="0.00" />
+                  <input type="number" step="0.01" className="ap-input" required value={invoiceForm.total_amount} onChange={e => setInvoiceForm({ ...invoiceForm, total_amount: e.target.value })} placeholder="0.00" />
                 </div>
                 <div className="ap-field">
                   <label>Invoice Date *</label>
-                  <input type="date" className="ap-input" required value={invoiceForm.invoice_date} onChange={e => setInvoiceForm({...invoiceForm, invoice_date: e.target.value})} />
+                  <input type="date" className="ap-input" required value={invoiceForm.invoice_date} onChange={e => setInvoiceForm({ ...invoiceForm, invoice_date: e.target.value })} />
                 </div>
                 <div className="ap-field">
                   <label>Due Date *</label>
-                  <input type="date" className="ap-input" required value={invoiceForm.due_date} onChange={e => setInvoiceForm({...invoiceForm, due_date: e.target.value})} />
+                  <input type="date" className="ap-input" required value={invoiceForm.due_date} onChange={e => setInvoiceForm({ ...invoiceForm, due_date: e.target.value })} />
                 </div>
               </div>
               <button type="submit" className="ap-submit-btn">Save Supplier Invoice</button>
@@ -435,14 +435,14 @@ function PurchasePayments() {
 
               <div className="ap-field">
                 <label>Payment Amount (₹) *</label>
-                <input 
-                  type="number" 
-                  step="0.01" 
-                  max={parseFloat(selectedInvoice.total_amount) - parseFloat(selectedInvoice.paid_amount)} 
-                  className="ap-input" 
-                  required 
-                  value={paymentForm.amount} 
-                  onChange={e => setPaymentForm({...paymentForm, amount: e.target.value})} 
+                <input
+                  type="number"
+                  step="0.01"
+                  max={parseFloat(selectedInvoice.total_amount) - parseFloat(selectedInvoice.paid_amount)}
+                  className="ap-input"
+                  required
+                  value={paymentForm.amount}
+                  onChange={e => setPaymentForm({ ...paymentForm, amount: e.target.value })}
                   placeholder="Enter amount to pay"
                 />
               </div>
@@ -450,7 +450,7 @@ function PurchasePayments() {
               <div className="ap-form-grid">
                 <div className="ap-field">
                   <label>Payment Method *</label>
-                  <select className="ap-select" required value={paymentForm.payment_method} onChange={e => setPaymentForm({...paymentForm, payment_method: e.target.value})}>
+                  <select className="ap-select" required value={paymentForm.payment_method} onChange={e => setPaymentForm({ ...paymentForm, payment_method: e.target.value })}>
                     <option value="BANK">Bank Transfer</option>
                     <option value="UPI">UPI</option>
                     <option value="CHEQUE">Cheque</option>
@@ -459,7 +459,7 @@ function PurchasePayments() {
                 </div>
                 <div className="ap-field">
                   <label>Reference No. / UTR</label>
-                  <input className="ap-input" value={paymentForm.reference_no} onChange={e => setPaymentForm({...paymentForm, reference_no: e.target.value})} placeholder="Transaction ID" />
+                  <input className="ap-input" value={paymentForm.reference_no} onChange={e => setPaymentForm({ ...paymentForm, reference_no: e.target.value })} placeholder="Transaction ID" />
                 </div>
               </div>
               <button type="submit" className="ap-submit-btn" style={{ background: '#10b981' }}>Confirm & Record Payment</button>

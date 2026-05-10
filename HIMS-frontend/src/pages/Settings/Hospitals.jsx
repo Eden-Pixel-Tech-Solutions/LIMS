@@ -4,7 +4,7 @@ import '../../assets/CSS/Hospitals.css';
 const API_BASE = import.meta.env.VITE_API_URL || 'http://172.16.11.160:7005';
 
 // ─── Role / Auth Helpers ─────────────────────────────────────────────────────
-const roleLevel    = () => localStorage.getItem('role_level') || 'Central';
+const roleLevel = () => localStorage.getItem('role_level') || 'Central';
 const userBranchId = () => localStorage.getItem('branch_id') || '';
 const canEdit = (branch) => {
   const rl = roleLevel();
@@ -16,14 +16,14 @@ const canEdit = (branch) => {
 
 // ─── Colors ──────────────────────────────────────────────────────────────────
 const LEVEL_COLOR = {
-  Central:       '#0d2554',
+  Central: '#0d2554',
   'Sub-Central': '#1a56db',
-  Center:        '#0ea5e9',
+  Center: '#0ea5e9',
 };
-const LEVEL_R    = { Central: 38, 'Sub-Central': 28, Center: 20 };
+const LEVEL_R = { Central: 38, 'Sub-Central': 28, Center: 20 };
 const BADGE_CLASS = { Central: 'badge-central', 'Sub-Central': 'badge-sub', Center: 'badge-center' };
-const DOT_CLASS   = { Central: 'dot-central',   'Sub-Central': 'dot-sub',   Center: 'dot-center'  };
-const TOP_CLASS   = { Central: 'top-central',   'Sub-Central': 'top-sub',   Center: 'top-center'  };
+const DOT_CLASS = { Central: 'dot-central', 'Sub-Central': 'dot-sub', Center: 'dot-center' };
+const TOP_CLASS = { Central: 'top-central', 'Sub-Central': 'top-sub', Center: 'top-center' };
 
 // ─── EMPTY CENTER DATA ────────────────────────────────────────────────────────
 const EMPTY_CENTER = {
@@ -35,7 +35,7 @@ const EMPTY_CENTER = {
 
 // ─── Ranchi District Bounds ───────────────────────────────────────────────────
 const RANCHI_CENTER = [23.3441, 85.3096];
-const RANCHI_ZOOM   = 11;
+const RANCHI_ZOOM = 11;
 
 // ─── Graph Layout: Radial Tree ────────────────────────────────────────────────
 function computeLayout(tree, width, height) {
@@ -55,7 +55,7 @@ function computeLayout(tree, width, height) {
     if (childCount === 0) return;
 
     const spread = childCount === 1 ? 0 : Math.PI * 1.2;
-    const step   = childCount > 1 ? spread / (childCount - 1) : 0;
+    const step = childCount > 1 ? spread / (childCount - 1) : 0;
     const startA = angle - spread / 2;
     const childR = radius + (node.branch_level === 'Central' ? 180 : 130);
 
@@ -90,11 +90,11 @@ function buildTree(list) {
 // ─── GRAPH COMPONENT ─────────────────────────────────────────────────────────
 function NetworkGraph({ branches, selectedId, onSelect }) {
   const svgRef = useRef(null);
-  const [pan, setPan]     = useState({ x: 0, y: 0 });
-  const [zoom, setZoom]   = useState(1);
-  const [drag, setDrag]   = useState(null);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [drag, setDrag] = useState(null);
   const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0, text: '' });
-  const [dims, setDims]   = useState({ w: 900, h: 600 });
+  const [dims, setDims] = useState({ w: 900, h: 600 });
 
   useEffect(() => {
     const obs = new ResizeObserver(entries => {
@@ -105,7 +105,7 @@ function NetworkGraph({ branches, selectedId, onSelect }) {
     return () => obs.disconnect();
   }, []);
 
-  const tree   = useMemo(() => buildTree(branches), [branches]);
+  const tree = useMemo(() => buildTree(branches), [branches]);
   const layout = useMemo(() => computeLayout(tree, dims.w, dims.h), [tree, dims]);
 
   const onMouseDown = (e) => {
@@ -130,9 +130,9 @@ function NetworkGraph({ branches, selectedId, onSelect }) {
     return () => { if (el) el.removeEventListener('wheel', onWheel); };
   }, []);
 
-  const zoomIn  = () => setZoom(z => Math.min(2.5, z + 0.15));
+  const zoomIn = () => setZoom(z => Math.min(2.5, z + 0.15));
   const zoomOut = () => setZoom(z => Math.max(0.3, z - 0.15));
-  const reset   = () => { setZoom(1); setPan({ x: 0, y: 0 }); };
+  const reset = () => { setZoom(1); setPan({ x: 0, y: 0 }); };
 
   const transform = `translate(${pan.x}, ${pan.y}) scale(${zoom})`;
 
@@ -175,9 +175,9 @@ function NetworkGraph({ branches, selectedId, onSelect }) {
             );
           })}
           {layout.nodes.map(node => {
-            const r        = LEVEL_R[node.branch_level] || 20;
+            const r = LEVEL_R[node.branch_level] || 20;
             const isSelected = selectedId === node.id;
-            const grdId    = `grd-${(node.branch_level || 'Center').replace(' ', '')}`;
+            const grdId = `grd-${(node.branch_level || 'Center').replace(' ', '')}`;
             return (
               <g
                 key={node.id}
@@ -243,7 +243,7 @@ function NetworkGraph({ branches, selectedId, onSelect }) {
 // ─── GEOCODE helper (shared) ──────────────────────────────────────────────────
 async function geocodeOne(address) {
   const query = encodeURIComponent(`${address}, Ranchi, Jharkhand, India`);
-  const res   = await fetch(
+  const res = await fetch(
     `https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=1&countrycodes=in`,
     { headers: { 'Accept-Language': 'en', 'User-Agent': 'HospitalNetworkApp/1.0' } }
   );
@@ -254,15 +254,15 @@ async function geocodeOne(address) {
 
 // ─── MAP COMPONENT ────────────────────────────────────────────────────────────
 function MapView({ branches, selectedId, onSelect, onCoordsUpdate }) {
-  const mapRef      = useRef(null);
-  const leafletRef  = useRef(null);
-  const markersRef  = useRef({});
+  const mapRef = useRef(null);
+  const leafletRef = useRef(null);
+  const markersRef = useRef({});
   const [leafletReady, setLeafletReady] = useState(false);
 
   // Bulk geocoding state
-  const [showFixer, setShowFixer]         = useState(false);
-  const [fixStatuses, setFixStatuses]     = useState({}); // id → 'idle'|'loading'|'done'|'error'
-  const [batchRunning, setBatchRunning]   = useState(false);
+  const [showFixer, setShowFixer] = useState(false);
+  const [fixStatuses, setFixStatuses] = useState({}); // id → 'idle'|'loading'|'done'|'error'
+  const [batchRunning, setBatchRunning] = useState(false);
 
   // Load Leaflet CSS + JS dynamically
   useEffect(() => {
@@ -280,7 +280,7 @@ function MapView({ branches, selectedId, onSelect, onCoordsUpdate }) {
   // Initialize map
   useEffect(() => {
     if (!leafletReady || !mapRef.current || leafletRef.current) return;
-    const L   = window.L;
+    const L = window.L;
     const map = L.map(mapRef.current, { center: RANCHI_CENTER, zoom: RANCHI_ZOOM, zoomControl: false });
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
@@ -288,13 +288,13 @@ function MapView({ branches, selectedId, onSelect, onCoordsUpdate }) {
     }).addTo(map);
     L.control.zoom({ position: 'bottomright' }).addTo(map);
     const ranchiBoundary = [
-      [23.5800,85.0500],[23.6200,85.1500],[23.6500,85.2500],[23.6300,85.3800],
-      [23.6000,85.4800],[23.5500,85.5500],[23.5000,85.6000],[23.4200,85.6200],
-      [23.3500,85.6000],[23.2800,85.5500],[23.2200,85.4800],[23.1800,85.4000],
-      [23.1500,85.3000],[23.1600,85.2000],[23.1900,85.1200],[23.2500,85.0600],
-      [23.3200,85.0200],[23.4000,85.0100],[23.4800,85.0200],[23.5800,85.0500],
+      [23.5800, 85.0500], [23.6200, 85.1500], [23.6500, 85.2500], [23.6300, 85.3800],
+      [23.6000, 85.4800], [23.5500, 85.5500], [23.5000, 85.6000], [23.4200, 85.6200],
+      [23.3500, 85.6000], [23.2800, 85.5500], [23.2200, 85.4800], [23.1800, 85.4000],
+      [23.1500, 85.3000], [23.1600, 85.2000], [23.1900, 85.1200], [23.2500, 85.0600],
+      [23.3200, 85.0200], [23.4000, 85.0100], [23.4800, 85.0200], [23.5800, 85.0500],
     ];
-    L.polygon(ranchiBoundary, { color:'#1a56db', weight:2, fillColor:'#dbeafe', fillOpacity:0.12, dashArray:'6 4' }).addTo(map);
+    L.polygon(ranchiBoundary, { color: '#1a56db', weight: 2, fillColor: '#dbeafe', fillOpacity: 0.12, dashArray: '6 4' }).addTo(map);
     L.marker([23.3441, 85.3096], {
       icon: L.divIcon({
         className: '',
@@ -318,16 +318,16 @@ function MapView({ branches, selectedId, onSelect, onCoordsUpdate }) {
       const lng = parseFloat(b.longitude);
       if (isNaN(lat) || isNaN(lng)) return;
       const color = LEVEL_COLOR[b.branch_level] || '#0ea5e9';
-      const size  = b.branch_level === 'Central' ? 44 : b.branch_level === 'Sub-Central' ? 36 : 28;
-      const ring  = selectedId === b.id ? `box-shadow:0 0 0 3px #3b82f6,0 2px 8px rgba(0,0,0,0.25);` : `box-shadow:0 2px 8px rgba(0,0,0,0.2);`;
-      const icon  = L.divIcon({
+      const size = b.branch_level === 'Central' ? 44 : b.branch_level === 'Sub-Central' ? 36 : 28;
+      const ring = selectedId === b.id ? `box-shadow:0 0 0 3px #3b82f6,0 2px 8px rgba(0,0,0,0.25);` : `box-shadow:0 2px 8px rgba(0,0,0,0.2);`;
+      const icon = L.divIcon({
         className: '',
         html: `<div style="width:${size}px;height:${size}px;border-radius:50%;background:${color};border:2.5px solid white;display:flex;align-items:center;justify-content:center;${ring}cursor:pointer;font-size:8px;font-weight:800;color:white;font-family:Syne,sans-serif;letter-spacing:0.3px;text-align:center;line-height:1.1;padding:3px;">${b.hospital_code}</div>`,
-        iconSize: [size, size], iconAnchor: [size/2, size/2], popupAnchor: [0, -(size/2+4)],
+        iconSize: [size, size], iconAnchor: [size / 2, size / 2], popupAnchor: [0, -(size / 2 + 4)],
       });
       const marker = L.marker([lat, lng], { icon })
         .addTo(map)
-        .bindPopup(`<div style="font-family:Figtree,sans-serif;min-width:180px;"><div style="font-family:Syne,sans-serif;font-size:13px;font-weight:700;color:#0f172a;margin-bottom:4px;">${b.branch_name}</div><div style="font-size:11px;font-weight:700;color:${color};background:${color}18;padding:2px 7px;border-radius:4px;display:inline-block;margin-bottom:8px;">${b.hospital_code}</div><div style="font-size:12px;color:#475569;display:flex;flex-direction:column;gap:4px;">${b.district_name?`<span>📍 ${b.district_name}</span>`:''} ${b.branch_level?`<span>🏷 ${b.branch_level}</span>`:''} ${b.contact_number?`<span>📞 ${b.contact_number}</span>`:''} ${b.address?`<span style="font-size:11px;">📌 ${b.address}</span>`:''}</div></div>`, { maxWidth:260 })
+        .bindPopup(`<div style="font-family:Figtree,sans-serif;min-width:180px;"><div style="font-family:Syne,sans-serif;font-size:13px;font-weight:700;color:#0f172a;margin-bottom:4px;">${b.branch_name}</div><div style="font-size:11px;font-weight:700;color:${color};background:${color}18;padding:2px 7px;border-radius:4px;display:inline-block;margin-bottom:8px;">${b.hospital_code}</div><div style="font-size:12px;color:#475569;display:flex;flex-direction:column;gap:4px;">${b.district_name ? `<span>📍 ${b.district_name}</span>` : ''} ${b.branch_level ? `<span>🏷 ${b.branch_level}</span>` : ''} ${b.contact_number ? `<span>📞 ${b.contact_number}</span>` : ''} ${b.address ? `<span style="font-size:11px;">📌 ${b.address}</span>` : ''}</div></div>`, { maxWidth: 260 })
         .on('click', () => onSelect(b));
       markersRef.current[b.id] = marker;
     });
@@ -339,20 +339,20 @@ function MapView({ branches, selectedId, onSelect, onCoordsUpdate }) {
     if (!map || !window.L) return;
     const L = window.L;
     Object.entries(markersRef.current).forEach(([id, marker]) => {
-      const b     = branches.find(br => br.id?.toString() === id?.toString());
+      const b = branches.find(br => br.id?.toString() === id?.toString());
       if (!b) return;
       const color = LEVEL_COLOR[b.branch_level] || '#0ea5e9';
-      const size  = b.branch_level === 'Central' ? 44 : b.branch_level === 'Sub-Central' ? 36 : 28;
+      const size = b.branch_level === 'Central' ? 44 : b.branch_level === 'Sub-Central' ? 36 : 28;
       const isSel = selectedId?.toString() === id?.toString();
-      const ring  = isSel ? `box-shadow:0 0 0 3px #3b82f6,0 2px 8px rgba(0,0,0,0.25);transform:scale(1.15);` : `box-shadow:0 2px 8px rgba(0,0,0,0.2);`;
+      const ring = isSel ? `box-shadow:0 0 0 3px #3b82f6,0 2px 8px rgba(0,0,0,0.25);transform:scale(1.15);` : `box-shadow:0 2px 8px rgba(0,0,0,0.2);`;
       marker.setIcon(L.divIcon({
         className: '',
         html: `<div style="width:${size}px;height:${size}px;border-radius:50%;background:${color};border:2.5px solid white;display:flex;align-items:center;justify-content:center;${ring}cursor:pointer;font-size:8px;font-weight:800;color:white;font-family:Syne,sans-serif;letter-spacing:0.3px;text-align:center;line-height:1.1;padding:3px;">${b.hospital_code}</div>`,
-        iconSize:[size,size], iconAnchor:[size/2,size/2], popupAnchor:[0,-(size/2+4)],
+        iconSize: [size, size], iconAnchor: [size / 2, size / 2], popupAnchor: [0, -(size / 2 + 4)],
       }));
       if (isSel) {
         const lat = parseFloat(b.latitude), lng = parseFloat(b.longitude);
-        if (!isNaN(lat) && !isNaN(lng)) { map.setView([lat,lng], Math.max(map.getZoom(),13), {animate:true}); marker.openPopup(); }
+        if (!isNaN(lat) && !isNaN(lng)) { map.setView([lat, lng], Math.max(map.getZoom(), 13), { animate: true }); marker.openPopup(); }
       }
     });
   }, [selectedId, branches]);
@@ -389,27 +389,27 @@ function MapView({ branches, selectedId, onSelect, onCoordsUpdate }) {
     setBatchRunning(false);
   };
 
-  const branchesWithCoords  = branches.filter(b => !isNaN(parseFloat(b.latitude)) && !isNaN(parseFloat(b.longitude)));
+  const branchesWithCoords = branches.filter(b => !isNaN(parseFloat(b.latitude)) && !isNaN(parseFloat(b.longitude)));
   const branchesMissingCoords = branches.filter(b => isNaN(parseFloat(b.latitude)) || isNaN(parseFloat(b.longitude)));
 
   return (
-    <div style={{ position:'relative', width:'100%', height:'100%' }}>
-      <div ref={mapRef} style={{ width:'100%', height:'100%' }} />
+    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+      <div ref={mapRef} style={{ width: '100%', height: '100%' }} />
 
       {/* Map Legend */}
       <div className="h-map-legend">
         <div className="h-map-legend-title">Legend</div>
         {[
-          { color:'#0d2554', label:'Central Hub'     },
-          { color:'#1a56db', label:'Sub-Central Hub' },
-          { color:'#0ea5e9', label:'Center / Lab'    },
+          { color: '#0d2554', label: 'Central Hub' },
+          { color: '#1a56db', label: 'Sub-Central Hub' },
+          { color: '#0ea5e9', label: 'Center / Lab' },
         ].map(l => (
           <div className="h-map-legend-row" key={l.label}>
-            <span style={{ width:12, height:12, borderRadius:'50%', background:l.color, flexShrink:0, display:'inline-block', border:'2px solid white', boxShadow:'0 1px 3px rgba(0,0,0,0.2)' }} />
-            <span style={{ fontSize:12, color:'#475569', fontWeight:500 }}>{l.label}</span>
+            <span style={{ width: 12, height: 12, borderRadius: '50%', background: l.color, flexShrink: 0, display: 'inline-block', border: '2px solid white', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} />
+            <span style={{ fontSize: 12, color: '#475569', fontWeight: 500 }}>{l.label}</span>
           </div>
         ))}
-        <div style={{ borderTop:'1px solid #e2e8f0', marginTop:8, paddingTop:8, fontSize:11, color:'#94a3b8', fontWeight:600 }}>
+        <div style={{ borderTop: '1px solid #e2e8f0', marginTop: 8, paddingTop: 8, fontSize: 11, color: '#94a3b8', fontWeight: 600 }}>
           {branchesWithCoords.length} / {branches.length} mapped
         </div>
       </div>
@@ -420,7 +420,7 @@ function MapView({ branches, selectedId, onSelect, onCoordsUpdate }) {
           <div className="h-map-fix-banner-left">
             <div className="h-map-fix-banner-icon">
               <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" />
               </svg>
             </div>
             <div>
@@ -433,8 +433,8 @@ function MapView({ branches, selectedId, onSelect, onCoordsUpdate }) {
           <button className="h-map-fix-btn" onClick={() => setShowFixer(f => !f)}>
             {showFixer ? 'Hide' : 'Fix Now'}
             <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"
-              style={{ transform: showFixer ? 'rotate(180deg)' : 'rotate(0deg)', transition:'transform 0.2s' }}>
-              <polyline points="6 9 12 15 18 9"/>
+              style={{ transform: showFixer ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>
+              <polyline points="6 9 12 15 18 9" />
             </svg>
           </button>
         </div>
@@ -446,7 +446,7 @@ function MapView({ branches, selectedId, onSelect, onCoordsUpdate }) {
           <div className="h-map-fixer-header">
             <span className="h-map-fixer-header-title">
               <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
               </svg>
               Geocode from address
             </span>
@@ -458,15 +458,15 @@ function MapView({ branches, selectedId, onSelect, onCoordsUpdate }) {
               {batchRunning ? (
                 <>
                   <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"
-                    style={{ animation:'spin 0.8s linear infinite' }}>
-                    <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+                    style={{ animation: 'spin 0.8s linear infinite' }}>
+                    <path d="M21 12a9 9 0 1 1-6.219-8.56" />
                   </svg>
                   Running…
                 </>
               ) : (
                 <>
                   <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                    <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.08-8.53"/>
+                    <polyline points="23 4 23 10 17 10" /><path d="M20.49 15a9 9 0 1 1-.08-8.53" />
                   </svg>
                   Geocode All ({branchesMissingCoords.filter(b => b.address).length})
                 </>
@@ -480,8 +480,8 @@ function MapView({ branches, selectedId, onSelect, onCoordsUpdate }) {
               return (
                 <div key={b.id} className={`h-map-fixer-row ${status}`}>
                   <div className="h-map-fixer-row-info">
-                    <span className={`h-node-dot ${DOT_CLASS[b.branch_level] || 'dot-center'}`} style={{ flexShrink:0 }} />
-                    <div style={{ minWidth:0 }}>
+                    <span className={`h-node-dot ${DOT_CLASS[b.branch_level] || 'dot-center'}`} style={{ flexShrink: 0 }} />
+                    <div style={{ minWidth: 0 }}>
                       <div className="h-map-fixer-row-name">{b.branch_name}</div>
                       {b.address
                         ? <div className="h-map-fixer-row-addr">{b.address}</div>
@@ -492,14 +492,14 @@ function MapView({ branches, selectedId, onSelect, onCoordsUpdate }) {
                   <div className="h-map-fixer-row-action">
                     {status === 'loading' && (
                       <svg width="16" height="16" fill="none" stroke="#3b82f6" strokeWidth="2" viewBox="0 0 24 24"
-                        style={{ animation:'spin 0.8s linear infinite', flexShrink:0 }}>
-                        <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+                        style={{ animation: 'spin 0.8s linear infinite', flexShrink: 0 }}>
+                        <path d="M21 12a9 9 0 1 1-6.219-8.56" />
                       </svg>
                     )}
                     {status === 'done' && (
                       <span className="h-fixer-status-done">
                         <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                          <polyline points="20 6 9 17 4 12"/>
+                          <polyline points="20 6 9 17 4 12" />
                         </svg>
                         Placed
                       </span>
@@ -507,7 +507,7 @@ function MapView({ branches, selectedId, onSelect, onCoordsUpdate }) {
                     {status === 'error' && (
                       <span className="h-fixer-status-error">
                         <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                          <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
                         </svg>
                         Not found
                       </span>
@@ -519,7 +519,7 @@ function MapView({ branches, selectedId, onSelect, onCoordsUpdate }) {
                         disabled={batchRunning}
                       >
                         <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+                          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" />
                         </svg>
                         Locate
                       </button>
@@ -533,10 +533,10 @@ function MapView({ branches, selectedId, onSelect, onCoordsUpdate }) {
       )}
 
       {!leafletReady && (
-        <div className="h-loading" style={{ position:'absolute', inset:0, background:'rgba(240,244,248,0.9)', zIndex:10 }}>
+        <div className="h-loading" style={{ position: 'absolute', inset: 0, background: 'rgba(240,244,248,0.9)', zIndex: 10 }}>
           <svg width="24" height="24" fill="none" stroke="#94a3b8" strokeWidth="2" viewBox="0 0 24 24">
             <path d="M21 12a9 9 0 1 1-6.219-8.56">
-              <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="0.8s" repeatCount="indefinite"/>
+              <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="0.8s" repeatCount="indefinite" />
             </path>
           </svg>
           Loading map…
@@ -548,35 +548,35 @@ function MapView({ branches, selectedId, onSelect, onCoordsUpdate }) {
 
 // ─── MAIN PAGE ────────────────────────────────────────────────────────────────
 export default function Hospitals() {
-  const [branches, setBranches]     = useState([]);
-  const [districts, setDistricts]   = useState([]);
+  const [branches, setBranches] = useState([]);
+  const [districts, setDistricts] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [loading, setLoading]       = useState(true);
-  const [viewMode, setViewMode]     = useState('graph'); // 'graph' | 'grid' | 'map'
-  const [search, setSearch]         = useState('');
+  const [loading, setLoading] = useState(true);
+  const [viewMode, setViewMode] = useState('graph'); // 'graph' | 'grid' | 'map'
+  const [search, setSearch] = useState('');
   const [selectedNode, setSelectedNode] = useState(null);
 
   const [showDistrictModal, setShowDistrictModal] = useState(false);
-  const [showCenterModal, setShowCenterModal]     = useState(false);
-  const [editDistrictId, setEditDistrictId]       = useState(null);
-  const [editCenterId, setEditCenterId]           = useState(null);
+  const [showCenterModal, setShowCenterModal] = useState(false);
+  const [editDistrictId, setEditDistrictId] = useState(null);
+  const [editCenterId, setEditCenterId] = useState(null);
 
   const [districtData, setDistrictData] = useState({ name: '' });
-  const [centerData, setCenterData]     = useState(EMPTY_CENTER);
+  const [centerData, setCenterData] = useState(EMPTY_CENTER);
 
   // Geocoding state
-  const [geoStatus, setGeoStatus]   = useState('idle'); // 'idle' | 'loading' | 'found' | 'error'
+  const [geoStatus, setGeoStatus] = useState('idle'); // 'idle' | 'loading' | 'found' | 'error'
   const [geoResults, setGeoResults] = useState([]);
-  const [geoError, setGeoError]     = useState('');
-  const miniMapRef   = useRef(null);
-  const miniLeafRef  = useRef(null);
-  const miniPinRef   = useRef(null);
+  const [geoError, setGeoError] = useState('');
+  const miniMapRef = useRef(null);
+  const miniLeafRef = useRef(null);
+  const miniPinRef = useRef(null);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       const districtId = localStorage.getItem('district_id') || '';
-      const res  = await fetch(`${API_BASE}/api/branches?role_level=${roleLevel()}&district_id=${districtId}`);
+      const res = await fetch(`${API_BASE}/api/branches?role_level=${roleLevel()}&district_id=${districtId}`);
       const data = await res.json();
       if (data.success) {
         setBranches(data.branches || []);
@@ -603,15 +603,15 @@ export default function Hospitals() {
   }, [branches, search]);
 
   const stats = useMemo(() => ({
-    total:   branches.length,
+    total: branches.length,
     central: branches.filter(b => b.branch_level === 'Central').length,
-    sub:     branches.filter(b => b.branch_level === 'Sub-Central').length,
+    sub: branches.filter(b => b.branch_level === 'Sub-Central').length,
     centers: branches.filter(b => b.branch_level === 'Center' || !b.branch_level).length,
   }), [branches]);
 
   const handleCreateDistrict = async (e) => {
     e.preventDefault();
-    const url    = editDistrictId ? `${API_BASE}/api/branches/district/${editDistrictId}` : `${API_BASE}/api/branches/district`;
+    const url = editDistrictId ? `${API_BASE}/api/branches/district/${editDistrictId}` : `${API_BASE}/api/branches/district`;
     const method = editDistrictId ? 'PUT' : 'POST';
     try {
       const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(districtData) });
@@ -632,7 +632,7 @@ export default function Hospitals() {
 
   const handleCreateCenter = async (e) => {
     e.preventDefault();
-    const url    = editCenterId ? `${API_BASE}/api/branches/center/${editCenterId}` : `${API_BASE}/api/branches/center`;
+    const url = editCenterId ? `${API_BASE}/api/branches/center/${editCenterId}` : `${API_BASE}/api/branches/center`;
     const method = editCenterId ? 'PUT' : 'POST';
     try {
       const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(centerData) });
@@ -655,16 +655,16 @@ export default function Hospitals() {
   const openEditCenter = (branch) => {
     setEditCenterId(branch.id);
     setCenterData({
-      district_id:      branch.district_id,
-      branch_name:      branch.branch_name,
-      category:         branch.category || '',
-      hospital_code:    branch.hospital_code,
-      address:          branch.address || '',
-      contact_number:   branch.contact_number || '',
-      branch_level:     branch.branch_level || 'Center',
+      district_id: branch.district_id,
+      branch_name: branch.branch_name,
+      category: branch.category || '',
+      hospital_code: branch.hospital_code,
+      address: branch.address || '',
+      contact_number: branch.contact_number || '',
+      branch_level: branch.branch_level || 'Center',
       parent_branch_id: branch.parent_branch_id || '',
-      latitude:         branch.latitude || '',
-      longitude:        branch.longitude || '',
+      latitude: branch.latitude || '',
+      longitude: branch.longitude || '',
     });
     setShowCenterModal(true);
   };
@@ -690,7 +690,7 @@ export default function Hospitals() {
     setGeoError('');
     try {
       const query = encodeURIComponent(`${addr}, Ranchi, Jharkhand, India`);
-      const res   = await fetch(
+      const res = await fetch(
         `https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=5&countrycodes=in`,
         { headers: { 'Accept-Language': 'en', 'User-Agent': 'HospitalNetworkApp/1.0' } }
       );
@@ -732,7 +732,7 @@ export default function Hospitals() {
     if (!miniMapRef.current || miniLeafRef.current) return;
     if (!window.L) return;
 
-    const L   = window.L;
+    const L = window.L;
     const lat = parseFloat(centerData.latitude) || RANCHI_CENTER[0];
     const lng = parseFloat(centerData.longitude) || RANCHI_CENTER[1];
 
@@ -763,20 +763,20 @@ export default function Hospitals() {
       const pos = marker.getLatLng();
       setCenterData(prev => ({
         ...prev,
-        latitude:  pos.lat.toFixed(7),
+        latitude: pos.lat.toFixed(7),
         longitude: pos.lng.toFixed(7),
       }));
     });
 
     miniLeafRef.current = map;
-    miniPinRef.current  = marker;
+    miniPinRef.current = marker;
 
     return () => {
       map.remove();
       miniLeafRef.current = null;
-      miniPinRef.current  = null;
+      miniPinRef.current = null;
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showCenterModal]);
 
   // Update pin when lat/lng changes from inputs
@@ -797,7 +797,7 @@ export default function Hospitals() {
       <header className="h-topbar">
         <div className="h-topbar-left">
           <div className="h-topbar-icon">
-            <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" /></svg>
           </div>
           <div>
             <div className="h-topbar-title">Hospital Network</div>
@@ -821,10 +821,10 @@ export default function Hospitals() {
       {/* ── Stats Strip ─────────────────────────────────────────── */}
       <div className="h-stats-strip">
         {[
-          { label: 'Total Facilities', val: stats.total,   icon: '🏥', cls: 'navy' },
-          { label: 'Central Hubs',     val: stats.central, icon: '🔵', cls: 'navy' },
-          { label: 'Sub-Central',      val: stats.sub,     icon: '🔷', cls: 'blue' },
-          { label: 'Centers / Labs',   val: stats.centers, icon: '🔹', cls: 'sky'  },
+          { label: 'Total Facilities', val: stats.total, icon: '🏥', cls: 'navy' },
+          { label: 'Central Hubs', val: stats.central, icon: '🔵', cls: 'navy' },
+          { label: 'Sub-Central', val: stats.sub, icon: '🔷', cls: 'blue' },
+          { label: 'Centers / Labs', val: stats.centers, icon: '🔹', cls: 'sky' },
         ].map(s => (
           <div className="h-stat-cell" key={s.label}>
             <div className={`h-stat-icon ${s.cls}`}>{s.icon}</div>
@@ -844,7 +844,7 @@ export default function Hospitals() {
           <div className="h-sidebar-section">
             <div className="h-sidebar-label">Search</div>
             <div className="h-search">
-              <svg className="h-search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              <svg className="h-search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>
               <input type="text" placeholder="Name, code, district…" value={search} onChange={e => setSearch(e.target.value)} />
             </div>
           </div>
@@ -872,9 +872,9 @@ export default function Hospitals() {
             <div className="h-sidebar-label">Legend</div>
             <div className="h-legend">
               {[
-                { level: 'Central',     dot: 'dot-central', label: 'Central Hub'     },
-                { level: 'Sub-Central', dot: 'dot-sub',     label: 'Sub-Central Hub' },
-                { level: 'Center',      dot: 'dot-center',  label: 'Center / Lab'    },
+                { level: 'Central', dot: 'dot-central', label: 'Central Hub' },
+                { level: 'Sub-Central', dot: 'dot-sub', label: 'Sub-Central Hub' },
+                { level: 'Center', dot: 'dot-center', label: 'Center / Lab' },
               ].map(l => (
                 <div className="h-legend-row" key={l.level}>
                   <span className={`h-legend-dot ${l.dot}`} />
@@ -892,22 +892,22 @@ export default function Hospitals() {
           <div className="h-view-toggle">
             <button className={`h-vtbtn ${viewMode === 'graph' ? 'active' : ''}`} onClick={() => setViewMode('graph')}>
               <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <circle cx="12" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/>
-                <line x1="12" y1="7" x2="5" y2="17"/><line x1="12" y1="7" x2="19" y2="17"/>
+                <circle cx="12" cy="5" r="2" /><circle cx="5" cy="19" r="2" /><circle cx="19" cy="19" r="2" />
+                <line x1="12" y1="7" x2="5" y2="17" /><line x1="12" y1="7" x2="19" y2="17" />
               </svg>
               Graph
             </button>
             <button className={`h-vtbtn ${viewMode === 'grid' ? 'active' : ''}`} onClick={() => setViewMode('grid')}>
               <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-                <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+                <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" />
+                <rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" />
               </svg>
               Grid
             </button>
             <button className={`h-vtbtn ${viewMode === 'map' ? 'active' : ''}`} onClick={() => setViewMode('map')}>
               <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/>
-                <line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/>
+                <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6" />
+                <line x1="8" y1="2" x2="8" y2="18" /><line x1="16" y1="6" x2="16" y2="22" />
               </svg>
               Map
             </button>
@@ -917,7 +917,7 @@ export default function Hospitals() {
             <div className="h-loading">
               <svg width="24" height="24" fill="none" stroke="#94a3b8" strokeWidth="2" viewBox="0 0 24 24">
                 <path d="M21 12a9 9 0 1 1-6.219-8.56">
-                  <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="0.8s" repeatCount="indefinite"/>
+                  <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="0.8s" repeatCount="indefinite" />
                 </path>
               </svg>
               Loading facilities…
@@ -925,7 +925,7 @@ export default function Hospitals() {
           ) : branches.length === 0 ? (
             <div className="h-empty">
               <svg fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
               </svg>
               No facilities added yet
             </div>
@@ -960,8 +960,8 @@ export default function Hospitals() {
                     </div>
                     <div className="h-gc-fields">
                       <div className="h-gc-field"><span>📍</span><span><strong>{b.district_name}</strong></span></div>
-                      {b.category        && <div className="h-gc-field"><span>🏷</span><span>{b.category}</span></div>}
-                      {b.contact_number  && <div className="h-gc-field"><span>📞</span><span>{b.contact_number}</span></div>}
+                      {b.category && <div className="h-gc-field"><span>🏷</span><span>{b.category}</span></div>}
+                      {b.contact_number && <div className="h-gc-field"><span>📞</span><span>{b.contact_number}</span></div>}
                       {b.parent_branch_name && <div className="h-gc-field"><span>↑</span><span>Reports to <strong>{b.parent_branch_name}</strong></span></div>}
                     </div>
                   </div>
@@ -989,11 +989,11 @@ export default function Hospitals() {
               <div className="h-detail-code">{selectedNode.hospital_code}</div>
               <div className="h-detail-rows">
                 {[
-                  { icon: '📍', label: 'District',   val: selectedNode.district_name },
-                  { icon: '🏷',  label: 'Category',   val: selectedNode.category },
-                  { icon: '📞', label: 'Contact',    val: selectedNode.contact_number },
-                  { icon: '📌', label: 'Address',    val: selectedNode.address },
-                  { icon: '↑',  label: 'Reports To', val: selectedNode.parent_branch_name },
+                  { icon: '📍', label: 'District', val: selectedNode.district_name },
+                  { icon: '🏷', label: 'Category', val: selectedNode.category },
+                  { icon: '📞', label: 'Contact', val: selectedNode.contact_number },
+                  { icon: '📌', label: 'Address', val: selectedNode.address },
+                  { icon: '↑', label: 'Reports To', val: selectedNode.parent_branch_name },
                   { icon: '🌐', label: 'Coordinates', val: selectedNode.latitude && selectedNode.longitude ? `${selectedNode.latitude}, ${selectedNode.longitude}` : null },
                 ].filter(r => r.val).map(r => (
                   <div className="h-detail-row" key={r.label}>
@@ -1013,8 +1013,8 @@ export default function Hospitals() {
                     onClick={() => setViewMode('map')}
                   >
                     <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                      <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/>
-                      <line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/>
+                      <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6" />
+                      <line x1="8" y1="2" x2="8" y2="18" /><line x1="16" y1="6" x2="16" y2="22" />
                     </svg>
                     View on Map
                   </button>
@@ -1129,8 +1129,8 @@ export default function Hospitals() {
                 <div className="h-coords-section">
                   <div className="h-form-coords-label">
                     <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                      <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/>
-                      <line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/>
+                      <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6" />
+                      <line x1="8" y1="2" x2="8" y2="18" /><line x1="16" y1="6" x2="16" y2="22" />
                     </svg>
                     Map Location
                     <span style={{ fontWeight: 400, color: '#94a3b8', textTransform: 'none', letterSpacing: 0 }}>(optional)</span>
@@ -1146,14 +1146,14 @@ export default function Hospitals() {
                     {geoStatus === 'loading' ? (
                       <>
                         <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{ animation: 'spin 0.8s linear infinite' }}>
-                          <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+                          <path d="M21 12a9 9 0 1 1-6.219-8.56" />
                         </svg>
                         Searching…
                       </>
                     ) : (
                       <>
                         <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                          <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
                         </svg>
                         Pick location from address
                       </>
@@ -1169,7 +1169,7 @@ export default function Hospitals() {
                   {geoStatus === 'error' && (
                     <div className="h-geo-error">
                       <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                        <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
                       </svg>
                       {geoError}
                     </div>
@@ -1187,7 +1187,7 @@ export default function Hospitals() {
                           onClick={() => pickGeoResult(r)}
                         >
                           <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{ flexShrink: 0, marginTop: 1 }}>
-                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" />
                           </svg>
                           <span>{r.display_name}</span>
                         </button>
@@ -1202,8 +1202,8 @@ export default function Hospitals() {
                     <div ref={miniMapRef} className="h-mini-map" />
                     <div className="h-mini-map-hint">
                       <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                        <path d="M12 2a7 7 0 0 1 7 7c0 5-7 13-7 13S5 14 5 9a7 7 0 0 1 7-7z"/>
-                        <circle cx="12" cy="9" r="2.5"/>
+                        <path d="M12 2a7 7 0 0 1 7 7c0 5-7 13-7 13S5 14 5 9a7 7 0 0 1 7-7z" />
+                        <circle cx="12" cy="9" r="2.5" />
                       </svg>
                       Drag the pin to fine-tune
                     </div>

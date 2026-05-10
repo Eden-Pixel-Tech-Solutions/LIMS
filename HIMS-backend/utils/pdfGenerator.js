@@ -112,7 +112,7 @@ async function drawPatientInfo(doc, report, startY) {
     { label: 'Patient Name',    value: report.patient_name },
     { label: 'Lab No',          value: report.sample_id },
     { label: 'Registration On', value: report.registration_date },
-    { label: 'Patient ID',      value: report.patient_reg_no },
+    { label: 'CRN No',      value: report.patient_reg_no },
     { label: 'Age / Sex',       value: `${report.age} / ${report.gender}` },
     { label: 'Referred By',     value: report.referred_by },
     { label: 'Centre',          value: report.centre },

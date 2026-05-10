@@ -13,7 +13,7 @@ function InventoryTransfers() {
   const [branches, setBranches] = useState([]);
   const [items, setItems] = useState([]);
   const [batches, setBatches] = useState([]);
-  
+
   const [loading, setLoading] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
@@ -49,7 +49,7 @@ function InventoryTransfers() {
       const infraData = await infraRes.json();
       const itemsData = await itemsRes.json();
       const batchesData = await batchesRes.json();
-      
+
       if (infraData.success) {
         setBranches((infraData.branches || []).map(b => ({
           ...b,
@@ -119,7 +119,11 @@ function InventoryTransfers() {
   };
 
   const handleAddNew = () => {
-    setFormData(initialFormState);
+    const assignedBranchId = localStorage.getItem('branch_id');
+    setFormData({
+      ...initialFormState,
+      from_branch_id: assignedBranchId ? parseInt(assignedBranchId) : ''
+    });
     setIsDrawerOpen(true);
   };
 
@@ -178,7 +182,7 @@ function InventoryTransfers() {
   return (
     <div className="inv-vendor-page">
       {alert && <Alert type={alert.type} message={alert.message} onClose={hideAlert} />}
-      
+
       <div className="inv-header">
         <div>
           <h1 className="inv-title">Stock Transfer Operations</h1>
@@ -203,33 +207,33 @@ function InventoryTransfers() {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan="6" style={{textAlign: 'center'}}>Loading transfers...</td></tr>
+              <tr><td colSpan="6" style={{ textAlign: 'center' }}>Loading transfers...</td></tr>
             ) : transfers.length === 0 ? (
-              <tr><td colSpan="6" style={{textAlign: 'center'}}>No transfers found.</td></tr>
+              <tr><td colSpan="6" style={{ textAlign: 'center' }}>No transfers found.</td></tr>
             ) : (
               transfers.map(txn => (
                 <tr key={txn.id}>
                   <td>
-                    <div style={{fontWeight: 600, color: 'var(--text-dark)'}}>{txn.transfer_number}</div>
-                    <div style={{fontSize: '12px', color: 'var(--text-soft)'}}>{new Date(txn.created_at).toLocaleDateString()}</div>
+                    <div style={{ fontWeight: 600, color: 'var(--text-dark)' }}>{txn.transfer_number}</div>
+                    <div style={{ fontSize: '12px', color: 'var(--text-soft)' }}>{new Date(txn.created_at).toLocaleDateString()}</div>
                   </td>
-                  <td><span style={{fontWeight: 600}}>{txn.from_branch_name}</span></td>
-                  <td><span style={{fontWeight: 600}}>{txn.to_branch_name}</span></td>
+                  <td><span style={{ fontWeight: 600 }}>{txn.from_branch_name}</span></td>
+                  <td><span style={{ fontWeight: 600 }}>{txn.to_branch_name}</span></td>
                   <td>{getStatusBadge(txn.status)}</td>
                   <td>{txn.created_by_name}</td>
                   <td>
                     <div style={{ display: 'flex', gap: '8px' }}>
                       {txn.status === 'PENDING' && (
                         <>
-                          <button onClick={() => updateStatus(txn.id, 'APPROVED')} className="btn-primary" style={{padding: '4px 8px', fontSize: '12px'}}>Approve</button>
-                          <button onClick={() => updateStatus(txn.id, 'CANCELLED')} className="btn-secondary" style={{padding: '4px 8px', fontSize: '12px', color: 'red'}}>Cancel</button>
+                          <button onClick={() => updateStatus(txn.id, 'APPROVED')} className="btn-primary" style={{ padding: '4px 8px', fontSize: '12px' }}>Approve</button>
+                          <button onClick={() => updateStatus(txn.id, 'CANCELLED')} className="btn-secondary" style={{ padding: '4px 8px', fontSize: '12px', color: 'red' }}>Cancel</button>
                         </>
                       )}
                       {txn.status === 'APPROVED' && (
-                        <button onClick={() => updateStatus(txn.id, 'IN_TRANSIT')} className="btn-primary" style={{padding: '4px 8px', fontSize: '12px', background: '#9333ea'}}>Dispatch</button>
+                        <button onClick={() => updateStatus(txn.id, 'IN_TRANSIT')} className="btn-primary" style={{ padding: '4px 8px', fontSize: '12px', background: '#9333ea' }}>Dispatch</button>
                       )}
                       {txn.status === 'IN_TRANSIT' && (
-                        <button onClick={() => updateStatus(txn.id, 'COMPLETED')} className="btn-primary" style={{padding: '4px 8px', fontSize: '12px', background: '#166534'}}>Receive</button>
+                        <button onClick={() => updateStatus(txn.id, 'COMPLETED')} className="btn-primary" style={{ padding: '4px 8px', fontSize: '12px', background: '#166534' }}>Receive</button>
                       )}
                     </div>
                   </td>
@@ -250,8 +254,8 @@ function InventoryTransfers() {
             </div>
             <div className="inv-drawer-body">
               <form id="transfer-form" onSubmit={handleSubmit}>
-                
-                <h4 style={{marginBottom: '12px', color: 'var(--text-dark)'}}>Routing Information</h4>
+
+                <h4 style={{ marginBottom: '12px', color: 'var(--text-dark)' }}>Routing Information</h4>
                 <div className="inv-grid-2">
                   <div className="inv-form-group">
                     <label>Source Branch (From) *</label>
@@ -259,10 +263,11 @@ function InventoryTransfers() {
                       options={branches.map(b => ({ value: b.id, label: b.name }))}
                       value={formData.from_branch_id ? { value: formData.from_branch_id, label: branches.find(b => b.id === formData.from_branch_id)?.name } : null}
                       onChange={(selected) => {
-                        setFormData({...formData, from_branch_id: selected ? selected.value : '', items: [{ item_id: '', batch_id: '', quantity: '' }]});
+                        setFormData({ ...formData, from_branch_id: selected ? selected.value : '', items: [{ item_id: '', batch_id: '', quantity: '' }] });
                       }}
                       required
                       styles={selectStyles}
+                      isDisabled={localStorage.getItem('role_level') !== '1' && !!localStorage.getItem('branch_id')}
                     />
                   </div>
 
@@ -271,14 +276,14 @@ function InventoryTransfers() {
                     <Select
                       options={branches.filter(b => b.id !== formData.from_branch_id).map(b => ({ value: b.id, label: b.name }))}
                       value={formData.to_branch_id ? { value: formData.to_branch_id, label: branches.find(b => b.id === formData.to_branch_id)?.name } : null}
-                      onChange={(selected) => setFormData({...formData, to_branch_id: selected ? selected.value : ''})}
+                      onChange={(selected) => setFormData({ ...formData, to_branch_id: selected ? selected.value : '' })}
                       required
                       styles={selectStyles}
                     />
                   </div>
                 </div>
 
-                <h4 style={{marginTop: '24px', marginBottom: '12px', color: 'var(--text-dark)'}}>Transfer Items</h4>
+                <h4 style={{ marginTop: '24px', marginBottom: '12px', color: 'var(--text-dark)' }}>Transfer Items</h4>
                 <table className="inv-table" style={{ marginBottom: '10px' }}>
                   <thead>
                     <tr>
@@ -315,13 +320,13 @@ function InventoryTransfers() {
                             />
                           </td>
                           <td>
-                            <input 
-                              type="number" 
-                              className="inv-input" 
-                              min="1" 
-                              required 
-                              value={lineItem.quantity} 
-                              onChange={(e) => updateLineItem(index, 'quantity', parseInt(e.target.value) || '')} 
+                            <input
+                              type="number"
+                              className="inv-input"
+                              min="1"
+                              required
+                              value={lineItem.quantity}
+                              onChange={(e) => updateLineItem(index, 'quantity', parseInt(e.target.value) || '')}
                             />
                           </td>
                           <td>
@@ -340,13 +345,13 @@ function InventoryTransfers() {
 
                 <div className="inv-form-group" style={{ marginTop: '24px' }}>
                   <label>Notes / Justification</label>
-                  <textarea className="inv-textarea" rows="2" value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})} placeholder="Reason for transfer..." />
+                  <textarea className="inv-textarea" rows="2" value={formData.notes} onChange={e => setFormData({ ...formData, notes: e.target.value })} placeholder="Reason for transfer..." />
                 </div>
 
               </form>
             </div>
             <div className="inv-drawer-footer">
-              <button type="button" className="action-btn" onClick={() => setIsDrawerOpen(false)} style={{padding: '10px 20px', color: 'var(--text-mid)'}}>Cancel</button>
+              <button type="button" className="action-btn" onClick={() => setIsDrawerOpen(false)} style={{ padding: '10px 20px', color: 'var(--text-mid)' }}>Cancel</button>
               <button type="submit" form="transfer-form" className="btn-primary">
                 Submit Request
               </button>

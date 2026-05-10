@@ -4,13 +4,13 @@ import { useAlert } from '../../hooks/useAlert';
 import '../../assets/CSS/InventoryMaster.css';
 
 const CATEGORIES = [
-  'Reagents', 'Consumables', 'Test Kits', 'Calibrators', 
+  'Reagents', 'Consumables', 'Test Kits', 'Calibrators',
   'Controls', 'Glassware', 'General Lab Supplies'
 ];
 
 const UNITS = ['ml', 'liter', 'test', 'box', 'pack', 'piece', 'mg', 'g', 'kg'];
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_URL = import.meta.env.VITE_API_URL || 'http://172.16.11.160:5000';
 
 function InventoryMaster() {
   const { alert, showAlert, hideAlert } = useAlert();
@@ -47,7 +47,7 @@ function InventoryMaster() {
       const params = new URLSearchParams();
       if (filterCategory) params.append('category', filterCategory);
       if (searchQuery) params.append('search', searchQuery);
-      
+
       const response = await fetch(`${API_URL}/api/inventory/items?${params}`);
       const data = await response.json();
       if (data.success) {
@@ -71,7 +71,7 @@ function InventoryMaster() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const url = editingItem 
+      const url = editingItem
         ? `${API_URL}/api/inventory/items/${editingItem.id}`
         : `${API_URL}/api/inventory/items`;
       const method = editingItem ? 'PUT' : 'POST';
@@ -98,7 +98,7 @@ function InventoryMaster() {
 
   const handleDelete = async (id) => {
     if (!confirm('Are you sure you want to delete this item?')) return;
-    
+
     try {
       const response = await fetch(`${API_URL}/api/inventory/items/${id}`, {
         method: 'DELETE'
@@ -184,7 +184,7 @@ function InventoryMaster() {
   return (
     <div className="inventory-master">
       {alert && <Alert type={alert.type} message={alert.message} onClose={hideAlert} />}
-      
+
       <div className="page-header">
         <h1>Inventory Master</h1>
         <button className="btn-primary" onClick={handleAddNew}>
@@ -203,8 +203,8 @@ function InventoryMaster() {
           />
           <button className="btn-secondary" onClick={handleSearch}>Search</button>
         </div>
-        <select 
-          value={filterCategory} 
+        <select
+          value={filterCategory}
           onChange={(e) => setFilterCategory(e.target.value)}
           className="filter-select"
         >
@@ -277,18 +277,18 @@ function InventoryMaster() {
               <div className="form-grid">
                 <div className="form-group">
                   <label>Item Name *</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     value={formData.item_name}
-                    onChange={(e) => setFormData({...formData, item_name: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, item_name: e.target.value })}
                     required
                   />
                 </div>
                 <div className="form-group">
                   <label>Category *</label>
-                  <select 
+                  <select
                     value={formData.category}
-                    onChange={(e) => setFormData({...formData, category: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                     required
                   >
                     <option value="">Select Category</option>
@@ -299,25 +299,25 @@ function InventoryMaster() {
                 </div>
                 <div className="form-group">
                   <label>Brand</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     value={formData.brand}
-                    onChange={(e) => setFormData({...formData, brand: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
                   />
                 </div>
                 <div className="form-group">
                   <label>Manufacturer</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     value={formData.manufacturer}
-                    onChange={(e) => setFormData({...formData, manufacturer: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, manufacturer: e.target.value })}
                   />
                 </div>
                 <div className="form-group">
                   <label>Unit *</label>
-                  <select 
+                  <select
                     value={formData.unit}
-                    onChange={(e) => setFormData({...formData, unit: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
                     required
                   >
                     {UNITS.map(u => (
@@ -327,74 +327,74 @@ function InventoryMaster() {
                 </div>
                 <div className="form-group">
                   <label>Min Stock Level</label>
-                  <input 
-                    type="number" 
+                  <input
+                    type="number"
                     step="0.01"
                     value={formData.min_stock_level}
-                    onChange={(e) => setFormData({...formData, min_stock_level: parseFloat(e.target.value)})}
+                    onChange={(e) => setFormData({ ...formData, min_stock_level: parseFloat(e.target.value) })}
                   />
                 </div>
                 <div className="form-group">
                   <label>Reorder Level</label>
-                  <input 
-                    type="number" 
+                  <input
+                    type="number"
                     step="0.01"
                     value={formData.reorder_level}
-                    onChange={(e) => setFormData({...formData, reorder_level: parseFloat(e.target.value)})}
+                    onChange={(e) => setFormData({ ...formData, reorder_level: parseFloat(e.target.value) })}
                   />
                 </div>
                 <div className="form-group">
                   <label>Storage Condition</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     value={formData.storage_condition}
-                    onChange={(e) => setFormData({...formData, storage_condition: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, storage_condition: e.target.value })}
                     placeholder="e.g., 2-8°C"
                   />
                 </div>
                 <div className="form-group">
                   <label>Cost Price</label>
-                  <input 
-                    type="number" 
+                  <input
+                    type="number"
                     step="0.01"
                     value={formData.cost_price}
-                    onChange={(e) => setFormData({...formData, cost_price: parseFloat(e.target.value)})}
+                    onChange={(e) => setFormData({ ...formData, cost_price: parseFloat(e.target.value) })}
                   />
                 </div>
                 <div className="form-group">
                   <label>Selling/Usage Cost</label>
-                  <input 
-                    type="number" 
+                  <input
+                    type="number"
                     step="0.01"
                     value={formData.selling_cost}
-                    onChange={(e) => setFormData({...formData, selling_cost: parseFloat(e.target.value)})}
+                    onChange={(e) => setFormData({ ...formData, selling_cost: parseFloat(e.target.value) })}
                   />
                 </div>
                 <div className="form-group checkbox-group">
                   <label>
-                    <input 
+                    <input
                       type="checkbox"
                       checked={formData.expiry_required}
-                      onChange={(e) => setFormData({...formData, expiry_required: e.target.checked})}
+                      onChange={(e) => setFormData({ ...formData, expiry_required: e.target.checked })}
                     />
                     Expiry Date Required
                   </label>
                 </div>
                 <div className="form-group checkbox-group">
                   <label>
-                    <input 
+                    <input
                       type="checkbox"
                       checked={formData.lot_tracking}
-                      onChange={(e) => setFormData({...formData, lot_tracking: e.target.checked})}
+                      onChange={(e) => setFormData({ ...formData, lot_tracking: e.target.checked })}
                     />
                     Lot/Batch Tracking
                   </label>
                 </div>
                 <div className="form-group">
                   <label>Status</label>
-                  <select 
+                  <select
                     value={formData.status}
-                    onChange={(e) => setFormData({...formData, status: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                   >
                     <option value="Active">Active</option>
                     <option value="Inactive">Inactive</option>

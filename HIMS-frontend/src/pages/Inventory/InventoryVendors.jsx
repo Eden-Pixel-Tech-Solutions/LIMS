@@ -36,7 +36,7 @@ function InventoryVendors() {
     try {
       const params = new URLSearchParams();
       if (searchQuery) params.append('search', searchQuery);
-      
+
       const response = await fetch(`${API_URL}/api/v2/inventory/vendors?${params}`);
       const data = await response.json();
       if (data.success) {
@@ -61,7 +61,7 @@ function InventoryVendors() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const url = editingVendor 
+      const url = editingVendor
         ? `${API_URL}/api/v2/inventory/vendors/${editingVendor.id}`
         : `${API_URL}/api/v2/inventory/vendors`;
       const method = editingVendor ? 'PUT' : 'POST';
@@ -88,7 +88,7 @@ function InventoryVendors() {
 
   const handleDelete = async (id) => {
     if (!confirm('Are you sure you want to remove this vendor?')) return;
-    
+
     try {
       const response = await fetch(`${API_URL}/api/v2/inventory/vendors/${id}`, {
         method: 'DELETE'
@@ -134,7 +134,7 @@ function InventoryVendors() {
   return (
     <div className="inv-vendor-page">
       {alert && <Alert type={alert.type} message={alert.message} onClose={hideAlert} />}
-      
+
       <div className="inv-header">
         <div>
           <h1 className="inv-title">Vendor Management</h1>
@@ -151,9 +151,9 @@ function InventoryVendors() {
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-soft)" strokeWidth="2">
               <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
             </svg>
-            <input 
-              type="text" 
-              placeholder="Search vendors by name, code..." 
+            <input
+              type="text"
+              placeholder="Search vendors by name, code..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -174,20 +174,20 @@ function InventoryVendors() {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan="7" style={{textAlign: 'center'}}>Loading vendors...</td></tr>
+              <tr><td colSpan="7" style={{ textAlign: 'center' }}>Loading vendors...</td></tr>
             ) : vendors.length === 0 ? (
-              <tr><td colSpan="7" style={{textAlign: 'center'}}>No vendors found.</td></tr>
+              <tr><td colSpan="7" style={{ textAlign: 'center' }}>No vendors found.</td></tr>
             ) : (
               vendors.map(vendor => (
                 <tr key={vendor.id}>
                   <td><strong>{vendor.vendor_code}</strong></td>
                   <td>
-                    <div style={{fontWeight: 600, color: 'var(--text-dark)'}}>{vendor.vendor_name}</div>
-                    <div style={{fontSize: '12px', color: 'var(--text-soft)'}}>{vendor.contact_person}</div>
+                    <div style={{ fontWeight: 600, color: 'var(--text-dark)' }}>{vendor.vendor_name}</div>
+                    <div style={{ fontSize: '12px', color: 'var(--text-soft)' }}>{vendor.contact_person}</div>
                   </td>
                   <td>
                     <div>{vendor.phone || '-'}</div>
-                    <div style={{fontSize: '12px', color: 'var(--text-soft)'}}>{vendor.email || '-'}</div>
+                    <div style={{ fontSize: '12px', color: 'var(--text-soft)' }}>{vendor.email || '-'}</div>
                   </td>
                   <td>{vendor.tax_id || '-'}</td>
                   <td>{vendor.lead_time_days} days</td>
@@ -200,7 +200,7 @@ function InventoryVendors() {
                     <button className="action-btn" onClick={() => handleEdit(vendor)} title="Edit">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                     </button>
-                    <button className="action-btn" onClick={() => handleDelete(vendor.id)} title="Delete" style={{marginLeft: '8px'}}>
+                    <button className="action-btn" onClick={() => handleDelete(vendor.id)} title="Delete" style={{ marginLeft: '8px' }}>
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                     </button>
                   </td>
@@ -221,66 +221,66 @@ function InventoryVendors() {
             </div>
             <div className="inv-drawer-body">
               <form id="vendor-form" onSubmit={handleSubmit}>
-                
-                <h4 style={{marginBottom: '12px', color: 'var(--text-dark)'}}>Basic Information</h4>
+
+                <h4 style={{ marginBottom: '12px', color: 'var(--text-dark)' }}>Basic Information</h4>
                 <div className="inv-form-group">
                   <label>Vendor Name *</label>
-                  <input className="inv-input" required value={formData.vendor_name} onChange={e => setFormData({...formData, vendor_name: e.target.value})} />
+                  <input className="inv-input" required value={formData.vendor_name} onChange={e => setFormData({ ...formData, vendor_name: e.target.value })} />
                 </div>
-                
+
                 <div className="inv-grid-2">
                   <div className="inv-form-group">
                     <label>Contact Person</label>
-                    <input className="inv-input" value={formData.contact_person} onChange={e => setFormData({...formData, contact_person: e.target.value})} />
+                    <input className="inv-input" value={formData.contact_person} onChange={e => setFormData({ ...formData, contact_person: e.target.value })} />
                   </div>
                   <div className="inv-form-group">
                     <label>Phone Number</label>
-                    <input className="inv-input" type="tel" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} />
+                    <input className="inv-input" type="tel" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} />
                   </div>
                 </div>
 
                 <div className="inv-form-group">
                   <label>Email Address</label>
-                  <input className="inv-input" type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
+                  <input className="inv-input" type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
                 </div>
 
                 <div className="inv-form-group">
                   <label>Physical Address</label>
-                  <textarea className="inv-textarea" rows="3" value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} />
+                  <textarea className="inv-textarea" rows="3" value={formData.address} onChange={e => setFormData({ ...formData, address: e.target.value })} />
                 </div>
 
-                <h4 style={{marginTop: '24px', marginBottom: '12px', color: 'var(--text-dark)'}}>Commercial Details</h4>
+                <h4 style={{ marginTop: '24px', marginBottom: '12px', color: 'var(--text-dark)' }}>Commercial Details</h4>
                 <div className="inv-grid-2">
                   <div className="inv-form-group">
                     <label>Tax ID / GST Number</label>
-                    <input className="inv-input" value={formData.tax_id} onChange={e => setFormData({...formData, tax_id: e.target.value})} />
+                    <input className="inv-input" value={formData.tax_id} onChange={e => setFormData({ ...formData, tax_id: e.target.value })} />
                   </div>
                   <div className="inv-form-group">
                     <label>Lead Time (Days)</label>
-                    <input className="inv-input" type="number" min="1" value={formData.lead_time_days} onChange={e => setFormData({...formData, lead_time_days: parseInt(e.target.value) || 7})} />
+                    <input className="inv-input" type="number" min="1" value={formData.lead_time_days} onChange={e => setFormData({ ...formData, lead_time_days: parseInt(e.target.value) || 7 })} />
                   </div>
                 </div>
 
-                <h4 style={{marginTop: '24px', marginBottom: '12px', color: 'var(--text-dark)'}}>Banking Information</h4>
+                <h4 style={{ marginTop: '24px', marginBottom: '12px', color: 'var(--text-dark)' }}>Banking Information</h4>
                 <div className="inv-form-group">
                   <label>Bank Name</label>
-                  <input className="inv-input" value={formData.bank_name} onChange={e => setFormData({...formData, bank_name: e.target.value})} />
+                  <input className="inv-input" value={formData.bank_name} onChange={e => setFormData({ ...formData, bank_name: e.target.value })} />
                 </div>
                 <div className="inv-grid-2">
                   <div className="inv-form-group">
                     <label>Account Number</label>
-                    <input className="inv-input" value={formData.account_number} onChange={e => setFormData({...formData, account_number: e.target.value})} />
+                    <input className="inv-input" value={formData.account_number} onChange={e => setFormData({ ...formData, account_number: e.target.value })} />
                   </div>
                   <div className="inv-form-group">
                     <label>IFSC / Routing Code</label>
-                    <input className="inv-input" value={formData.ifsc_code} onChange={e => setFormData({...formData, ifsc_code: e.target.value})} />
+                    <input className="inv-input" value={formData.ifsc_code} onChange={e => setFormData({ ...formData, ifsc_code: e.target.value })} />
                   </div>
                 </div>
 
-                <h4 style={{marginTop: '24px', marginBottom: '12px', color: 'var(--text-dark)'}}>System Status</h4>
+                <h4 style={{ marginTop: '24px', marginBottom: '12px', color: 'var(--text-dark)' }}>System Status</h4>
                 <div className="inv-form-group">
                   <label>Vendor Status</label>
-                  <select className="inv-select" value={formData.status} onChange={e => setFormData({...formData, status: e.target.value})}>
+                  <select className="inv-select" value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value })}>
                     <option value="Active">Active</option>
                     <option value="Inactive">Inactive</option>
                     <option value="Blacklisted">Blacklisted</option>
@@ -290,7 +290,7 @@ function InventoryVendors() {
               </form>
             </div>
             <div className="inv-drawer-footer">
-              <button type="button" className="action-btn" onClick={() => setIsDrawerOpen(false)} style={{padding: '10px 20px', color: 'var(--text-mid)'}}>Cancel</button>
+              <button type="button" className="action-btn" onClick={() => setIsDrawerOpen(false)} style={{ padding: '10px 20px', color: 'var(--text-mid)' }}>Cancel</button>
               <button type="submit" form="vendor-form" className="btn-primary">
                 {editingVendor ? 'Save Changes' : 'Register Vendor'}
               </button>

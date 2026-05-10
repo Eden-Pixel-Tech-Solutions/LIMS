@@ -3,33 +3,33 @@ import '../../assets/CSS/InventoryNetworkDashboard.css';
 
 const API = import.meta.env.VITE_API_URL || 'http://172.16.11.160:7005';
 
-const fmt     = (n) => new Intl.NumberFormat('en-IN').format(Math.round(n || 0));
-const fmtRs   = (n) => `₹${new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(n || 0)}`;
+const fmt = (n) => new Intl.NumberFormat('en-IN').format(Math.round(n || 0));
+const fmtRs = (n) => `₹${new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(n || 0)}`;
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: '2-digit' }) : '—';
 
 const STATUS_STYLE = {
-  'OK':           { bg: '#dcfce7', color: '#166534' },
-  'Low':          { bg: '#fef3c7', color: '#92400e' },
-  'Critical':     { bg: '#fee2e2', color: '#991b1b' },
+  'OK': { bg: '#dcfce7', color: '#166534' },
+  'Low': { bg: '#fef3c7', color: '#92400e' },
+  'Critical': { bg: '#fee2e2', color: '#991b1b' },
   'Out of Stock': { bg: '#f1f5f9', color: '#475569' },
 };
 
 const CATEGORIES = ['All', 'Reagents', 'Consumables', 'Test Kits', 'Calibrators', 'Controls', 'Glassware', 'General Lab Supplies'];
 
 export default function InventoryOverview() {
-  const [items, setItems]         = useState([]);
+  const [items, setItems] = useState([]);
   const [facilityStock, setFacilityStock] = useState([]);
-  const [loading, setLoading]     = useState(true);
-  const [error, setError]         = useState('');
-  const [search, setSearch]       = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [search, setSearch] = useState('');
   const [catFilter, setCatFilter] = useState('All');
   const [statusFilter, setStatus] = useState('All');
-  const [viewMode, setViewMode]   = useState('catalog'); // 'catalog' | 'facility'
+  const [viewMode, setViewMode] = useState('catalog'); // 'catalog' | 'facility'
 
-  const roleLevel  = localStorage.getItem('role_level') || 'Branch';
-  const branchId   = localStorage.getItem('branch_id');
+  const roleLevel = localStorage.getItem('role_level') || 'Branch';
+  const branchId = localStorage.getItem('branch_id');
   const districtId = localStorage.getItem('district_id');
-  const token      = localStorage.getItem('hims_token');
+  const token = localStorage.getItem('hims_token');
 
   useEffect(() => {
     const params = new URLSearchParams({ role_level: roleLevel });
@@ -54,7 +54,7 @@ export default function InventoryOverview() {
   const filtered = useMemo(() => {
     return items.filter(item => {
       const matchSearch = !search || item.item_name.toLowerCase().includes(search.toLowerCase()) || item.item_code.toLowerCase().includes(search.toLowerCase());
-      const matchCat    = catFilter === 'All' || item.category === catFilter;
+      const matchCat = catFilter === 'All' || item.category === catFilter;
       const matchStatus = statusFilter === 'All' || item.stock_status === statusFilter;
       return matchSearch && matchCat && matchStatus;
     });
@@ -62,12 +62,12 @@ export default function InventoryOverview() {
 
   // Summary stats
   const summary = useMemo(() => ({
-    total:     items.length,
-    ok:        items.filter(i => i.stock_status === 'OK').length,
-    low:       items.filter(i => i.stock_status === 'Low').length,
-    critical:  items.filter(i => i.stock_status === 'Critical').length,
-    outOfStock:items.filter(i => i.stock_status === 'Out of Stock').length,
-    totalValue:items.reduce((s, i) => s + Number(i.stock_value), 0),
+    total: items.length,
+    ok: items.filter(i => i.stock_status === 'OK').length,
+    low: items.filter(i => i.stock_status === 'Low').length,
+    critical: items.filter(i => i.stock_status === 'Critical').length,
+    outOfStock: items.filter(i => i.stock_status === 'Out of Stock').length,
+    totalValue: items.reduce((s, i) => s + Number(i.stock_value), 0),
   }), [items]);
 
   // Group facility stock by branch (for table view)
@@ -84,7 +84,7 @@ export default function InventoryOverview() {
     if (!filtered.length) return;
     const headers = ['Item Name', 'Code', 'Category', 'Unit', 'Available', 'Consumed', 'Batches', 'Expiry', 'Status'];
     if (roleLevel === 'Central') headers.push('Value');
-    
+
     const csvRows = [headers.join(',')];
     filtered.forEach(item => {
       const row = [
@@ -103,9 +103,9 @@ export default function InventoryOverview() {
     });
 
     const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement('a');
-    a.href     = url;
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
     a.download = `Inventory_Catalog_${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
   };
@@ -130,20 +130,20 @@ export default function InventoryOverview() {
     });
 
     const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement('a');
-    a.href     = url;
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
     a.download = `Facility_Stock_Log_${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
   };
 
-  if (loading) return <div className="inv-net-loading"><div className="inv-net-spinner"/>Loading stock overview…</div>;
-  if (error)   return <div className="inv-net-error">{error}</div>;
+  if (loading) return <div className="inv-net-loading"><div className="inv-net-spinner" />Loading stock overview…</div>;
+  if (error) return <div className="inv-net-error">{error}</div>;
 
   const titleMap = {
-    'Central':     'State-wide Overall Inventory',
+    'Central': 'State-wide Overall Inventory',
     'Sub-Central': 'District Overall Inventory',
-    'Branch':      'Facility Stock Overview',
+    'Branch': 'Facility Stock Overview',
   };
 
   return (
@@ -166,8 +166,8 @@ export default function InventoryOverview() {
             </div>
           )}
           <div className="inv-net-role-badge">{roleLevel}</div>
-          <button 
-            className="inv-net-clear-btn" 
+          <button
+            className="inv-net-clear-btn"
             style={{ marginLeft: 5, background: '#10b981', color: 'white', borderColor: '#10b981' }}
             onClick={viewMode === 'catalog' ? exportCatalogCSV : exportFacilityCSV}
           >
@@ -264,8 +264,8 @@ export default function InventoryOverview() {
                         <td>
                           {item.days_to_expiry !== null
                             ? <span style={{ fontSize: 11, fontWeight: 700, color: item.days_to_expiry <= 7 ? '#dc2626' : item.days_to_expiry <= 30 ? '#d97706' : '#16a34a' }}>
-                                {item.days_to_expiry}d
-                              </span>
+                              {item.days_to_expiry}d
+                            </span>
                             : <span style={{ color: '#94a3b8', fontSize: 11 }}>—</span>
                           }
                         </td>
@@ -310,11 +310,11 @@ export default function InventoryOverview() {
                   <tbody>
                     {group.items.map((item, j) => (
                       <tr key={j}>
-                        <td><div className="inv-tbl-name" style={{fontSize:12}}>{item.item_name}</div><div className="inv-tbl-code">{item.item_code}</div></td>
-                        <td style={{fontSize:11,color:'#64748b'}}>{item.category}</td>
+                        <td><div className="inv-tbl-name" style={{ fontSize: 12 }}>{item.item_name}</div><div className="inv-tbl-code">{item.item_code}</div></td>
+                        <td style={{ fontSize: 11, color: '#64748b' }}>{item.category}</td>
                         <td className="inv-tbl-num">{fmt(item.available_stock)}</td>
                         <td className="inv-tbl-num">{fmt(item.current_stock)}</td>
-                        <td style={{fontSize:11,color:'#94a3b8'}}>{item.unit}</td>
+                        <td style={{ fontSize: 11, color: '#94a3b8' }}>{item.unit}</td>
                       </tr>
                     ))}
                   </tbody>

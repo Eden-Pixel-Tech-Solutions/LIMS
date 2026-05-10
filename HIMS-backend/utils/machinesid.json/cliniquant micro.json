@@ -64,8 +64,8 @@
       ]
     },
     "4-9": {
-      "data": "Patient ID",
-      "description": "6 Digit Patient ID (e.g., 000012)"
+      "data": "CRN No",
+      "description": "6 Digit CRN No (e.g., 000012)"
     },
     "10-13": {
       "data": "Result",

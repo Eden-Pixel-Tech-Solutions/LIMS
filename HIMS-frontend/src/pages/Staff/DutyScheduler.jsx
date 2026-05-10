@@ -26,7 +26,7 @@ const DutyScheduler = () => {
       setLoading(true);
       const userBranchId = localStorage.getItem('branch_id');
       const userRoleLevel = localStorage.getItem('role_level');
-      
+
       const staffUrl = userRoleLevel === 'Central' ? '/api/staff/list' : `/api/staff/list?branch_id=${userBranchId}`;
 
       const [staffRes, infraRes, dutyRes] = await Promise.all([
@@ -39,14 +39,14 @@ const DutyScheduler = () => {
       const dutyData = await dutyRes.json();
 
       setPersonnel(staffData.staff.filter(s => {
-        const matchRole = s.role?.toLowerCase().includes('lab') || 
-                         s.role?.toLowerCase().includes('technician') || 
-                         s.department?.toLowerCase().includes('lab') ||
-                         s.role === 'Doctor';
-        
+        const matchRole = s.role?.toLowerCase().includes('lab') ||
+          s.role?.toLowerCase().includes('technician') ||
+          s.department?.toLowerCase().includes('lab') ||
+          s.role === 'Doctor';
+
         // If not central, only show staff from the same branch
         const matchBranch = userRoleLevel === 'Central' || !userBranchId || s.branch_id?.toString() === userBranchId.toString();
-        
+
         return matchRole && matchBranch;
       }));
       setLabs(infraData.items.filter(i => i.type === 'Laboratory' || i.name.toLowerCase().includes('lab')));
@@ -219,7 +219,7 @@ const DutyScheduler = () => {
                 <input type="date" className="preg-input filter-input" value={filters.date}
                   onChange={e => setFilters(f => ({ ...f, date: e.target.value }))} />
               </div>
-              
+
               <button className="btn-ghost" onClick={resetFilters} style={{ fontSize: 12, marginTop: '18px' }}>
                 Reset All
               </button>

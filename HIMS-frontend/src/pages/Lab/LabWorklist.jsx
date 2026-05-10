@@ -299,8 +299,8 @@ export default function LabWorklist() {
         {(userRole === 'Central' || userRole === 'Sub-Central') && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <label style={{ fontWeight: 'bold', color: 'var(--text-color)' }}>View Network Branch:</label>
-            <select 
-              value={selectedBranch} 
+            <select
+              value={selectedBranch}
               onChange={(e) => setSelectedBranch(e.target.value)}
               style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '14px' }}
             >
@@ -401,7 +401,7 @@ export default function LabWorklist() {
                 <tr>
                   <th>Queue No.</th>
                   <th>Patient</th>
-                  <th>Patient ID</th>
+                  <th>CRN No</th>
                   <th>Test Name</th>
                   <th>Sample Type</th>
                   <th>Container</th>
@@ -410,7 +410,9 @@ export default function LabWorklist() {
                 </tr>
               </thead>
               <tbody>
-                {worklist.map((item, index) => (
+                {worklist
+                  .filter(item => ['Pending', 'Collected', 'In Progress'].includes(item.status))
+                  .map((item, index) => (
                   <tr key={index} className={`status-${item.status?.toLowerCase().replace(' ', '-')}`}>
                     <td className="queue-number">
                       <strong>#{item.lab_queue_number || index + 1}</strong>
@@ -426,12 +428,19 @@ export default function LabWorklist() {
                     <td>{item.sample_type}</td>
                     <td>{item.tube_color || 'N/A'}</td>
                     <td>
-                      <span
-                        className="status-badge"
-                        style={{ backgroundColor: STATUS_COLORS[item.status] || '#999' }}
-                      >
-                        {item.status}
-                      </span>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <span
+                          className="status-badge"
+                          style={{ backgroundColor: STATUS_COLORS[item.status] || '#999' }}
+                        >
+                          {item.status}
+                        </span>
+                        {item.pending_params && item.pending_params.length > 0 && (
+                          <div style={{ fontSize: '10px', color: '#64748b', fontWeight: '600', maxWidth: '120px' }}>
+                            ⏳ Waiting for: {item.pending_params.join(', ')}
+                          </div>
+                        )}
+                      </div>
                     </td>
                     <td>
                       {item.status === 'Pending' ? (
@@ -476,7 +485,7 @@ export default function LabWorklist() {
               <button className="print-again-btn" onClick={handlePrint}>
                 🖨️ Print Again
               </button>
-              <button className="close-btn" onClick={() => setPrintLabel(null)}>
+              <button className="close" onClick={() => setPrintLabel(null)}>
                 ✕ Close
               </button>
             </div>

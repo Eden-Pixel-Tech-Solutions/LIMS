@@ -1,22 +1,18 @@
+import pool from '../config/db.js';
 
-import db from '../config/db.js';
-
-async function checkTables() {
+async function check() {
   try {
-    const [tables] = await db.query('SHOW TABLES');
-    console.log("Tables:", tables);
+    const [resultCols] = await pool.query('DESCRIBE lab_test_result');
+    console.log('Lab Test Result Columns:', resultCols);
     
-    const [results] = await db.query('SELECT * FROM lab_test_result');
-    console.log("Results count:", results.length);
-    if (results.length > 0) {
-        console.log("Latest result:", JSON.stringify(results[results.length-1], null, 2));
-    }
-    
-    process.exit(0);
+    // Check some sample data to see how findings are stored
+    const [samples] = await pool.query('SELECT * FROM lab_test_result LIMIT 5');
+    console.log('Sample Results:', samples);
   } catch (err) {
     console.error(err);
-    process.exit(1);
+  } finally {
+    process.exit();
   }
 }
 
-checkTables();
+check();

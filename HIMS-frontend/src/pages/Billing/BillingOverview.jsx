@@ -3,27 +3,27 @@ import { useState, useEffect } from 'react';
 const API_BASE = import.meta.env.VITE_API_URL || 'http://172.16.11.160:7005';
 
 const statusColors = {
-  Paid:    { bg: '#dcfce7', color: '#166534', dot: '#16a34a' },
+  Paid: { bg: '#dcfce7', color: '#166534', dot: '#16a34a' },
   Partial: { bg: '#fef9c3', color: '#854d0e', dot: '#ca8a04' },
   Pending: { bg: '#fee2e2', color: '#991b1b', dot: '#dc2626' },
 };
 
 function BillingOverview() {
-  const [bills, setBills]           = useState([]);
-  const [filtered, setFiltered]     = useState([]);
-  const [loading, setLoading]       = useState(true);
-  const [search, setSearch]         = useState('');
+  const [bills, setBills] = useState([]);
+  const [filtered, setFiltered] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
-  const [startDate, setStartDate]       = useState('');
-  const [endDate, setEndDate]           = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const [selectedBill, setSelectedBill] = useState(null);
   const [billDetail, setBillDetail] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
-  const [payModal, setPayModal]     = useState(false);
-  const [payAmount, setPayAmount]   = useState('');
-  const [payMethod, setPayMethod]   = useState('Cash');
-  const [paying, setPaying]         = useState(false);
-  const [toast, setToast]           = useState(null);
+  const [payModal, setPayModal] = useState(false);
+  const [payAmount, setPayAmount] = useState('');
+  const [payMethod, setPayMethod] = useState('Cash');
+  const [paying, setPaying] = useState(false);
+  const [toast, setToast] = useState(null);
 
   const showToast = (msg, type = 'success') => {
     setToast({ msg, type });
@@ -33,7 +33,7 @@ function BillingOverview() {
   const fetchBills = async () => {
     setLoading(true);
     try {
-      const res  = await fetch(`${API_BASE}/api/billing/all`);
+      const res = await fetch(`${API_BASE}/api/billing/all`);
       const data = await res.json();
       if (data.success) {
         setBills(data.data || []);
@@ -73,7 +73,7 @@ function BillingOverview() {
     setSelectedBill(bill);
     setDetailLoading(true);
     try {
-      const res  = await fetch(`${API_BASE}/api/billing/${bill.id}`);
+      const res = await fetch(`${API_BASE}/api/billing/${bill.id}`);
       const data = await res.json();
       if (data.success) setBillDetail(data.data);
     } catch { /* silent */ }
@@ -92,10 +92,10 @@ function BillingOverview() {
     if (!payAmount || parseFloat(payAmount) <= 0) return;
     setPaying(true);
     try {
-      const res  = await fetch(`${API_BASE}/api/billing/${selectedBill.id}/payment`, {
-        method:  'POST',
+      const res = await fetch(`${API_BASE}/api/billing/${selectedBill.id}/payment`, {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ paid_amount: parseFloat(payAmount), payment_method: payMethod }),
+        body: JSON.stringify({ paid_amount: parseFloat(payAmount), payment_method: payMethod }),
       });
       const data = await res.json();
       if (data.success) {
@@ -112,9 +112,9 @@ function BillingOverview() {
   };
 
   // Summaries
-  const totalBills   = bills.length;
+  const totalBills = bills.length;
   const totalRevenue = bills.reduce((s, b) => s + parseFloat(b.net_amount || 0), 0);
-  const totalPaid    = bills.reduce((s, b) => s + parseFloat(b.paid_amount || 0), 0);
+  const totalPaid = bills.reduce((s, b) => s + parseFloat(b.paid_amount || 0), 0);
   const totalPending = totalRevenue - totalPaid;
 
   const fmt = (n) => `₹${parseFloat(n || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
@@ -134,14 +134,14 @@ function BillingOverview() {
       <p><strong>Bill No:</strong> ${detail.bill_number}</p>
       <p><strong>Patient:</strong> ${detail.patient_name}</p>
       <p><strong>Phone:</strong> ${detail.patient_phone || '—'}</p>
-      <p><strong>Date:</strong> ${new Date(detail.created_at || Date.now()).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})}</p>
+      <p><strong>Date:</strong> ${new Date(detail.created_at || Date.now()).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
       <hr/>
       <table><thead><tr><th style="text-align:left;padding:8px;border-bottom:2px solid #e2e8f0">Service</th><th style="text-align:center;padding:8px;border-bottom:2px solid #e2e8f0">Qty</th><th style="text-align:right;padding:8px;border-bottom:2px solid #e2e8f0">Amount</th></tr></thead><tbody>${items}</tbody></table>
       <div class="totals">
-        <p>Gross Total: ₹${parseFloat(detail.total_amount||0).toLocaleString('en-IN')}</p>
-        ${parseFloat(detail.discount_amount)>0 ? `<p>Discount: -₹${parseFloat(detail.discount_amount).toLocaleString('en-IN')}</p>` : ''}
-        <p><strong>Net Amount: ₹${parseFloat(detail.net_amount||0).toLocaleString('en-IN')}</strong></p>
-        <p style="color:#16a34a">Paid: ₹${parseFloat(detail.paid_amount||0).toLocaleString('en-IN')}</p>
+        <p>Gross Total: ₹${parseFloat(detail.total_amount || 0).toLocaleString('en-IN')}</p>
+        ${parseFloat(detail.discount_amount) > 0 ? `<p>Discount: -₹${parseFloat(detail.discount_amount).toLocaleString('en-IN')}</p>` : ''}
+        <p><strong>Net Amount: ₹${parseFloat(detail.net_amount || 0).toLocaleString('en-IN')}</strong></p>
+        <p style="color:#16a34a">Paid: ₹${parseFloat(detail.paid_amount || 0).toLocaleString('en-IN')}</p>
         <p>Payment Status: <strong>${detail.payment_status || 'Pending'}</strong></p>
         <p>Method: ${detail.payment_method || '—'}</p>
       </div>
@@ -156,7 +156,7 @@ function BillingOverview() {
   const sendWhatsApp = async (detail) => {
     const phone = (detail.patient_phone || '').replace(/[^0-9]/g, '');
     if (!phone) { showToast('No phone number on file for this patient', 'error'); return; }
-    
+
     // Ensure 91 prefix for Indian numbers if only 10 digits
     const targetPhone = phone.length === 10 ? '91' + phone : phone;
 
@@ -172,9 +172,9 @@ function BillingOverview() {
       `*Services:*`,
       items,
       `------------------------------------------`,
-      `*Gross Total:* ₹${parseFloat(detail.total_amount||0).toLocaleString('en-IN')}`,
+      `*Gross Total:* ₹${parseFloat(detail.total_amount || 0).toLocaleString('en-IN')}`,
       parseFloat(detail.discount_amount) > 0 ? `*Discount:* -₹${parseFloat(detail.discount_amount).toLocaleString('en-IN')}` : null,
-      `*NET AMOUNT: ₹${parseFloat(detail.net_amount||0).toLocaleString('en-IN')}*`,
+      `*NET AMOUNT: ₹${parseFloat(detail.net_amount || 0).toLocaleString('en-IN')}*`,
       `------------------------------------------`,
       `*Payment Status:* ${isPaid ? '✅ PAID' : '⏳ PENDING'}`,
       isPaid ? `*Method:* ${detail.payment_method || 'Cash'}` : `_Please clear the balance at the reception._`,
@@ -242,7 +242,7 @@ function BillingOverview() {
     const w = window.open('', '_blank');
     const items = (detail.items || []).map(i =>
       `<tr><td colspan="2" style="padding:4px 0">${i.service_name}</td></tr>
-       <tr><td style="padding:0 0 8px">${i.quantity} x ${parseFloat(i.unit_price||0).toFixed(2)}</td><td style="text-align:right">₹${parseFloat(i.total_price).toFixed(2)}</td></tr>`
+       <tr><td style="padding:0 0 8px">${i.quantity} x ${parseFloat(i.unit_price || 0).toFixed(2)}</td><td style="text-align:right">₹${parseFloat(i.total_price).toFixed(2)}</td></tr>`
     ).join('');
     w.document.write(`
       <html><head><style>
@@ -261,7 +261,7 @@ function BillingOverview() {
         <table>${items}</table>
         <div class="hr"></div>
         <div class="right">Total: ₹${parseFloat(detail.total_amount).toFixed(2)}</div>
-        ${parseFloat(detail.discount_amount)>0 ? `<div class="right">Disc: -₹${parseFloat(detail.discount_amount).toFixed(2)}</div>` : ''}
+        ${parseFloat(detail.discount_amount) > 0 ? `<div class="right">Disc: -₹${parseFloat(detail.discount_amount).toFixed(2)}</div>` : ''}
         <div class="right bold">NET: ₹${parseFloat(detail.net_amount).toFixed(2)}</div>
         <div class="right">Paid: ₹${parseFloat(detail.paid_amount).toFixed(2)}</div>
         <div class="hr"></div>
@@ -280,7 +280,7 @@ function BillingOverview() {
         <div style={{
           position: 'fixed', top: 24, right: 24, zIndex: 9999,
           background: toast.type === 'error' ? '#fee2e2' : '#dcfce7',
-          color:      toast.type === 'error' ? '#991b1b' : '#166534',
+          color: toast.type === 'error' ? '#991b1b' : '#166534',
           border: `1px solid ${toast.type === 'error' ? '#fca5a5' : '#86efac'}`,
           borderRadius: 12, padding: '14px 22px', fontWeight: 600, fontSize: 14,
           boxShadow: '0 4px 20px rgba(0,0,0,0.12)',
@@ -298,10 +298,10 @@ function BillingOverview() {
       {/* KPI Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 18, marginBottom: 28 }}>
         {[
-          { label: 'Total Bills',    value: totalBills,   unit: '',    bg: '#eff6ff', accent: '#1d4ed8', icon: '🧾' },
-          { label: 'Total Revenue',  value: fmt(totalRevenue),  unit: '', bg: '#f0fdf4', accent: '#16a34a', icon: '💰' },
-          { label: 'Amount Paid',    value: fmt(totalPaid),     unit: '', bg: '#f5f3ff', accent: '#7c3aed', icon: '✅' },
-          { label: 'Pending Amount', value: fmt(totalPending),  unit: '', bg: '#fff7ed', accent: '#c2410c', icon: '⏳' },
+          { label: 'Total Bills', value: totalBills, unit: '', bg: '#eff6ff', accent: '#1d4ed8', icon: '🧾' },
+          { label: 'Total Revenue', value: fmt(totalRevenue), unit: '', bg: '#f0fdf4', accent: '#16a34a', icon: '💰' },
+          { label: 'Amount Paid', value: fmt(totalPaid), unit: '', bg: '#f5f3ff', accent: '#7c3aed', icon: '✅' },
+          { label: 'Pending Amount', value: fmt(totalPending), unit: '', bg: '#fff7ed', accent: '#c2410c', icon: '⏳' },
         ].map(c => (
           <div key={c.label} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 16, padding: '20px 22px', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
             <div style={{ fontSize: 26, marginBottom: 8 }}>{c.icon}</div>
@@ -316,7 +316,7 @@ function BillingOverview() {
         <div style={{ flex: 1, minWidth: 300, position: 'relative' }}>
           <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#64748b', marginBottom: 5 }}>Search Bills</label>
           <div style={{ position: 'relative' }}>
-            <svg style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <svg style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
@@ -344,8 +344,8 @@ function BillingOverview() {
               style={{
                 padding: '9px 16px', borderRadius: 10, border: '1.5px solid',
                 borderColor: statusFilter === s ? '#0d2554' : '#e2e8f0',
-                background:  statusFilter === s ? '#0d2554' : '#fff',
-                color:       statusFilter === s ? '#fff' : '#475569',
+                background: statusFilter === s ? '#0d2554' : '#fff',
+                color: statusFilter === s ? '#fff' : '#475569',
                 fontWeight: 600, fontSize: 13, cursor: 'pointer', transition: 'all 0.15s',
               }}
             >{s}</button>
@@ -359,21 +359,21 @@ function BillingOverview() {
 
         <button
           onClick={handleExportCSV}
-          style={{ 
-            padding: '10px 18px', 
-            background: '#0d2554', 
-            color: '#fff', 
-            border: 'none', 
-            borderRadius: 10, 
-            fontWeight: 600, 
-            fontSize: 13, 
+          style={{
+            padding: '10px 18px',
+            background: '#0d2554',
+            color: '#fff',
+            border: 'none',
+            borderRadius: 10,
+            fontWeight: 600,
+            fontSize: 13,
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
             gap: '8px'
           }}
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
           Export CSV
         </button>
       </div>
@@ -395,10 +395,10 @@ function BillingOverview() {
               <tr><td colSpan={12} style={{ textAlign: 'center', padding: 40, color: '#94a3b8' }}>No bills found.</td></tr>
             ) : (
               filtered.map((b, i) => {
-                const net     = parseFloat(b.net_amount   || 0);
-                const paid    = parseFloat(b.paid_amount  || 0);
+                const net = parseFloat(b.net_amount || 0);
+                const paid = parseFloat(b.paid_amount || 0);
                 const balance = net - paid;
-                const sc      = statusColors[b.payment_status] || statusColors.Pending;
+                const sc = statusColors[b.payment_status] || statusColors.Pending;
                 return (
                   <tr key={b.id} style={{ borderBottom: '1px solid #f1f5f9', background: i % 2 === 0 ? '#fff' : '#fafafa', transition: 'background 0.15s' }}
                     onMouseEnter={e => e.currentTarget.style.background = '#f0f9ff'}
@@ -433,7 +433,7 @@ function BillingOverview() {
       {selectedBill && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.45)', zIndex: 1000, display: 'flex', justifyContent: 'flex-end' }} onClick={closeDetail}>
           <div style={{ width: 520, background: '#fff', height: '100%', overflowY: 'auto', boxShadow: '-8px 0 40px rgba(0,0,0,0.15)', display: 'flex', flexDirection: 'column' }} onClick={e => e.stopPropagation()}>
-            
+
             {/* Panel Header */}
             <div style={{ padding: '24px 28px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff', position: 'sticky', top: 0, zIndex: 2 }}>
               <div>
@@ -449,24 +449,26 @@ function BillingOverview() {
               <div style={{ padding: '24px 28px', flex: 1 }}>
 
                 {/* Payment Status Badge */}
-                {(() => { const sc = statusColors[billDetail.payment_status] || statusColors.Pending; return (
-                  <div style={{ marginBottom: 24 }}>
-                    <span style={{ background: sc.bg, color: sc.color, padding: '6px 14px', borderRadius: 100, fontSize: 13, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                      <span style={{ width: 8, height: 8, borderRadius: '50%', background: sc.dot, display: 'inline-block' }} />
-                      {billDetail.payment_status || 'Pending'}
-                    </span>
-                  </div>
-                ); })()}
+                {(() => {
+                  const sc = statusColors[billDetail.payment_status] || statusColors.Pending; return (
+                    <div style={{ marginBottom: 24 }}>
+                      <span style={{ background: sc.bg, color: sc.color, padding: '6px 14px', borderRadius: 100, fontSize: 13, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                        <span style={{ width: 8, height: 8, borderRadius: '50%', background: sc.dot, display: 'inline-block' }} />
+                        {billDetail.payment_status || 'Pending'}
+                      </span>
+                    </div>
+                  );
+                })()}
 
                 {/* Financial Summary */}
                 <div style={{ background: '#f8fafc', borderRadius: 14, padding: '18px 20px', marginBottom: 24, border: '1px solid #e2e8f0' }}>
                   <h4 style={{ margin: '0 0 14px', fontSize: 13, color: '#64748b', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase' }}>Payment Summary</h4>
                   {[
-                    { label: 'Gross Total',    val: fmt(billDetail.total_amount),   color: '#0f172a' },
-                    { label: 'Discount',        val: billDetail.discount_amount > 0 ? `-${fmt(billDetail.discount_amount)}` : '—', color: '#dc2626' },
-                    { label: 'Net Amount',      val: fmt(billDetail.net_amount),     color: '#0f172a', bold: true },
-                    { label: 'Amount Paid',     val: fmt(billDetail.paid_amount),    color: '#16a34a', bold: true },
-                    { label: 'Balance Due',     val: fmt(parseFloat(billDetail.net_amount || 0) - parseFloat(billDetail.paid_amount || 0)), color: '#dc2626', bold: true },
+                    { label: 'Gross Total', val: fmt(billDetail.total_amount), color: '#0f172a' },
+                    { label: 'Discount', val: billDetail.discount_amount > 0 ? `-${fmt(billDetail.discount_amount)}` : '—', color: '#dc2626' },
+                    { label: 'Net Amount', val: fmt(billDetail.net_amount), color: '#0f172a', bold: true },
+                    { label: 'Amount Paid', val: fmt(billDetail.paid_amount), color: '#16a34a', bold: true },
+                    { label: 'Balance Due', val: fmt(parseFloat(billDetail.net_amount || 0) - parseFloat(billDetail.paid_amount || 0)), color: '#dc2626', bold: true },
                   ].map(r => (
                     <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #e2e8f0', fontSize: 14 }}>
                       <span style={{ color: '#64748b' }}>{r.label}</span>

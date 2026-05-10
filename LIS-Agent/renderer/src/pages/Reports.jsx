@@ -54,13 +54,13 @@ const Reports = () => {
                 <td style={{ padding: '16px', color: '#64748b' }}>{new Date(report.verified_at).toLocaleString()}</td>
                 <td style={{ padding: '16px' }}>
                   <div style={{ display: 'flex', gap: '8px' }}>
-                    <button 
+                    <button
                       onClick={() => handleDownload(report.sample_id)}
                       style={{ padding: '8px 16px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}
                     >
                       📥 PDF
                     </button>
-                    <button 
+                    <button
                       onClick={() => handleResend(report)}
                       style={{ padding: '8px 16px', background: '#22c55e', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}
                     >

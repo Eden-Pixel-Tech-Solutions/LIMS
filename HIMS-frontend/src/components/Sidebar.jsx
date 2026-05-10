@@ -114,6 +114,11 @@ const NAV_ITEMS = [
         path: '/lab-worklist',
       },
       {
+        id: 'lab-sample-list',
+        label: 'Sample List',
+        path: '/lab-sample-list',
+      },
+      {
         id: 'lab-verification',
         label: 'Verification',
         path: '/lab-verification',
@@ -220,7 +225,7 @@ function Sidebar() {
       return {
         ...item,
         children: item.children.filter(child => 
-          child.id === 'lab-worklist' || child.id === 'lab-reports'
+          child.id === 'lab-worklist' || child.id === 'lab-reports' || child.id === 'lab-sample-list'
         )
       };
     }
