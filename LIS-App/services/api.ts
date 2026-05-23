@@ -17,7 +17,7 @@ const initializeAsyncStorage = async () => {
 let inMemoryToken: string | null = null;
 
 // API Configuration
-const API_BASE_URL = "http://172.16.11.160:7005/api/lab"; // Update with your backend URL
+const API_BASE_URL = "http://localhost:7005/api/lab"; // Update with your backend URL
 
 // Types for API responses
 interface ApiResponse<T = any> {
@@ -519,7 +519,7 @@ class ApiClient {
   > {
     const headers = await this.getHeaders();
     const response = await fetch(
-      "http://172.16.11.160:7005/api/dashboard/stats",
+      "http://localhost:7005/api/dashboard/stats",
       {
         headers,
       },

@@ -60,7 +60,7 @@ export const appendBranchContext = (baseUrl) => {
  * @returns {Promise} Fetch promise
  */
 export const fetchWithBranchContext = async (url, options = {}) => {
-  const API = import.meta.env.VITE_API_URL || 'http://172.16.11.160:7005';
+  const API = import.meta.env.VITE_API_URL || 'http://localhost:7005';
   const token = localStorage.getItem('hims_token');
 
   const urlWithContext = appendBranchContext(url);

@@ -548,6 +548,227 @@ export const deleteLabTest = async (req, res) => {
   }
 };
 
+export const mapAnalyzerTests = async (req, res) => {
+  try {
+    const { lab_id, analyzer_name } = req.body;
+    
+    if (!lab_id || !analyzer_name) {
+      return res.status(400).json({ success: false, message: 'Lab ID and Analyzer Name are required' });
+    }
+
+    // Predefined tests for Auto-Mapping
+    const ANALYZER_TEST_TEMPLATES = {
+      'HDC-Lyte Plus': [
+        {
+          test_code: 'ELYTES', test_name: 'Electrolyte Panel', department: 'Biochemistry', sample_type: 'Serum / Plasma',
+          parameters: [
+            { parameter_code: 'NA', parameter_name: 'Sodium', machine_parameter_code: 'Na', parameter_unit: 'mmol/L', min_value: 135, max_value: 145 },
+            { parameter_code: 'K', parameter_name: 'Potassium', machine_parameter_code: 'K', parameter_unit: 'mmol/L', min_value: 3.5, max_value: 5.5 },
+            { parameter_code: 'CL', parameter_name: 'Chloride', machine_parameter_code: 'Cl', parameter_unit: 'mmol/L', min_value: 98, max_value: 107 }
+          ]
+        },
+        {
+          test_code: 'SE', test_name: 'Serum Electrolytes', department: 'Biochemistry', sample_type: 'Serum',
+          parameters: [
+            { parameter_code: 'NA', parameter_name: 'Sodium', machine_parameter_code: 'Na', parameter_unit: 'mmol/L', min_value: 135, max_value: 145 },
+            { parameter_code: 'K', parameter_name: 'Potassium', machine_parameter_code: 'K', parameter_unit: 'mmol/L', min_value: 3.5, max_value: 5.5 },
+            { parameter_code: 'CL', parameter_name: 'Chloride', machine_parameter_code: 'Cl', parameter_unit: 'mmol/L', min_value: 98, max_value: 107 }
+          ]
+        },
+        {
+          test_code: 'ELCA', test_name: 'Electrolyte with iCa', department: 'Biochemistry', sample_type: 'Whole Blood / Serum',
+          parameters: [
+            { parameter_code: 'NA', parameter_name: 'Sodium', machine_parameter_code: 'Na', parameter_unit: 'mmol/L', min_value: 135, max_value: 145 },
+            { parameter_code: 'K', parameter_name: 'Potassium', machine_parameter_code: 'K', parameter_unit: 'mmol/L', min_value: 3.5, max_value: 5.5 },
+            { parameter_code: 'CL', parameter_name: 'Chloride', machine_parameter_code: 'Cl', parameter_unit: 'mmol/L', min_value: 98, max_value: 107 },
+            { parameter_code: 'ICA', parameter_name: 'Ionized Calcium', machine_parameter_code: 'iCa', parameter_unit: 'mmol/L', min_value: 1.10, max_value: 1.35 }
+          ]
+        },
+        {
+          test_code: 'ICA', test_name: 'Ionized Calcium', department: 'Biochemistry', sample_type: 'Whole Blood',
+          parameters: [
+            { parameter_code: 'ICA', parameter_name: 'Ionized Calcium', machine_parameter_code: 'iCa', parameter_unit: 'mmol/L', min_value: 1.10, max_value: 1.35 }
+          ]
+        },
+        {
+          test_code: 'LI', test_name: 'Serum Lithium', department: 'Biochemistry', sample_type: 'Serum',
+          parameters: [
+            { parameter_code: 'LI', parameter_name: 'Lithium', machine_parameter_code: 'Li', parameter_unit: 'mmol/L' }
+          ]
+        },
+        {
+          test_code: 'BGE', test_name: 'Blood Gas Electrolytes', department: 'Critical Care', sample_type: 'Arterial Blood',
+          parameters: [
+            { parameter_code: 'PH', parameter_name: 'pH', machine_parameter_code: 'pH', parameter_unit: 'pH', min_value: 7.35, max_value: 7.45 },
+            { parameter_code: 'NA', parameter_name: 'Sodium', machine_parameter_code: 'Na', parameter_unit: 'mmol/L', min_value: 135, max_value: 145 },
+            { parameter_code: 'K', parameter_name: 'Potassium', machine_parameter_code: 'K', parameter_unit: 'mmol/L', min_value: 3.5, max_value: 5.5 },
+            { parameter_code: 'CL', parameter_name: 'Chloride', machine_parameter_code: 'Cl', parameter_unit: 'mmol/L', min_value: 98, max_value: 107 },
+            { parameter_code: 'ICA', parameter_name: 'Ionized Calcium', machine_parameter_code: 'iCa', parameter_unit: 'mmol/L', min_value: 1.10, max_value: 1.35 }
+          ]
+        }
+      ],
+      'CelQuant Edge': [
+        {
+          test_code: 'CBC', test_name: 'Complete Blood Count (CBC)', department: 'Hematology', sample_type: 'Whole Blood',
+          parameters: [
+            { parameter_code: 'WBC', parameter_name: 'WBC', machine_parameter_code: '6690-2', parameter_unit: '10^3/µL' },
+            { parameter_code: 'RBC', parameter_name: 'RBC', machine_parameter_code: '789-8', parameter_unit: '10^6/µL' },
+            { parameter_code: 'HGB', parameter_name: 'HGB', machine_parameter_code: '718-7', parameter_unit: 'g/dL' },
+            { parameter_code: 'HCT', parameter_name: 'HCT', machine_parameter_code: '4544-3', parameter_unit: '%' },
+            { parameter_code: 'MCH', parameter_name: 'MCH', machine_parameter_code: '785-6', parameter_unit: 'pg' },
+            { parameter_code: 'MCHC', parameter_name: 'MCHC', machine_parameter_code: '786-4', parameter_unit: 'g/dL' },
+            { parameter_code: 'RDW-CV', parameter_name: 'RDW-CV', machine_parameter_code: '788-0', parameter_unit: '%' },
+            { parameter_code: 'PLT', parameter_name: 'PLT', machine_parameter_code: '777-3', parameter_unit: '10^3/µL' },
+            { parameter_code: 'MPV', parameter_name: 'MPV', machine_parameter_code: '32623-1', parameter_unit: 'fL' },
+            { parameter_code: 'LYMPH_PCT', parameter_name: 'Lymph%', machine_parameter_code: '736-9', parameter_unit: '%' },
+            { parameter_code: 'MID_PCT', parameter_name: 'Mid%', machine_parameter_code: '10029', parameter_unit: '%' },
+            { parameter_code: 'GRAN_PCT', parameter_name: 'Gran%', machine_parameter_code: '10030', parameter_unit: '%' }
+          ]
+        }
+      ],
+      'CliniQuant Micro': [
+        {
+          test_code: 'LFT', test_name: 'Liver Function Test', department: 'Biochemistry', sample_type: 'Serum',
+          parameters: [
+            { parameter_code: 'TBIL', parameter_name: 'TBIL', machine_parameter_code: '15', parameter_unit: 'mg/dL' },
+            { parameter_code: 'DBIL', parameter_name: 'DBIL', machine_parameter_code: '20', parameter_unit: 'mg/dL' },
+            { parameter_code: 'AST', parameter_name: 'AST', machine_parameter_code: '4', parameter_unit: 'U/L' },
+            { parameter_code: 'ALT', parameter_name: 'ALT', machine_parameter_code: '2', parameter_unit: 'U/L' },
+            { parameter_code: 'ALP', parameter_name: 'ALP', machine_parameter_code: '1', parameter_unit: 'U/L' },
+            { parameter_code: 'TP', parameter_name: 'TP', machine_parameter_code: '23', parameter_unit: 'g/dL' },
+            { parameter_code: 'ALB', parameter_name: 'ALB', machine_parameter_code: '14', parameter_unit: 'g/dL' }
+          ]
+        },
+        {
+          test_code: 'KFT', test_name: 'Kidney Function Test', department: 'Biochemistry', sample_type: 'Serum',
+          parameters: [
+            { parameter_code: 'UREA', parameter_name: 'UREA', machine_parameter_code: '12', parameter_unit: 'mg/dL' },
+            { parameter_code: 'CREAT', parameter_name: 'CREAT', machine_parameter_code: '19', parameter_unit: 'mg/dL' },
+            { parameter_code: 'URIC-ACID', parameter_name: 'URIC-ACID', machine_parameter_code: '13', parameter_unit: 'mg/dL' }
+          ]
+        },
+        {
+          test_code: 'LIPID', test_name: 'Lipid Profile', department: 'Biochemistry', sample_type: 'Serum',
+          parameters: [
+            { parameter_code: 'CHO', parameter_name: 'CHO', machine_parameter_code: '5', parameter_unit: 'mg/dL' },
+            { parameter_code: 'TRIG', parameter_name: 'TRIG', machine_parameter_code: '11', parameter_unit: 'mg/dL' },
+            { parameter_code: 'HDL', parameter_name: 'HDL', machine_parameter_code: '21', parameter_unit: 'mg/dL' }
+          ]
+        },
+        {
+          test_code: 'BS', test_name: 'Blood Sugar (F/PP/R)', department: 'Biochemistry', sample_type: 'Plasma',
+          parameters: [
+            { parameter_code: 'GLU', parameter_name: 'GLU', machine_parameter_code: '9', parameter_unit: 'mg/dL' }
+          ]
+        }
+      ],
+      'LAURA Smart': [
+        {
+          test_code: 'URM', test_name: 'Urine Routine & Microscopy (URM)', department: 'Clinical Pathology', sample_type: 'Urine',
+          parameters: [
+            { parameter_code: 'GLU', parameter_name: 'Glucose', machine_parameter_code: 'GLU', parameter_unit: '' },
+            { parameter_code: 'BIL', parameter_name: 'Bilirubin', machine_parameter_code: 'BIL', parameter_unit: '' },
+            { parameter_code: 'KET', parameter_name: 'Ketone', machine_parameter_code: 'KET', parameter_unit: '' },
+            { parameter_code: 'SG', parameter_name: 'Specific Gravity', machine_parameter_code: 'SG', parameter_unit: '' },
+            { parameter_code: 'BLD', parameter_name: 'Blood', machine_parameter_code: 'BLD', parameter_unit: '' },
+            { parameter_code: 'PH', parameter_name: 'pH', machine_parameter_code: 'pH', parameter_unit: 'pH' },
+            { parameter_code: 'PRO', parameter_name: 'Protein', machine_parameter_code: 'PRO', parameter_unit: '' },
+            { parameter_code: 'UBG', parameter_name: 'Urobilinogen', machine_parameter_code: 'UBG', parameter_unit: '' },
+            { parameter_code: 'NIT', parameter_name: 'Nitrite', machine_parameter_code: 'NIT', parameter_unit: '' },
+            { parameter_code: 'LEU', parameter_name: 'Leukocytes', machine_parameter_code: 'LEU', parameter_unit: '' }
+          ]
+        }
+      ]
+    };
+
+    const templates = ANALYZER_TEST_TEMPLATES[analyzer_name];
+    if (!templates) {
+      return res.status(400).json({ success: false, message: 'Unsupported analyzer for auto-mapping' });
+    }
+
+    const connection = await db.getConnection();
+    await connection.beginTransaction();
+
+    let createdCount = 0;
+    try {
+      // Get all categories to match department name
+      const [categories] = await connection.query('SELECT * FROM lab_categories');
+
+      for (const tpl of templates) {
+        // Ensure category exists
+        let category = categories.find(c => c.name === tpl.department);
+        if (!category) {
+          const [catRes] = await connection.query('INSERT INTO lab_categories (name, description) VALUES (?, ?)', [tpl.department, tpl.department]);
+          category = { id: catRes.insertId, name: tpl.department };
+          categories.push(category);
+        }
+
+        // Check if test already exists for this exact lab AND analyzer AND test_code
+        const [existing] = await connection.query(
+          'SELECT id FROM lab_tests WHERE test_code = ? AND lab_id = ?',
+          [tpl.test_code, lab_id]
+        );
+
+        let testId;
+        if (existing.length === 0) {
+          // If a global test with same code exists, we might suffix it, but usually test_code is unique per hospital. 
+          // However, the schema might enforce test_code uniqueness globally. 
+          // Let's try to insert, and handle duplicate test_code gracefully by suffixing Lab ID.
+          
+          let finalTestCode = tpl.test_code;
+          const [globalExisting] = await connection.query('SELECT id FROM lab_tests WHERE test_code = ?', [finalTestCode]);
+          if (globalExisting.length > 0) {
+            finalTestCode = `${tpl.test_code}_${lab_id}`; 
+          }
+
+          const [testResult] = await connection.query(
+            `INSERT INTO lab_tests
+             (test_code, test_name, category_id, lab_id, sample_type, analyzer_name)
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            [finalTestCode, tpl.test_name, category.id, lab_id, tpl.sample_type, analyzer_name]
+          );
+          testId = testResult.insertId;
+          createdCount++;
+
+          // Insert parameters
+          if (tpl.parameters && tpl.parameters.length > 0) {
+            for (let i = 0; i < tpl.parameters.length; i++) {
+              const param = tpl.parameters[i];
+              await connection.query(
+                `INSERT INTO lab_test_parameters 
+                 (test_id, parameter_code, parameter_name, parameter_unit, result_type, min_value, max_value, display_order, machine_parameter_code) 
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                [
+                  testId,
+                  param.parameter_code || null,
+                  param.parameter_name,
+                  param.parameter_unit,
+                  'numeric',
+                  param.min_value || null,
+                  param.max_value || null,
+                  i + 1,
+                  param.machine_parameter_code || null
+                ]
+              );
+            }
+          }
+        }
+      }
+
+      await connection.commit();
+      res.json({ success: true, message: `Successfully mapped ${createdCount} tests for ${analyzer_name} to the selected lab.`, count: createdCount });
+    } catch (error) {
+      await connection.rollback();
+      throw error;
+    } finally {
+      connection.release();
+    }
+  } catch (error) {
+    console.error('Error mapping analyzer tests:', error);
+    res.status(500).json({ success: false, message: 'Server error mapping tests' });
+  }
+};
+
 // Get labs from infrastructure (type = 'Lab') with workload
 export const getLabs = async (req, res) => {
   try {
@@ -1074,9 +1295,10 @@ export const acknowledgeTest = async (req, res) => {
             text: textMsg
           });
 
+          const botUrl = new URL(process.env.WHATSAPP_BOT_URL || 'http://localhost:3000');
           const req = http.request({
-            hostname: 'localhost',
-            port: 3000,
+            hostname: botUrl.hostname,
+            port: botUrl.port || (botUrl.protocol === 'https:' ? 443 : 80),
             path: '/send-message',
             method: 'POST',
             headers: {
@@ -1709,9 +1931,10 @@ export const verifyTest = async (req, res) => {
                  filename: `${(report.test_name || 'Lab_Report').replace(/[^a-zA-Z0-9]/g, '_')}.pdf`
                });
                
+               const botUrl = new URL(process.env.WHATSAPP_BOT_URL || 'http://localhost:3000');
                const httpReq = http.request({
-                 hostname: 'localhost',
-                 port: 3000,
+                 hostname: botUrl.hostname,
+                 port: botUrl.port || (botUrl.protocol === 'https:' ? 443 : 80),
                  path: '/send-message',
                  method: 'POST',
                  headers: {

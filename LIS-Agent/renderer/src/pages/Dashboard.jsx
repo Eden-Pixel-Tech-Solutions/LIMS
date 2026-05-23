@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 
-const API_BASE = 'http://172.16.11.160:7005';
+const API_BASE = 'http://localhost:7005';
 
 export default function Dashboard() {
     const [machines, setMachines] = useState([]);

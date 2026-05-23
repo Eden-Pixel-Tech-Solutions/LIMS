@@ -2,7 +2,7 @@ const { SerialPort } = require('serialport');
 const axios = require('axios');
 const db = require('../db/sqlite');
 
-const API_BASE = 'http://172.16.11.160:7005';
+const API_BASE = 'http://localhost:7005';
 
 // path -> SerialPort instance
 const activePorts = new Map();
@@ -31,6 +31,9 @@ const CBC_PARAMS = [
   'PLT', 'MPV', 'PDW', 'PCT',
   'P-LCC', 'P-LCR',
 ];
+
+const ELECTROLYTE_PARAMS = ['Na', 'K', 'iCa', 'Cl', 'pH', 'Li'];
+const LAURA_SMART_PARAMS = ['BLD', 'LEU', 'BIL', 'UBG', 'KET', 'GLU', 'PRO', 'pH', 'NIT', 'SG'];
 
 // LOINC code → parameter name
 const CODE_MAP = {
@@ -257,6 +260,118 @@ function parseHL7(raw) {
 
 
 // ─────────────────────────────────────────────────────────────────────────────
+// TEXT REPORT PARSER  (HDC-Lyte Plus electrolyte analyzer)
+// Key:  "Patient ID" field is used as the session identifier
+// ─────────────────────────────────────────────────────────────────────────────
+
+
+/**
+ * Parse a raw text report from the HDC-Lyte Plus analyzer.
+ *
+ * Returns an object with:
+ *   - date_time: extracted date string
+ *   - one key per ELECTROLYTE_PARAMS entry: { value, unit } | null
+ */
+function parseLauraSmartReport(raw) {
+  const result = {
+    patient_name: '',
+    patient_id: '',
+    date_time: '',
+  };
+
+  for (const p of LAURA_SMART_PARAMS) result[p] = null;
+
+  const lines = raw.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
+  
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+    if (!line) continue;
+
+    if (line.startsWith('Seq.No:')) continue;
+
+    if (line.startsWith('ID:')) {
+      result.patient_id = line.substring(3).trim();
+      continue;
+    }
+
+    if (/^\d{2}\.\d{2}\.\d{4}\s+\d{2}:\d{2}/.test(line)) {
+      result.date_time = line;
+      continue;
+    }
+
+    for (const param of LAURA_SMART_PARAMS) {
+      if (line.startsWith(param)) {
+        const val = line.substring(param.length).trim();
+        result[param] = {
+          value: val,
+          unit: '' 
+        };
+        break;
+      }
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Parse a raw text report from the HDC-Lyte Plus analyzer.
+ *
+ * Returns an object with:
+ *   - patient_name, patient_id, date_time
+ *   - one key per ELECTROLYTE_PARAMS entry: { value, unit } | null
+ *
+ * SESSION KEY → result.patient_id
+ */
+function parseTextReport(raw) {
+  const result = {
+    patient_name: '',
+    patient_id: '',
+    date_time: '',
+  };
+
+  for (const p of ELECTROLYTE_PARAMS) result[p] = null;
+
+  const lines = raw.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
+
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+    if (!line) continue;
+
+    // Header: Date time
+    const dt = line.match(/Date.*time:\s*(.*)/i);
+    if (dt) { result.date_time = dt[1].trim(); continue; }
+
+    // Header: Patient Name
+    const name = line.match(/Name\s*:\s*(.*)/i);
+    if (name) { result.patient_name = name[1].trim(); continue; }
+
+    // Header: Patient ID
+    const pid = line.match(/Patient ID\s*:\s*(.*)/i);
+    if (pid) { result.patient_id = pid[1].trim(); continue; }
+
+    // Parameter values: PARAM = VALUE
+    for (const param of ELECTROLYTE_PARAMS) {
+      // Escape special regex chars in param name (e.g. no issue here, but safe)
+      const escaped = param.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(`^${escaped}\\s*=\\s*(.+)`, 'i');
+      const match = line.match(regex);
+      if (match) {
+        const testDef = null; // unit/range come from protocol JSON at sync time
+        result[param] = {
+          value: match[1].trim(),
+          unit: param === 'pH' ? '' : 'mmol/L',
+        };
+        break;
+      }
+    }
+  }
+
+  return result;
+}
+
+
+// ─────────────────────────────────────────────────────────────────────────────
 // PUBLIC: call once at startup (and safely on hot-reload)
 // ─────────────────────────────────────────────────────────────────────────────
 async function initializeAllPorts(win) {
@@ -314,8 +429,9 @@ async function startBackgroundListener(machine, win) {
 
   // ── 2. Resolve SOF / EOF for binary machines ─────────────────────────────
   const isHL7 = protocol.protocol_type === 'HL7';
+  const isText = protocol.protocol_type === 'TEXT';
   let SOF, EOF;
-  if (!isHL7) {
+  if (!isHL7 && !isText) {
     SOF = safeHex(protocol?.frame_structure?.['1']?.data, 0xaa);
     const keys = Object.keys(protocol.frame_structure).map(Number).sort((a, b) => a - b);
     const lastKey = String(keys[keys.length - 1]);
@@ -323,10 +439,17 @@ async function startBackgroundListener(machine, win) {
     console.log(`   SOF=0x${SOF.toString(16).toUpperCase()}  EOF=0x${EOF.toString(16).toUpperCase()}`);
   }
 
+  let fixedBaudRate = parseInt(machine.baud, 10) || 9600;
+  const model = machine.model ? machine.model.toLowerCase() : '';
+  if (model.includes('cliniquant micro')) fixedBaudRate = 9600;
+  else if (model.includes('celquant edge')) fixedBaudRate = 115200;
+  else if (model.includes('hdc lyte') || model.includes('hdc-lyte')) fixedBaudRate = 9600;
+  else if (model.includes('laura smart')) fixedBaudRate = 19200;
+
   // ── 3. Open SerialPort ───────────────────────────────────────────────────
   const port = new SerialPort({
     path: machine.port,
-    baudRate: parseInt(machine.baud, 10),
+    baudRate: fixedBaudRate,
     autoOpen: false,
   });
 
@@ -353,26 +476,43 @@ async function startBackgroundListener(machine, win) {
   port.on('data', async (chunk) => {
     buffer = Buffer.concat([buffer, chunk]);
 
-    if (!isHL7) {
-      // ── Binary framing ────────────────────────────────────────────────
-      let startIdx, endIdx;
-      while (
-        (startIdx = buffer.indexOf(SOF)) !== -1 &&
-        (endIdx = buffer.indexOf(EOF, startIdx)) !== -1
-      ) {
-        const frame = buffer.slice(startIdx, endIdx + 1);
-        buffer = buffer.slice(endIdx + 1);
-        await processIncomingFrame(frame, protocol, machine, win).catch((e) =>
-          console.error('Frame processing error:', e)
+    if (isText) {
+      // ── TEXT protocol framing (HDC-Lyte Plus) ───────────────────────
+      // 1. Strip ESC formatting bytes before accumulating
+      let cleanChunk = buffer.toString('binary')
+        .replace(/\x1b\x00/g, '')
+        .replace(/\x1b/g, '');
+      buffer = Buffer.from(cleanChunk, 'binary');
+
+      let raw = buffer.toString('ascii');
+
+      // 2. Look for complete reports: from "Date" header to "Li = value"
+      const reportRegex = /Date.*time:[\s\S]*?Li\s*=\s*[^\n]+/gi;
+      let match;
+      let lastEnd = 0;
+
+      while ((match = reportRegex.exec(raw)) !== null) {
+        const report = match[0];
+        lastEnd = match.index + match[0].length;
+
+        await processTextMessage(report, protocol, machine, win).catch((e) =>
+          console.error('Text report processing error:', e)
         );
       }
 
-      if (buffer.length > 4096) {
-        console.warn(`⚠️  Buffer overflow on ${machine.port} — clearing stale data.`);
+      if (lastEnd > 0) {
+        raw = raw.slice(lastEnd);
+      }
+
+      buffer = Buffer.from(raw, 'ascii');
+
+      // Safety: prevent unbounded growth
+      if (buffer.length > 50_000) {
+        console.warn(`⚠️  Text buffer overflow on ${machine.port} — clearing.`);
         buffer = Buffer.alloc(0);
       }
 
-    } else {
+    } else if (isHL7) {
       // ── MLLP framing  \x0B ... \x1C\x0D ─────────────────────────────
       // Process all complete messages in the buffer before returning
       // (multiple messages can arrive in one TCP/serial burst)
@@ -400,6 +540,25 @@ async function startBackgroundListener(machine, win) {
       // Safety: prevent unbounded growth on malformed streams
       if (buffer.length > 100_000) {
         console.warn(`⚠️  HL7 buffer overflow on ${machine.port} — clearing.`);
+        buffer = Buffer.alloc(0);
+      }
+
+    } else {
+      // ── Binary framing ────────────────────────────────────────────────
+      let startIdx, endIdx;
+      while (
+        (startIdx = buffer.indexOf(SOF)) !== -1 &&
+        (endIdx = buffer.indexOf(EOF, startIdx)) !== -1
+      ) {
+        const frame = buffer.slice(startIdx, endIdx + 1);
+        buffer = buffer.slice(endIdx + 1);
+        await processIncomingFrame(frame, protocol, machine, win).catch((e) =>
+          console.error('Frame processing error:', e)
+        );
+      }
+
+      if (buffer.length > 4096) {
+        console.warn(`⚠️  Buffer overflow on ${machine.port} — clearing stale data.`);
         buffer = Buffer.alloc(0);
       }
     }
@@ -629,6 +788,131 @@ async function processHL7Message(msg, machine, win) {
 
 
 // ─────────────────────────────────────────────────────────────────────────────
+// PROCESS TEXT REPORT  (HDC-Lyte Plus / LAURA Smart — keyed by Patient ID)
+// ─────────────────────────────────────────────────────────────────────────────
+async function processTextMessage(msg, protocol, machine, win) {
+  console.log(`📨 Text report received on ${machine.port} (${msg.length} chars)`);
+
+  let parsed;
+  let PARAMS_LIST = [];
+  
+  if (machine.model === 'LAURA Smart') {
+    parsed = parseLauraSmartReport(msg);
+    PARAMS_LIST = LAURA_SMART_PARAMS;
+  } else {
+    parsed = parseTextReport(msg);
+    PARAMS_LIST = ELECTROLYTE_PARAMS;
+  }
+
+  // The session key for TEXT is the Patient ID field
+  const sessionKey = parsed.patient_id;
+
+  if (!sessionKey) {
+    console.warn(`⚠️  Text report has no Patient ID — skipping. (Model: ${machine.model})`);
+    return;
+  }
+
+  console.log(`🔍 ${machine.model} — Patient ID: ${sessionKey}`);
+  console.log(`   Patient: ${parsed.patient_name || '(no name)'}  |  Date: ${parsed.date_time || '(none)'}`);
+
+  // ── 2. Worklist lookup by Patient ID ─────────────────────────────────────
+  let session = sessionAccumulator.get(sessionKey);
+  if (!session) {
+    console.log(`🆕 New TEXT session for Patient ID "${sessionKey}" — fetching worklist...`);
+
+    let test = null;
+    try {
+      const wlRes = await axios.get(
+        `${API_BASE}/api/lab/worklist-by-id/${sessionKey}`,
+        { timeout: 5000 }
+      );
+      if (wlRes.data.success && wlRes.data.test) test = wlRes.data.test;
+    } catch (err) {
+      console.warn(`⚠️  Worklist fetch failed for Patient ID "${sessionKey}": ${err.message}`);
+    }
+
+    if (!test) {
+      console.log(`⚠️  No active worklist entry for Patient ID "${sessionKey}". Ignoring report.`);
+      return;
+    }
+
+    let allParams = [];
+    try {
+      const pr = await axios.get(`${API_BASE}/api/lab/tests/${test.test_id}`, { timeout: 5000 });
+      if (pr.data.success) allParams = pr.data.parameters;
+    } catch {
+      console.warn(`⚠️  Could not fetch parameters for test ${test.test_id}`);
+    }
+
+    session = {
+      testId: test.bill_item_id,
+      sampleId: test.sample_id,
+      patientName: test.patient_name || parsed.patient_name,
+      testName: test.test_name,
+      results: [],
+      requiredParams: allParams.map((p) => ({
+        id: (p.machine_parameter_code || p.parameter_name).toLowerCase(),
+        name: p.parameter_name.toLowerCase(),
+        unit: p.parameter_unit,
+      })),
+      protocol: 'TEXT',
+      textMeta: {
+        patient_name: parsed.patient_name,
+        patient_id: parsed.patient_id,
+        date_time: parsed.date_time,
+      },
+    };
+    sessionAccumulator.set(sessionKey, session);
+  }
+
+  // ── 3. Extract results from parsed report ───────────────────
+  let newResultsCount = 0;
+  const protocolTests = protocol?.tests ?? [];
+
+  for (const param of PARAMS_LIST) {
+    const obs = parsed[param];
+    if (!obs || obs.value === undefined) continue;
+
+    // De-duplicate
+    if (session.results.some((r) => r.parameter_name.toLowerCase() === param.toLowerCase())) continue;
+
+    // Look up unit/range from protocol definition
+    const testDef = protocolTests.find((t) => t.name === param);
+
+    const resultEntry = {
+      parameter_name: param,
+      result_value: obs.value,
+      unit: testDef?.unit ?? obs.unit ?? '',
+      ref_range: testDef?.ref_range ?? '',
+    };
+
+    session.results.push(resultEntry);
+    newResultsCount++;
+
+    console.log(`📍 TEXT Recorded: ${param} = ${obs.value} ${resultEntry.unit}`);
+
+    // Live update to renderer
+    win?.webContents?.send('test-completed', {
+      sampleId: session.sampleId,
+      test_name: param,
+      result_value: obs.value,
+      unit: resultEntry.unit,
+    });
+  }
+
+  if (newResultsCount === 0) {
+    console.log(`ℹ️  No new electrolyte results in this report for Patient ID "${sessionKey}".`);
+    return;
+  }
+
+  // ── 4. Sync to backend ──────────────────────────────────────────────────
+  // TEXT protocol sends all params in one burst — mark as complete immediately
+  session.protocol = 'TEXT';
+  await syncSession(session, machine, sessionKey);
+}
+
+
+// ─────────────────────────────────────────────────────────────────────────────
 // SHARED: check completeness + POST results to API
 // ─────────────────────────────────────────────────────────────────────────────
 async function syncSession(session, machine, sessionKey) {
@@ -640,10 +924,10 @@ async function syncSession(session, machine, sessionKey) {
       (p) => receivedNamesLower.includes(p.name) || receivedNamesLower.includes(p.id)
     );
 
-  // 🧪 CelQuant Edge Optimization:
-  // HL7 messages from the Edge always contain the full panel in one burst.
+  // 🧪 CelQuant Edge / HDC-Lyte Plus Optimization:
+  // HL7 and TEXT messages always contain the full panel in one burst.
   // We mark as complete immediately to avoid "stuck" sessions due to minor parameter naming mismatches.
-  if (session.protocol === 'HL7') {
+  if (session.protocol === 'HL7' || session.protocol === 'TEXT') {
     isComplete = true;
   }
 

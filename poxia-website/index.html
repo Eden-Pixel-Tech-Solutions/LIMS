@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Poxia Technologies Pvt Ltd — Automation, AI & Enterprise Software</title>
+  <meta name="description" content="Poxia Technologies Pvt Ltd builds cutting-edge automation systems, LLM-powered solutions, AI chatbots, and enterprise-grade hospital management software." />
+  <meta name="keywords" content="Poxia Technologies, Automation, LLM, AI, Chatbot, HIMS, LIS, Hospital Software, Enterprise Solutions" />
+  <meta name="author" content="Poxia Technologies Pvt Ltd" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/png" href="logo.png" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- NAVIGATION                                                            -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <nav id="navbar" class="navbar">
+    <div class="nav-container">
+      <a href="#hero" class="nav-logo">
+        <img src="logo.png" alt="Poxia Technologies" class="logo-img" />
+        <span class="logo-text">Poxia<span class="logo-accent">Tech</span></span>
+      </a>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="#about" class="nav-link">About</a></li>
+        <li><a href="#services" class="nav-link">Services</a></li>
+        <li><a href="#portfolio" class="nav-link">Portfolio</a></li>
+        <li><a href="#tech" class="nav-link">Tech Stack</a></li>
+        <li><a href="#blog" class="nav-link">News</a></li>
+        <li><a href="#contact" class="nav-link nav-link--cta">Contact Us</a></li>
+      </ul>
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- HERO                                                                  -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <section id="hero" class="hero">
+    <canvas id="particleCanvas" class="hero-canvas"></canvas>
+    <div class="hero-content">
+      <div class="hero-badge animate-in">
+        <span class="badge-dot"></span>
+        Engineering the Future with AI
+      </div>
+      <h1 class="hero-title animate-in">
+        We Build Intelligent<br />
+        <span class="gradient-text">Automation Systems</span>
+      </h1>
+      <p class="hero-subtitle animate-in">
+        From LLM-powered chatbots to enterprise hospital management platforms —
+        we architect software that transforms industries.
+      </p>
+      <div class="hero-actions animate-in">
+        <a href="#services" class="btn btn--primary">Explore Our Work</a>
+        <a href="#contact" class="btn btn--outline">Get in Touch</a>
+      </div>
+      <div class="hero-stats animate-in">
+        <div class="stat">
+          <span class="stat-value" data-count="15">0</span><span class="stat-suffix">+</span>
+          <span class="stat-label">Projects Delivered</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat">
+          <span class="stat-value" data-count="5">0</span><span class="stat-suffix">+</span>
+          <span class="stat-label">States Served</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat">
+          <span class="stat-value" data-count="99">0</span><span class="stat-suffix">.9%</span>
+          <span class="stat-label">Uptime SLA</span>
+        </div>
+      </div>
+    </div>
+    <div class="hero-scroll">
+      <div class="scroll-indicator">
+        <div class="scroll-dot"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- ABOUT                                                                 -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <section id="about" class="section about">
+    <div class="container">
+      <div class="section-header reveal">
+        <span class="section-tag">Who We Are</span>
+        <h2 class="section-title">Technology That <span class="gradient-text">Matters</span></h2>
+      </div>
+      <div class="about-grid">
+        <div class="about-text reveal">
+          <p class="about-lead">
+            <strong>Poxia Technologies Pvt Ltd</strong> is a product-driven engineering company
+            specializing in <em>automation</em>, <em>artificial intelligence</em>, and
+            <em>mission-critical enterprise software</em>.
+          </p>
+          <p>
+            We don't just write code — we solve real-world problems at scale. Our platforms power
+            government hospital networks, automate laboratory diagnostics with physical hardware
+            integration, and deliver AI-driven patient engagement systems used by thousands daily.
+          </p>
+          <p>
+            From serial-port communication with medical analyzers to LLM-orchestrated clinical
+            chatbots, we operate at the intersection of <strong>hardware, software, and
+            intelligence</strong>.
+          </p>
+        </div>
+        <div class="about-cards reveal">
+          <div class="about-card">
+            <h3>Mission</h3>
+            <p>Democratize intelligent automation for enterprises that impact millions of lives.</p>
+          </div>
+          <div class="about-card">
+            <h3>Approach</h3>
+            <p>Full-stack engineering — from embedded hardware protocols to cloud-native AI agents.</p>
+          </div>
+          <div class="about-card">
+            <h3>Impact</h3>
+            <p>Deployed in state government hospitals across India, serving real patients every day.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- INNOVATION SPOTLIGHT — MOBILE LIMS                                    -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <section id="innovation" class="section innovation">
+    <div class="container">
+      <div class="innovation-wrapper">
+        <div class="innovation-content reveal">
+          <span class="section-tag">Industry First</span>
+          <h2 class="section-title">The World's First<br /><span class="gradient-text">Mobile APP-Based LIMS</span></h2>
+          <p class="innovation-lead">
+            We pioneered a breakthrough in laboratory diagnostics — a fully functional 
+            <strong>Laboratory Information Management System</strong> that runs entirely on an 
+            <strong>Android tablet</strong>, connecting directly to medical analyzers via <strong>USB OTG</strong>.
+          </p>
+          <p class="innovation-desc">
+            No desktop. No server room. Just a tablet, a USB cable, and a diagnostic analyzer — 
+            delivering lab-grade results from anywhere, even the most remote healthcare facilities.
+          </p>
+          <div class="innovation-features">
+            <div class="innovation-feature">
+              <div class="innovation-feature-icon">🔌</div>
+              <div>
+                <h4>Analyzer Connectivity via OTG</h4>
+                <p>Connect laboratory analyzers directly to Android devices using USB-OTG for seamless real-time data capture.</p>
+              </div>
+            </div>
+            <div class="innovation-feature">
+              <div class="innovation-feature-icon">📱</div>
+              <div>
+                <h4>Mobile-Based LIS Operations</h4>
+                <p>Sample processing, result validation, and report generation — all from a handheld device.</p>
+              </div>
+            </div>
+            <div class="innovation-feature">
+              <div class="innovation-feature-icon">🚫</div>
+              <div>
+                <h4>No Computer Required</h4>
+                <p>Eliminates the need for dedicated desktop systems or complex IT infrastructure in the lab.</p>
+              </div>
+            </div>
+            <div class="innovation-feature">
+              <div class="innovation-feature-icon">🏥</div>
+              <div>
+                <h4>Remote Laboratory Access</h4>
+                <p>Designed for rural healthcare centers, collection units, and mobile diagnostic camps.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="innovation-visual reveal">
+          <div class="innovation-image-wrapper">
+            <img src="mobile.png" alt="Mobile LIS Application — Merilyzer Cliniquant Micro LIS running on Android tablet with dashboard and worklist views" />
+            <div class="innovation-glow"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- SERVICES                                                              -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <section id="services" class="section services">
+    <div class="container">
+      <div class="section-header reveal">
+        <span class="section-tag">What We Do</span>
+        <h2 class="section-title">Our <span class="gradient-text">Services</span></h2>
+        <p class="section-desc">End-to-end engineering across the full technology spectrum.</p>
+      </div>
+      <div class="services-grid">
+        <!-- Service 1 -->
+        <div class="service-card reveal">
+          <div class="service-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          </div>
+          <h3 class="service-title">Intelligent Automation</h3>
+          <p class="service-desc">Workflow automation engines that replace manual processes with self-operating systems — from lab diagnostics to supply chain management.</p>
+          <ul class="service-tags">
+            <li>Process Automation</li>
+            <li>IoT Integration</li>
+            <li>Workflow Engines</li>
+          </ul>
+        </div>
+        <!-- Service 2 -->
+        <div class="service-card reveal">
+          <div class="service-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 10h.01M12 10h.01M16 10h.01"/></svg>
+          </div>
+          <h3 class="service-title">LLM & AI Solutions</h3>
+          <p class="service-desc">Custom large language model integrations — RAG pipelines, AI agents, and intelligent document processing tailored to your domain.</p>
+          <ul class="service-tags">
+            <li>LLM Integration</li>
+            <li>RAG Pipelines</li>
+            <li>AI Agents</li>
+          </ul>
+        </div>
+        <!-- Service 3 -->
+        <div class="service-card reveal">
+          <div class="service-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+          </div>
+          <h3 class="service-title">Chatbot Development</h3>
+          <p class="service-desc">Production-grade conversational AI — WhatsApp bots, clinical assistants, and multi-channel engagement platforms with real database connectivity.</p>
+          <ul class="service-tags">
+            <li>WhatsApp Bots</li>
+            <li>Clinical Chatbots</li>
+            <li>Multi-Channel</li>
+          </ul>
+        </div>
+        <!-- Service 4 -->
+        <div class="service-card reveal">
+          <div class="service-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          </div>
+          <h3 class="service-title">Healthcare IT (HIMS/LIS)</h3>
+          <p class="service-desc">Complete hospital and laboratory information management systems — patient registration, billing, lab workflows, inventory, and report generation.</p>
+          <ul class="service-tags">
+            <li>HIMS</li>
+            <li>LIS</li>
+            <li>C-DAC Integration</li>
+          </ul>
+        </div>
+        <!-- Service 5 -->
+        <div class="service-card reveal">
+          <div class="service-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          </div>
+          <h3 class="service-title">Full-Stack Development</h3>
+          <p class="service-desc">Modern web & desktop applications — React, Node.js, Electron, Python — designed for performance, scale, and real-world deployment.</p>
+          <ul class="service-tags">
+            <li>React / Next.js</li>
+            <li>Node.js</li>
+            <li>Electron</li>
+          </ul>
+        </div>
+        <!-- Service 6 -->
+        <div class="service-card reveal">
+          <div class="service-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+          </div>
+          <h3 class="service-title">Hardware Integration</h3>
+          <p class="service-desc">Serial protocol engineering for medical devices — HL7, binary frame protocols, USB-OTG, and real-time data capture from diagnostic analyzers.</p>
+          <ul class="service-tags">
+            <li>HL7 / MLLP</li>
+            <li>Serial Protocols</li>
+            <li>Medical Devices</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- PORTFOLIO                                                             -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <section id="portfolio" class="section portfolio">
+    <div class="container">
+      <div class="section-header reveal">
+        <span class="section-tag">Our Work</span>
+        <h2 class="section-title">Featured <span class="gradient-text">Projects</span></h2>
+        <p class="section-desc">Real systems. Real users. Real impact.</p>
+      </div>
+      <div class="portfolio-grid">
+        <!-- Project 1 -->
+        <div class="portfolio-card portfolio-card--featured reveal">
+          <div class="portfolio-visual">
+            <div class="portfolio-mockup">
+              <div class="mockup-bar">
+                <span></span><span></span><span></span>
+              </div>
+              <div class="mockup-content">
+                <div class="mockup-sidebar">
+                  <div class="m-item"></div>
+                  <div class="m-item m-item--active"></div>
+                  <div class="m-item"></div>
+                  <div class="m-item"></div>
+                  <div class="m-item"></div>
+                </div>
+                <div class="mockup-main">
+                  <div class="m-chart">
+                    <div class="m-bar" style="--h: 60%"></div>
+                    <div class="m-bar" style="--h: 85%"></div>
+                    <div class="m-bar" style="--h: 45%"></div>
+                    <div class="m-bar" style="--h: 72%"></div>
+                    <div class="m-bar" style="--h: 90%"></div>
+                    <div class="m-bar" style="--h: 55%"></div>
+                  </div>
+                  <div class="m-cards">
+                    <div class="m-minicard"></div>
+                    <div class="m-minicard"></div>
+                    <div class="m-minicard"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="portfolio-info">
+            <div class="portfolio-tag">Enterprise Platform</div>
+            <h3>Hospital Information Management System</h3>
+            <p>A full-scale HIMS deployed across Jharkhand state government hospitals — covering patient registration, billing, lab workflow, inventory management, and C-DAC HMIS interoperability.</p>
+            <div class="portfolio-tech">
+              <span>React 19</span><span>Node.js</span><span>MySQL</span><span>PDFKit</span>
+            </div>
+          </div>
+        </div>
+        <!-- Project 2 -->
+        <div class="portfolio-card reveal">
+          <div class="portfolio-visual">
+            <div class="portfolio-mockup portfolio-mockup--dark">
+              <div class="mockup-bar">
+                <span></span><span></span><span></span>
+              </div>
+              <div class="mockup-content">
+                <div class="mockup-terminal">
+                  <div class="term-line"><span class="term-prompt">▶</span> Listening on COM3...</div>
+                  <div class="term-line"><span class="term-success">✅</span> WBC = 6.80 10³/µL</div>
+                  <div class="term-line"><span class="term-success">✅</span> HGB = 14.2 g/dL</div>
+                  <div class="term-line"><span class="term-success">✅</span> PLT = 245 10³/µL</div>
+                  <div class="term-line">Panel COMPLETE — synced</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="portfolio-info">
+            <div class="portfolio-tag">Desktop Agent</div>
+            <h3>LIS Agent — Analyzer Bridge</h3>
+            <p>Electron-based desktop agent that captures real-time data from Merilyzer analyzers via serial USB, parses HL7/binary protocols, and auto-syncs results to the cloud.</p>
+            <div class="portfolio-tech">
+              <span>Electron</span><span>SerialPort</span><span>HL7</span><span>SQLite</span>
+            </div>
+          </div>
+        </div>
+        <!-- Project 3 -->
+        <div class="portfolio-card reveal">
+          <div class="portfolio-visual">
+            <div class="portfolio-mockup portfolio-mockup--chat">
+              <div class="mockup-bar">
+                <span></span><span></span><span></span>
+              </div>
+              <div class="mockup-content">
+                <div class="mockup-chat">
+                  <div class="chat-bubble chat-bubble--in">Hi</div>
+                  <div class="chat-bubble chat-bubble--out">Hello! I am your Health Assistant.<br/>How can I help you today?</div>
+                  <div class="chat-bubble chat-bubble--in">1</div>
+                  <div class="chat-bubble chat-bubble--out">✅ Latest Report Found!<br/>🔗 Download Link ready</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="portfolio-info">
+            <div class="portfolio-tag">AI Chatbot</div>
+            <h3>Clinical WhatsApp Assistant</h3>
+            <p>24/7 WhatsApp chatbot that lets patients download lab reports, view history, and check profiles — directly connected to the live hospital database.</p>
+            <div class="portfolio-tech">
+              <span>WhatsApp API</span><span>Node.js</span><span>MySQL</span><span>Puppeteer</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- BLOG / NEWS & PRESS                                                   -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <section id="blog" class="section blog">
+    <div class="container">
+      <div class="section-header reveal">
+        <span class="section-tag">In the News</span>
+        <h2 class="section-title">News & <span class="gradient-text">Press</span></h2>
+        <p class="section-desc">Our work making headlines across India.</p>
+      </div>
+
+      <!-- Featured Image -->
+      <div class="blog-featured-image reveal">
+        <img src="img.jpg" alt="Team meeting with Jharkhand Additional Chief Secretary Ajay Kumar Singh for pathology automation presentation" />
+        <div class="blog-featured-caption">
+          <span class="blog-featured-badge">Jharkhand Government</span>
+          Team presentation to Additional Chief Secretary, Dept. of Health — Ranchi, 2026
+        </div>
+      </div>
+
+      <div class="blog-grid">
+        <!-- Article 1 -->
+        <article class="blog-card reveal">
+          <div class="blog-card-header">
+            <span class="blog-source">Lagatar Media</span>
+            <time class="blog-date">May 2026</time>
+          </div>
+          <h3 class="blog-card-title">Fully Automatic Pathology Machines to Be Installed in Medical Colleges & District Hospitals by June 15</h3>
+          <p class="blog-card-excerpt">
+            A presentation by Meril was held in the office of Additional Chief Secretary Ajay Kumar Singh, Dept. of Health, Medical Education & Family Welfare. The company demonstrated machines capable of processing 50 samples simultaneously, with a 10-year maintenance commitment. Reports will be delivered directly to patients via WhatsApp.
+          </p>
+          <ul class="blog-highlights">
+            <li>Phase 1: All medical colleges & district hospitals by June 15, 2026</li>
+            <li>Phase 2: Expansion to CHC and PHC level across Jharkhand</li>
+            <li>Full automation — urine & blood tests with instant WhatsApp reports</li>
+            <li>Software, machine operation & manpower training included</li>
+          </ul>
+          <a href="https://lagatar.in/ranchi-news-fully-automatic-pathology-machines-will-be-installed-in-medical-colleges-and-district-hospitals-by-june-15" target="_blank" rel="noopener" class="blog-link">
+            Read Full Article
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg>
+          </a>
+        </article>
+
+        <!-- Article 2 -->
+        <article class="blog-card reveal">
+          <div class="blog-card-header">
+            <span class="blog-source">Udit Vani</span>
+            <time class="blog-date">May 2026</time>
+          </div>
+          <h3 class="blog-card-title">Jharkhand Hospitals to Get Fully Automatic Pathology Machines — Launch in June</h3>
+          <p class="blog-card-excerpt">
+            In a major push to modernize healthcare diagnostics, the Jharkhand state government has approved the deployment of fully automatic pathology machines across all government hospitals. The initiative — powered by Meril diagnostic technology and LIS software integration — aims to eliminate manual pathology workflows entirely.
+          </p>
+          <ul class="blog-highlights">
+            <li>State-wide deployment across Jharkhand's government hospital network</li>
+            <li>Replacing semi-automatic machines with fully automated analyzers</li>
+            <li>Digital report delivery via integrated LIS + WhatsApp pipeline</li>
+            <li>C-DAC HMIS integration for interoperability</li>
+          </ul>
+          <a href="https://uditvani.in/jharkhand/jharkhand-hospitals-fully-automatic-pathology-machines-launch-june/" target="_blank" rel="noopener" class="blog-link">
+            Read Full Article
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg>
+          </a>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- CONTACT                                                               -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <section id="contact" class="section contact">
+    <div class="container">
+      <div class="contact-wrapper reveal">
+        <div class="contact-info">
+          <span class="section-tag">Let's Talk</span>
+          <h2 class="section-title">Ready to Build<br /><span class="gradient-text">Something Great?</span></h2>
+          <p class="contact-desc">
+            Whether you need an AI-powered system, a custom automation platform, or a
+            full enterprise solution — we'd love to hear about your project.
+          </p>
+          <div class="contact-details">
+            <div class="contact-item">
+              <div class="contact-item-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              </div>
+              <div>
+                <span class="contact-item-label">Email</span>
+                <a href="mailto:contactus@poxiatechnologies.com" class="contact-item-value">contactus@poxiatechnologies.com</a>
+              </div>
+            </div>
+            <div class="contact-item">
+              <div class="contact-item-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              </div>
+              <div>
+                <span class="contact-item-label">Location</span>
+                <span class="contact-item-value">India</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <form class="contact-form" id="contactForm">
+          <div class="form-group">
+            <label for="name" class="form-label">Full Name</label>
+            <input type="text" id="name" name="name" class="form-input" placeholder="John Doe" required />
+          </div>
+          <div class="form-group">
+            <label for="email" class="form-label">Email Address</label>
+            <input type="email" id="email" name="email" class="form-input" placeholder="john@company.com" required />
+          </div>
+          <div class="form-group">
+            <label for="subject" class="form-label">Subject</label>
+            <select id="subject" name="subject" class="form-input">
+              <option value="">Select a topic...</option>
+              <option value="automation">Automation Solutions</option>
+              <option value="ai">LLM / AI Integration</option>
+              <option value="chatbot">Chatbot Development</option>
+              <option value="healthcare">Healthcare IT (HIMS/LIS)</option>
+              <option value="custom">Custom Software Development</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="message" class="form-label">Message</label>
+            <textarea id="message" name="message" class="form-input form-textarea" rows="4" placeholder="Tell us about your project..." required></textarea>
+          </div>
+          <button type="submit" class="btn btn--primary btn--full" id="submitBtn">
+            <span class="btn-text">Send Message</span>
+            <span class="btn-loader" style="display:none;">Sending...</span>
+          </button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- FOOTER                                                                -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-brand">
+          <a href="#hero" class="nav-logo">
+            <img src="logo.png" alt="Poxia Technologies" class="logo-img" />
+            <span class="logo-text">Poxia<span class="logo-accent">Tech</span></span>
+          </a>
+          <p class="footer-tagline">Engineering the future, one system at a time.</p>
+        </div>
+        <div class="footer-links">
+          <div class="footer-col">
+            <h4>Company</h4>
+            <a href="#about">About</a>
+            <a href="#services">Services</a>
+            <a href="#portfolio">Portfolio</a>
+            <a href="#contact">Contact</a>
+          </div>
+          <div class="footer-col">
+            <h4>Services</h4>
+            <a href="#services">Automation</a>
+            <a href="#services">LLM & AI</a>
+            <a href="#services">Chatbots</a>
+            <a href="#services">Healthcare IT</a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 Poxia Technologies Pvt Ltd. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

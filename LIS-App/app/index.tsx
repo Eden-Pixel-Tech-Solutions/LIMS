@@ -257,7 +257,7 @@ export default function LoginScreen() {
 
     try {
       // Call backend authentication API
-      const response = await fetch('http://172.16.11.160:7005/api/auth/login', {
+      const response = await fetch('http://localhost:7005/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),

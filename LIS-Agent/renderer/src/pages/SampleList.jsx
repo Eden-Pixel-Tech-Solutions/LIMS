@@ -19,7 +19,7 @@ const SampleList = () => {
   const [isFetchingParams, setIsFetchingParams] = useState(false);
   const barcodeRef = useRef(null);
 
-  const API_BASE = 'http://172.16.11.160:7005';
+  const API_BASE = 'http://localhost:7005';
 
   useEffect(() => {
     fetchWorklist();

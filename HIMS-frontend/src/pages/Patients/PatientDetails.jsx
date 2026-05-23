@@ -168,7 +168,7 @@ function PatientDetails({ onSaveSuccess }) {
         branch_id: localStorage.getItem('branch_id')
       };
 
-      const API_BASE = import.meta.env.VITE_API_URL || 'http://172.16.11.160:7005';
+      const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:7005';
       const res = await fetch(`${API_BASE}/api/patients/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -200,7 +200,7 @@ function PatientDetails({ onSaveSuccess }) {
     setIsSearching(true);
     setShowDropdown(true);
     try {
-      const API_BASE = import.meta.env.VITE_API_URL || 'http://172.16.11.160:7005';
+      const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:7005';
       const res = await fetch(`${API_BASE}/api/patients/search?q=${encodeURIComponent(val)}`);
       const result = await res.json();
       if (result.success) {

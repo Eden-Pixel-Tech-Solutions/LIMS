@@ -47,7 +47,7 @@ app.post('/send-report', async (req, res) => {
         let formattedPhone = phone.replace(/\D/g, '');
         if (formattedPhone.length === 10) formattedPhone = '91' + formattedPhone;
         const chatId = formattedPhone + '@c.us';
-        const reportUrl = `${process.env.API_BASE_URL || 'http://172.16.11.160:7005'}/api/lab/generate-report-pdf/${sampleId}`;
+        const reportUrl = `${process.env.API_BASE_URL || 'http://localhost:7005'}/api/lab/generate-report-pdf/${sampleId}`;
         const message = `🏥 *JHARKHAND STATE DIAGNOSTIC SERVICES*\n\n✅ *Report Ready!*\n👤 *Patient:* ${patientName || 'Valued Patient'}\n🔬 *Test:* ${testName || 'Laboratory Test'}\n🆔 *Sample ID:* ${sampleId}\n\n🔗 *Download Link:* \n${reportUrl}\n\n_Thank you for choosing Meril HIMS._`;
         await client.sendMessage(chatId, message);
         res.json({ success: true, message: 'Report sent to WhatsApp' });
@@ -122,7 +122,7 @@ ________________________________
 
             if (rows.length > 0) {
                 const report = rows[0];
-                const reportUrl = `${process.env.API_BASE_URL || 'http://172.16.11.160:7005'}/api/lab/generate-report-pdf/${report.sample_id}`;
+                const reportUrl = `${process.env.API_BASE_URL || 'http://localhost:7005'}/api/lab/generate-report-pdf/${report.sample_id}`;
 
                 const responseMsg = `✅ *Latest Report Found!*
 👤 *Patient:* ${report.first_name} ${report.last_name}
@@ -154,7 +154,7 @@ ${reportUrl}`;
                 let historyMsg = `📚 *Your Recent Reports (Last 10)*\n\n`;
                 rows.forEach((r, idx) => {
                     const date = new Date(r.tested_at).toLocaleDateString();
-                    historyMsg += `${idx + 1}. *${r.test_name}*\n📅 ${date} | 🆔 ${r.sample_id}\n🔗 ${process.env.API_BASE_URL || 'http://172.16.11.160:7005'}/api/lab/generate-report-pdf/${r.sample_id}\n\n`;
+                    historyMsg += `${idx + 1}. *${r.test_name}*\n📅 ${date} | 🆔 ${r.sample_id}\n🔗 ${process.env.API_BASE_URL || 'http://localhost:7005'}/api/lab/generate-report-pdf/${r.sample_id}\n\n`;
                 });
                 historyMsg += `_You can click the links above to download any report._`;
                 client.sendMessage(msg.from, historyMsg);

@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import '../../assets/CSS/LabWorklist.css';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://172.16.11.160:7005';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:7005';
 
 const DEPARTMENTS = [
   { id: 'all', name: 'All Departments', icon: <LayoutGrid size={18} /> },

@@ -163,7 +163,7 @@ export default function ReportDownload() {
     setLoading((prev) => ({ ...prev, download: true }));
 
     try {
-      const API_BASE = "http://172.16.11.160:7005/api";
+      const API_BASE = "http://localhost:7005/api";
       const token = await api.getToken();
 
       const fileUri =

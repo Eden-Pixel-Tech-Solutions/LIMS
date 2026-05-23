@@ -5,7 +5,7 @@ const Verification = () => {
   const [tests, setTests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedTest, setSelectedTest] = useState(null);
-  const API_BASE = 'http://172.16.11.160:7005';
+  const API_BASE = 'http://localhost:7005';
 
   useEffect(() => {
     fetchPending();

@@ -6,7 +6,7 @@ import m3 from '../assets/m3.png';
 import merilLogo from '../assets/meril.png';
 import '../assets/CSS/Login.css';
 
-const API_BASE = 'http://172.16.11.160:7005'; // Matches backend port
+const API_BASE = 'http://localhost:7005'; // Matches backend port
 
 export default function Login() {
     const navigate = useNavigate();

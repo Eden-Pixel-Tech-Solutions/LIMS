@@ -248,9 +248,10 @@ export const createBill = async (req, res) => {
             \nYour Reference Number is ${referenceNumber}.\n\nYour Queue Token Number is: *#${queueNumber}*.`
           });
 
+          const botUrl = new URL(process.env.WHATSAPP_BOT_URL || 'http://localhost:3000');
           const req = http.request({
-            hostname: 'localhost',
-            port: 3000,
+            hostname: botUrl.hostname,
+            port: botUrl.port || (botUrl.protocol === 'https:' ? 443 : 80),
             path: '/send-message',
             method: 'POST',
             headers: {

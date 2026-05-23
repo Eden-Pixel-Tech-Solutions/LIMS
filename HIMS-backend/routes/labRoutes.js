@@ -35,7 +35,8 @@ import {
   trackTestStatus,
   getHospitalCode,
   getMachineProtocol,
-  getActivityLogs
+  getActivityLogs,
+  mapAnalyzerTests
 } from '../controllers/labController.js';
 import {
   getLabMachines,
@@ -78,6 +79,7 @@ router.get('/tests/:id', getLabTestById);
 router.post('/tests', addLabTest);
 router.put('/tests/:id', updateLabTest);
 router.delete('/tests/:id', deleteLabTest);
+router.post('/map-analyzer-tests', mapAnalyzerTests);
 
 // AI Parameter Generation Route
 router.post('/generate-parameters', generateTestParameters);

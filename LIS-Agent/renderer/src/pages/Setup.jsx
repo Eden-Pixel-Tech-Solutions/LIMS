@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
-const API_BASE = 'http://172.16.11.160:7005';
+const API_BASE = 'http://localhost:7005';
 
 export default function Setup() {
     const [labs, setLabs] = useState([]);
@@ -33,7 +33,9 @@ export default function Setup() {
     const manufacturers = {
         'Meril': ['CliniQuant Micro', 'CelQuant Edge', 'CelQuant Micro', 'AutoQuant 200i', 'Quantirase'],
         'Sysmex': ['XP-100', 'XN-350', 'XN-550', 'KX-21'],
-        'Agape': ['Mispa Viva', 'Mispa i2', 'Mispa i3', 'Mispa CC']
+        'Agape': ['Mispa Viva', 'Mispa i2', 'Mispa i3', 'Mispa CC'],
+        'HDC India': ['HDC-Lyte Plus'],
+        'Erba Mannheim': ['LAURA Smart']
     };
 
     const baudRates = ["1200", "2400", "4800", "9600", "19200", "38400", "57600", "115200"];

@@ -26,7 +26,7 @@ function createWindow() {
 }
 
 async function syncMachines() {
-  const API_BASE = 'http://172.16.11.160:7005';
+  const API_BASE = 'http://localhost:7005';
   try {
     const labId = await db.getSetting('labId');
     if (!labId) {

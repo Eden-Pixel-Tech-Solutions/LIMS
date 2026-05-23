@@ -11,7 +11,7 @@ const Inventory = () => {
   const [activeTab, setActiveTab] = useState('stock');
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
-  const API_BASE = 'http://172.16.11.160:7005';
+  const API_BASE = 'http://localhost:7005';
 
   useEffect(() => {
     fetchData();

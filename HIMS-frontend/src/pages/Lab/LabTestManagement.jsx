@@ -185,28 +185,34 @@ const LabTestManagement = () => {
   const handleSubmitTest = async (e) => {
     e.preventDefault();
     try {
-      const url = editingTest ? `/api/lab/tests/${editingTest.id}` : '/api/lab/tests';
-      const method = editingTest ? 'PUT' : 'POST';
-      
-      const response = await fetch(url, {
-        method,
+      if (!formData.lab_id || !selectedAnalyzer) {
+        alert('Please select both a Lab and an Analyzer.');
+        return;
+      }
+
+      const response = await fetch('/api/lab/map-analyzer-tests', {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ ...formData, analyzer_name: selectedAnalyzer })
+        body: JSON.stringify({ 
+          lab_id: formData.lab_id, 
+          analyzer_name: selectedAnalyzer 
+        })
       });
 
       const data = await response.json();
       if (data.success) {
+        alert(`Success: ${data.message}`);
         setShowAddTestModal(false);
         resetForm();
         fetchTests();
       } else {
-        alert(data.message || 'Error saving test');
+        alert(data.message || 'Error mapping analyzer tests');
       }
     } catch (error) {
-      console.error('Error saving test:', error);
-      alert('Error saving test');
+      console.error('Error mapping analyzer tests:', error);
+      alert('Error mapping analyzer tests');
     }
   };
 
@@ -379,7 +385,7 @@ const LabTestManagement = () => {
                 setShowAddTestModal(true);
               }}
             >
-              Add New Test
+              Map Analyzer Tests
             </button>
           </div>
           
@@ -490,7 +496,7 @@ const LabTestManagement = () => {
         <div className="modal-overlay">
           <div className="modal">
             <div className="modal-header">
-              <h2>{editingTest ? 'Edit Lab Test' : 'Add New Lab Test'}</h2>
+              <h2>{editingTest ? 'Edit Lab Test' : 'Map Analyzer Tests to Lab'}</h2>
               <button onClick={() => {
                 setShowAddTestModal(false);
                 resetForm();
@@ -499,215 +505,59 @@ const LabTestManagement = () => {
             
             <form onSubmit={handleSubmitTest} className="test-form">
               <div className="modal-form-content">
-              <div className="form-grid">
-                <div className="form-group">
-                  <label>Test Code *</label>
-                  <input
-                    type="text"
-                    value={formData.test_code}
-                    onChange={(e) => setFormData(prev => ({ ...prev, test_code: e.target.value }))}
-                    required
-                  />
-                </div>
-                
-                <div className="form-group">
-                  <label>Test Name *</label>
-                  <input
-                    type="text"
-                    value={formData.test_name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, test_name: e.target.value }))}
-                    required
-                  />
-                </div>
-                
-                <div className="form-group">
-                  <label>Category *</label>
-                  <select
-                    value={formData.category_id}
-                    onChange={(e) => setFormData(prev => ({ ...prev, category_id: e.target.value }))}
-                    required
-                  >
-                    <option value="">Select Category</option>
-                    {categories.map(cat => (
-                      <option key={cat.id} value={cat.id}>{cat.name}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label>Lab *</label>
-                  <select
-                    value={formData.lab_id}
-                    onChange={(e) => setFormData(prev => ({ ...prev, lab_id: e.target.value }))}
-                    required
-                  >
-                    <option value="">Select Lab</option>
-                    {labs.map(lab => (
-                      <option key={lab.id} value={lab.id}>
-                        {lab.name} {lab.block ? `(${lab.block})` : ''}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label>Sample Type *</label>
-                  <select
-                    value={formData.sample_type}
-                    onChange={(e) => {
-                      if (e.target.value === '__add_new__') {
-                        setShowAddSampleTypeModal(true);
-                      } else {
-                        setFormData(prev => ({ ...prev, sample_type: e.target.value }));
-                      }
-                    }}
-                    required
-                  >
-                    <option value="">Select Sample Type</option>
-                    {sampleTypes.map(type => (
-                      <option key={type.id} value={type.type_name}>
-                        {type.type_name}
-                      </option>
-                    ))}
-                    <option value="__add_new__">+ Add New Sample Type</option>
-                  </select>
-                </div>
-                
-                <div className="form-group">
-                  <label>Sample Container</label>
-                  <select
-                    value={formData.tube_color}
-                    onChange={(e) => {
-                      if (e.target.value === '__add_new__') {
-                        setShowAddContainerModal(true);
-                      } else {
-                        setFormData(prev => ({ ...prev, tube_color: e.target.value }));
-                      }
-                    }}
-                  >
-                    <option value="">Select Container</option>
-                    {containers.map(container => (
-                      <option key={container.id} value={container.tube_color}>
-                        {container.container_name} ({container.tube_color})
-                      </option>
-                    ))}
-                    <option value="__add_new__">+ Add New Container</option>
-                  </select>
-                </div>
-                
-                <div className="form-group">
-                  <label>Price</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={formData.price}
-                    onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
-                    placeholder="0.00"
-                  />
-                </div>
-              </div>
-              
-              <div className="form-group">
-                <label>Storage Conditions</label>
-                <textarea
-                  value={formData.storage_conditions}
-                  onChange={(e) => setFormData(prev => ({ ...prev, storage_conditions: e.target.value }))}
-                  placeholder="e.g., Refrigerated at 2-8°C"
-                />
-              </div>
-              
-              <div className="form-group">
-                <label>Methodology</label>
-                <textarea
-                  value={formData.methodology}
-                  onChange={(e) => setFormData(prev => ({ ...prev, methodology: e.target.value }))}
-                  placeholder="e.g., Automated chemistry analyzer"
-                />
-              </div>
-              
-              <div className="form-group" style={{ marginTop: '20px', padding: '15px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                <label style={{ fontWeight: '700', color: '#1e293b' }}>
-                  Select Analyzer *
-                </label>
-
-                <select 
-                  value={selectedAnalyzer}
-                  onChange={(e) => {
-                    setSelectedAnalyzer(e.target.value);
-
-                    // Reset parameters when changing machine
-                    setFormData(prev => ({
-                      ...prev,
-                      parameters: []
-                    }));
-                  }}
+              <div className="form-group" style={{ marginBottom: '15px' }}>
+                <label style={{ fontWeight: '600', marginBottom: '8px', display: 'block' }}>Select Lab *</label>
+                <select
+                  value={formData.lab_id}
+                  onChange={(e) => setFormData(prev => ({ ...prev, lab_id: e.target.value }))}
                   required
-                  style={{ marginTop: '8px', width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+                  style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1' }}
                 >
-                  <option value="">Select Analyzer</option>
-                  <option value="CliniQuant Micro">Merilyzer CliniQuant Micro</option>
-                  <option value="CelQuant Edge">Merilyzer CelQuant Edge (3-Part)</option>
+                  <option value="">-- Select Lab --</option>
+                  {labs.map(lab => (
+                    <option key={lab.id} value={lab.id}>
+                      {lab.name} {lab.block ? `(${lab.block})` : ''}
+                    </option>
+                  ))}
                 </select>
               </div>
 
-              {/* CLINIQUANT (BIOCHEMISTRY) PARAMETERS */}
-              {selectedAnalyzer === 'CliniQuant Micro' && (
-                <div className="machine-tests-section" style={{ marginTop: '20px' }}>
-                  <h3 style={{ marginBottom: '10px', color: '#1e293b' }}>Select Biochemistry Parameters</h3>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', maxHeight: '320px', overflowY: 'auto', padding: '15px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px' }}>
-                    {CLINIQUANT_TESTS.map(mTest => (
-                      <label key={mTest.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px', border: '1px solid #f1f5f9', borderRadius: '6px', fontSize: '13px', cursor: 'pointer' }}>
-                        <input type="checkbox" checked={formData.parameters.some(p => p.machine_parameter_code === mTest.id.toString())}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setFormData(prev => ({ ...prev, parameters: [...prev.parameters, { parameter_name: mTest.name, parameter_unit: mTest.unit, machine_parameter_code: mTest.id.toString(), result_type: 'numeric', display_order: prev.parameters.length }] }));
-                            } else {
-                              setFormData(prev => ({ ...prev, parameters: prev.parameters.filter(p => p.machine_parameter_code !== mTest.id.toString()) }));
-                            }
-                          }}
-                        />
-                        <div><strong>{mTest.name}</strong><div style={{ fontSize: '10px', color: '#94a3b8' }}>ID: {mTest.id} | {mTest.unit}</div></div>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* CELQUANT (HEMATOLOGY) PARAMETERS */}
-              {selectedAnalyzer === 'CelQuant Edge' && (
-                <div className="machine-tests-section" style={{ marginTop: '20px' }}>
-                  <h3 style={{ marginBottom: '10px', color: '#1e293b' }}>Select CBC (Hematology) Parameters</h3>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', maxHeight: '320px', overflowY: 'auto', padding: '15px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px' }}>
-                    {CELQUANT_TESTS.map(mTest => (
-                      <label key={mTest.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px', border: '1px solid #f1f5f9', borderRadius: '6px', fontSize: '13px', cursor: 'pointer' }}>
-                        <input type="checkbox" checked={formData.parameters.some(p => p.machine_parameter_code === mTest.id.toString())}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setFormData(prev => ({ ...prev, parameters: [...prev.parameters, { parameter_name: mTest.name, parameter_unit: mTest.unit, machine_parameter_code: mTest.id.toString(), result_type: 'numeric', display_order: prev.parameters.length }] }));
-                            } else {
-                              setFormData(prev => ({ ...prev, parameters: prev.parameters.filter(p => p.machine_parameter_code !== mTest.id.toString()) }));
-                            }
-                          }}
-                        />
-                        <div><strong>{mTest.name}</strong><div style={{ fontSize: '10px', color: '#94a3b8' }}>HL7: {mTest.id} | {mTest.unit}</div></div>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-          </div>
-          <div className="form-actions">
-                <button type="button" onClick={() => {
-                  setShowAddTestModal(false);
-                  resetForm();
-                }} className="btn-secondary">
-                  Cancel
-                </button>
-                <button type="submit" className="btn-primary">
-                  {editingTest ? 'Update Test' : 'Add Test'}
-                </button>
+              <div className="form-group" style={{ marginBottom: '20px', padding: '15px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                <label style={{ fontWeight: '600', color: '#1e293b', marginBottom: '8px', display: 'block' }}>
+                  Select Analyzer / Machine *
+                </label>
+                <select 
+                  value={selectedAnalyzer}
+                  onChange={(e) => setSelectedAnalyzer(e.target.value)}
+                  required
+                  style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+                >
+                  <option value="">-- Select Analyzer --</option>
+                  <option value="CliniQuant Micro">Merilyzer CliniQuant Micro</option>
+                  <option value="CelQuant Edge">Merilyzer CelQuant Edge (3-Part)</option>
+                  <option value="HDC-Lyte Plus">HDC Lyte Pro (Electrolytes)</option>
+                  <option value="LAURA Smart">Erba Mannheim LAURA Smart (Urine)</option>
+                </select>
+                
+                {selectedAnalyzer && (
+                  <p style={{ marginTop: '10px', fontSize: '13px', color: '#64748b' }}>
+                    <strong>Note:</strong> All standard tests associated with this analyzer will be automatically generated and mapped to the selected lab.
+                  </p>
+                )}
               </div>
+            </div>
+            
+            <div className="form-actions">
+              <button type="button" onClick={() => {
+                setShowAddTestModal(false);
+                resetForm();
+              }} className="btn-secondary">
+                Cancel
+              </button>
+              <button type="submit" className="btn-primary">
+                Map Tests
+              </button>
+            </div>
             </form>
           </div>
         </div>

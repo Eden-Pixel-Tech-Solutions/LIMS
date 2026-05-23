@@ -5,7 +5,7 @@ import Select from 'react-select';
 import { fetchWithBranchContext, appendBranchContext } from '../../utils/branchContext';
 import '../../assets/CSS/InventoryVendors.css'; // Reusing glassmorphic CSS
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://172.16.11.160:7005';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:7005';
 
 function InventoryTransfers() {
   const { alert, showAlert, hideAlert } = useAlert();

@@ -60,9 +60,9 @@ Example format:
 }
 `;
 
-      // OLLAMA API
+      const ollamaUrl = process.env.OLLAMA_API_URL || 'http://localhost:11434/api/generate';
       const ollamaResponse = await axios.post(
-        'http://localhost:11434/api/generate',
+        ollamaUrl,
         {
           model: 'gemma4:31b-cloud',
           prompt,

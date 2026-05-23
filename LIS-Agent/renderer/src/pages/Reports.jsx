@@ -4,7 +4,7 @@ import axios from 'axios';
 const Reports = () => {
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
-  const API_BASE = 'http://172.16.11.160:7005';
+  const API_BASE = 'http://localhost:7005';
 
   useEffect(() => {
     fetchApproved();
@@ -79,7 +79,7 @@ const Reports = () => {
 
 const handleResend = async (report) => {
   try {
-    const API_BASE = 'http://172.16.11.160:7005';
+    const API_BASE = 'http://localhost:7005';
     const doctorId = JSON.parse(localStorage.getItem('user'))?.id || 1;
     await axios.post(`${API_BASE}/api/lab/verify-test`, {
       test_result_id: report.id,

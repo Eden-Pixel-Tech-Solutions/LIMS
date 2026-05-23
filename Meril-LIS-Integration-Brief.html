@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meril LIS — Integration Overview</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    color: #1a1a2e;
+    background: #fff;
+    padding: 40px 50px;
+    line-height: 1.6;
+  }
+
+  /* Header Banner */
+  .header {
+    background: linear-gradient(135deg, #0f3460 0%, #16213e 60%, #0f3460 100%);
+    color: white;
+    padding: 28px 32px;
+    border-radius: 10px;
+    margin-bottom: 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .header h1 {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+  }
+  .header .sub {
+    font-size: 12px;
+    opacity: 0.75;
+    margin-top: 4px;
+  }
+  .header .badge {
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 20px;
+    padding: 6px 16px;
+    font-size: 11px;
+    font-weight: 500;
+    text-align: center;
+  }
+  .badge-label { opacity: 0.7; font-size: 10px; }
+  .badge-val { font-size: 13px; font-weight: 600; }
+
+  /* Section headings */
+  h2 {
+    font-size: 15px;
+    font-weight: 700;
+    color: #0f3460;
+    margin: 28px 0 12px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid #e8eef7;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  h2 .num {
+    background: #0f3460;
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  h3 {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #16213e;
+    margin: 16px 0 8px;
+  }
+
+  /* Code / ASCII blocks */
+  pre {
+    background: #f0f4fa;
+    border: 1px solid #d6e0f0;
+    border-radius: 8px;
+    padding: 16px 18px;
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    font-size: 11px;
+    line-height: 1.55;
+    overflow: hidden;
+    color: #1a1a2e;
+    white-space: pre;
+  }
+
+  /* Tables */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0 16px;
+    font-size: 12.5px;
+  }
+  thead tr {
+    background: #0f3460;
+    color: white;
+  }
+  thead th {
+    padding: 9px 12px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 11.5px;
+    letter-spacing: 0.3px;
+  }
+  tbody tr:nth-child(even) { background: #f5f8fd; }
+  tbody tr:hover { background: #eaf0fb; }
+  td {
+    padding: 8px 12px;
+    border-bottom: 1px solid #e8eef7;
+    vertical-align: top;
+  }
+  td code {
+    background: #e8eef7;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: #0f3460;
+  }
+  td strong { color: #0f3460; }
+
+  /* Info boxes */
+  .note {
+    background: #fff8e1;
+    border-left: 4px solid #f59e0b;
+    padding: 10px 14px;
+    border-radius: 0 6px 6px 0;
+    font-size: 12px;
+    margin: 12px 0;
+    color: #78350f;
+  }
+
+  /* Divider */
+  hr { border: none; border-top: 1px solid #e8eef7; margin: 20px 0; }
+
+  /* Two column layout */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 10px 0; }
+
+  /* Status badges */
+  .status-grid { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+  .status-item {
+    background: #f0f4fa;
+    border: 1px solid #d6e0f0;
+    border-radius: 6px;
+    padding: 8px 12px;
+    min-width: 160px;
+  }
+  .status-item .code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    color: #0f3460;
+    background: #dbeafe;
+    padding: 2px 6px;
+    border-radius: 3px;
+    display: inline-block;
+    margin-bottom: 3px;
+  }
+  .status-item .desc { font-size: 11px; color: #555; }
+
+  /* Footer */
+  .footer {
+    margin-top: 36px;
+    padding-top: 12px;
+    border-top: 2px solid #e8eef7;
+    text-align: center;
+    font-size: 11px;
+    color: #888;
+  }
+
+  @media print {
+    body { padding: 20px 30px; }
+    .header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    thead tr { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .status-item .code { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    pre { page-break-inside: avoid; }
+    table { page-break-inside: avoid; }
+    h2 { page-break-after: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div>
+    <div class="sub">TECHNICAL BRIEF &nbsp;·&nbsp; CONFIDENTIAL</div>
+    <h1>Meril LIS — Integration Overview</h1>
+    <div class="sub" style="margin-top:6px;">For External HMIS Vendors</div>
+  </div>
+  <div style="text-align:right;">
+    <div class="badge">
+      <div class="badge-label">PREPARED BY</div>
+      <div class="badge-val">Meril Life Sciences</div>
+      <div class="badge-label" style="margin-top:4px;">May 2026</div>
+    </div>
+  </div>
+</div>
+
+<!-- Section 1: Architecture -->
+<h2><span class="num">1</span> System Architecture</h2>
+
+<pre>
+  ┌─────────────────────────────────────────────────────────────┐
+  │                        YOUR HMIS                            │
+  │   Investigation Orders · Patient Registry · Status Tracking  │
+  └──────────────────────┬──────────────────────────────────────┘
+                         │  REST API  (JSON)
+                         │  ← Pull-on-Demand / Push / Webhook →
+  ┌──────────────────────▼──────────────────────────────────────┐
+  │                   Meril LIS  (Backend)                       │
+  │        Node.js · Express · MySQL · REST API : 7005           │
+  │                                                              │
+  │   ┌──────────────┐  ┌─────────────────┐  ┌───────────────┐  │
+  │   │  Patient &   │  │   Lab Core LIS  │  │  PDF Engine   │  │
+  │   │  Billing     │  │   Worklist      │  │  WhatsApp Bot │  │
+  │   │  Module      │  │   Results       │  │  Email SMTP   │  │
+  │   └──────────────┘  │   Verification  │  └───────────────┘  │
+  │                     └────────┬────────┘                      │
+  └──────────────────────────────┼─────────────────────────────┘
+                                 │  Serial / USB-OTG / TCP / HL7
+  ┌──────────────────────────────▼─────────────────────────────┐
+  │           LIS Mobile Agent  (Android Tablet)                │
+  │     Cliniquant Micro · Merilyzer · Other Analyzers          │
+  └─────────────────────────────────────────────────────────────┘
+</pre>
+
+<!-- Section 2: Lab Workflow -->
+<h2><span class="num">2</span> Lab Workflow</h2>
+
+<pre>
+YOUR HMIS ── Creates Investigation Order
+       │
+       ▼
+  [API]  LIS fetches / receives order   ◄──  Patient CR Number / UHID
+       │
+       ▼
+  LIS ── Internal Worklist generated
+         (grouped by lab · sample type · priority)
+       │
+       ▼
+  LIS ── Barcode / Sample ID generated internally
+         └── Mapped to Your Order Reference Number
+       │
+       ▼
+  [PUSH → YOUR HMIS]  Status: SAMPLE_COLLECTED
+       │
+       ▼
+  Analyzer processes sample  (Serial / TCP / ASTM / HL7)
+       │
+       ▼
+  [PUSH → YOUR HMIS]  Structured Results  (parameter-wise)
+       │
+       ▼
+  Lab Doctor verifies & authorizes
+       │
+       ▼
+  [PUSH → YOUR HMIS]  Status: AUTHORIZED
+       │
+       ▼
+  LIS ── PDF Report generated  (branded, H/L flagged)
+         ├── [PUSH → YOUR HMIS]  PDF as Base64
+         ├── WhatsApp ──► Patient  (PDF attachment)
+         └── Patient Portal ──► Self-download
+</pre>
+
+<!-- Section 3: APIs We Need From You -->
+<h2><span class="num">3</span> APIs We Need From You</h2>
+<p style="margin-bottom:10px;color:#555;font-size:12px;">Your HMIS must expose the following endpoints for us to call:</p>
+
+<table>
+  <thead>
+    <tr><th>#</th><th>API Endpoint</th><th>Purpose</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>1</td><td><code>GET /investigations?patient_id=XXX</code></td><td>Fetch pending lab orders for a patient</td></tr>
+    <tr><td>2</td><td><code>POST /status-update</code></td><td>Receive workflow status at each stage (we call this)</td></tr>
+    <tr><td>3</td><td><code>POST /results</code></td><td>Receive structured parameter-wise test results</td></tr>
+    <tr><td>4</td><td><code>POST /report-upload</code></td><td>Receive final PDF report as Base64</td></tr>
+    <tr><td>5</td><td><code>GET /master/tests</code></td><td>Your test code master list (for mapping)</td></tr>
+    <tr><td>6</td><td><code>GET /master/parameters</code></td><td>Your parameter codes + parent codes + UOM codes</td></tr>
+  </tbody>
+</table>
+
+<!-- Section 4: Data Required -->
+<h2><span class="num">4</span> Data We Need From You</h2>
+
+<div class="two-col">
+  <div>
+    <h3>4.1 — Setup / Credentials</h3>
+    <table>
+      <thead><tr><th>Field</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td>Base URL</td><td>Your HMIS API endpoint</td></tr>
+        <tr><td>Auth Method</td><td>API Key / OAuth2 / Basic Auth</td></tr>
+        <tr><td>Patient Key</td><td>CR Number / UHID / ABHA ID</td></tr>
+        <tr><td>Hospital Code</td><td>Your facility mapping code for our branch</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div>
+    <h3>4.2 — Per Investigation Order</h3>
+    <table>
+      <thead><tr><th>Field</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td>Patient identifier</td><td>CR Number / UHID</td></tr>
+        <tr><td>Patient demographics</td><td>Name, DOB, gender, mobile</td></tr>
+        <tr><td>Order reference number</td><td>We map our barcode to this</td></tr>
+        <tr><td>Test code + name</td><td>What test was ordered</td></tr>
+        <tr><td>Sample type</td><td>Blood / Urine / etc.</td></tr>
+        <tr><td>Referring doctor</td><td>Doctor name</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<h3>4.3 — For Result Mapping (Parameter Upload)</h3>
+<table>
+  <thead><tr><th>Field</th><th>Description</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Parameter Codes</strong></td><td>Your internal code per test parameter (e.g., <code>HB</code>, <code>WBC</code>)</td></tr>
+    <tr><td><strong>Parent Parameter Codes</strong></td><td>Grouping code (e.g., CBC panel → individual parameters)</td></tr>
+    <tr><td><strong>UOM Codes</strong></td><td>Unit of measure per parameter (g/dL, x10³/µL, U/L, etc.)</td></tr>
+    <tr><td><strong>Reference Ranges</strong></td><td>Normal ranges per parameter — or we use our own</td></tr>
+  </tbody>
+</table>
+
+<div class="note">
+  ⚠️ &nbsp;<strong>Critical:</strong> Parameter codes, parent parameter codes, and UOM codes are required before structured result upload (API #3) can be activated. Without this mapping, only status updates and PDF delivery are possible.
+</div>
+
+<!-- Section 5: Status Codes -->
+<h2><span class="num">5</span> Status Codes We Send to Your HMIS</h2>
+
+<div class="status-grid">
+  <div class="status-item">
+    <div class="code">SAMPLE_COLLECTED</div>
+    <div class="desc">Sample received at lab</div>
+  </div>
+  <div class="status-item">
+    <div class="code">RESULT_SAVED</div>
+    <div class="desc">Results entered by technician</div>
+  </div>
+  <div class="status-item">
+    <div class="code">VERIFIED</div>
+    <div class="desc">Technician verified results</div>
+  </div>
+  <div class="status-item">
+    <div class="code">AUTHORIZED</div>
+    <div class="desc">Doctor signed off report</div>
+  </div>
+  <div class="status-item">
+    <div class="code">PRINTED</div>
+    <div class="desc">PDF generated &amp; uploaded</div>
+  </div>
+  <div class="status-item">
+    <div class="code">SAMPLE_REJECTED</div>
+    <div class="desc">Sample rejected (with reason)</div>
+  </div>
+  <div class="status-item">
+    <div class="code">CANCELED</div>
+    <div class="desc">Test cancelled</div>
+  </div>
+</div>
+
+<div class="footer">
+  Meril Life Sciences · Meril LIS Integration Team · Confidential — May 2026
+</div>
+
+</body>
+</html>

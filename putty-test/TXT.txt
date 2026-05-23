@@ -1,0 +1,486 @@
+(venv) PS C:\Users\godvi\Desktop\putty-test> python '.\laura smart.py'
+============================================================
+LAURA SMART LIS READER
+Connected to COM19
+Baud Rate: 19200
+============================================================
+
+RAW:
+b'\x02DekaPHAN LAURA\r\n'
+
+TEXT:
+DekaPHAN LAURA
+
+------------------------------------------------------------
+
+RAW:
+b'Seq.No:  0001\r\nID:      RUPA DEVI\r\n23.04.2026     11:41\r\n........................\r\n BLD    NEG\r\n LEU    NEG\r\n BIL    NEG\r\n UBG   NORM\r\n KET    NEG\r\n GLU    NEG\r\n PRO    NEG\r\n pH       6\r\n NIT    NEG\r\n SG   1.030\r\n------------------------\r\n'
+
+TEXT:
+Seq.No:  0001
+ID:      RUPA DEVI
+23.04.2026     11:41
+........................
+ BLD    NEG
+ LEU    NEG
+ BIL    NEG
+ UBG   NORM
+ KET    NEG
+ GLU    NEG
+ PRO    NEG
+ pH       6
+ NIT    NEG
+ SG   1.030
+------------------------
+
+------------------------------------------------------------
+
+RAW:
+b'\x03'
+
+TEXT:
+
+------------------------------------------------------------
+
+RAW:
+b'\x02DekaPHAN LAURA\r\nSeq.No:  0001\r\nID:      MUNIA DEVI\r\n01.05.2026     13:08\r\n........................\r\n BLD    NEG\r\n*LEU    +/-\r\n BIL    NEG\r\n UBG   NORM\r\n KET    NEG\r\n GLU    NEG\r\n PRO    NEG\r\n pH       6\r\n NIT    NEG\r\n SG   1.030\r\n------------------------\r\n'
+
+TEXT:
+DekaPHAN LAURA
+Seq.No:  0001
+ID:      MUNIA DEVI
+01.05.2026     13:08
+........................
+ BLD    NEG
+*LEU    +/-
+ BIL    NEG
+ UBG   NORM
+ KET    NEG
+ GLU    NEG
+ PRO    NEG
+ pH       6
+ NIT    NEG
+ SG   1.030
+------------------------
+
+------------------------------------------------------------
+
+RAW:
+b'\x03'
+
+TEXT:
+
+------------------------------------------------------------
+
+RAW:
+b'\x02DekaPHAN LAURA\r\n'
+
+TEXT:
+DekaPHAN LAURA
+
+------------------------------------------------------------
+
+RAW:
+b'Seq.No:  0001\r\nID:      VISHNU KESHRI\r\n08.05.2026     13:09\r\n........................\r\n BLD    NEG\r\n LEU    NEG\r\n BIL    NEG\r\n UBG   NORM\r\n KET    NEG\r\n*GLU     2+      \r\n PRO    NEG\r\n pH       6\r\n NIT    NEG\r\n SG   1.020\r\n------------------------\r\n\x03'
+
+TEXT:
+Seq.No:  0001
+ID:      VISHNU KESHRI
+08.05.2026     13:09
+........................
+ BLD    NEG
+ LEU    NEG
+ BIL    NEG
+ UBG   NORM
+ KET    NEG
+*GLU     2+
+ PRO    NEG
+ pH       6
+ NIT    NEG
+ SG   1.020
+------------------------
+
+------------------------------------------------------------
+
+
+(venv) PS C:\Users\godvi\Desktop\putty-test> python '.\laura smart.py'
+============================================================
+LAURA SMART LIS READER
+Connected to COM19
+Baud Rate: 19200
+============================================================
+
+RAW:
+b'\x02DekaPHAN LAURA\r\n'
+
+TEXT:
+DekaPHAN LAURA
+
+------------------------------------------------------------
+
+RAW:
+b'Seq.No:  0001\r\nID:      VISHNU KESHRI\r\n08.05.2026     13:09\r\n........................\r\n BLD    NEG\r\n LEU    NEG\r\n BIL    NEG\r\n UBG   NORM\r\n KET    NEG\r\n*GLU     2+      \r\n PRO    NEG\r\n pH       6\r\n NIT    NEG\r\n SG   1.020\r\n------------------------\r\n'
+
+TEXT:
+Seq.No:  0001
+ID:      VISHNU KESHRI
+08.05.2026     13:09
+........................
+ BLD    NEG
+ LEU    NEG
+ BIL    NEG
+ UBG   NORM
+ KET    NEG
+*GLU     2+
+ PRO    NEG
+ pH       6
+ NIT    NEG
+ SG   1.020
+------------------------
+
+------------------------------------------------------------
+
+RAW:
+b'\x03\x02DekaPHAN LAURA\r\n'
+
+TEXT:
+DekaPHAN LAURA
+
+------------------------------------------------------------
+
+RAW:
+b'Seq.No:  0001\r\nID:      MUNIA DEVI\r\n01.05.2026     13:08\r\n........................\r\n BLD    NEG\r\n*LEU    +/-\r\n BIL    NEG\r\n UBG   NORM\r\n KET    NEG\r\n GLU    NEG\r\n PRO    NEG\r\n pH       6\r\n NIT    NEG\r\n SG   1.030\r\n------------------------\r\n\x03'
+
+TEXT:
+Seq.No:  0001
+ID:      MUNIA DEVI
+01.05.2026     13:08
+........................
+ BLD    NEG
+*LEU    +/-
+ BIL    NEG
+ UBG   NORM
+ KET    NEG
+ GLU    NEG
+ PRO    NEG
+ pH       6
+ NIT    NEG
+ SG   1.030
+------------------------
+
+------------------------------------------------------------
+
+RAW:
+b'\x02DekaPHAN LAURA\r\nSeq.No:  0001\r\nID:      RUPA DEVI\r\n23.04.2026     11:41\r\n........................\r\n BLD    NEG\r\n LEU    NEG\r\n BIL    NEG\r\n UBG   NORM\r\n KET    NEG\r\n GLU    NEG\r\n PRO    NEG\r\n pH       6\r\n NIT    NEG\r\n SG   1.030\r\n------------------------\r\n'
+
+TEXT:
+DekaPHAN LAURA
+Seq.No:  0001
+ID:      RUPA DEVI
+23.04.2026     11:41
+........................
+ BLD    NEG
+ LEU    NEG
+ BIL    NEG
+ UBG   NORM
+ KET    NEG
+ GLU    NEG
+ PRO    NEG
+ pH       6
+ NIT    NEG
+ SG   1.030
+------------------------
+
+------------------------------------------------------------
+
+RAW:
+b'\x03\x02DekaPHAN LAURA\r\n'
+
+TEXT:
+DekaPHAN LAURA
+
+------------------------------------------------------------
+
+RAW:
+b'Seq.No:  0001\r\nID:      MANJU DEVI\r\n20.04.2026     15:14\r\n........................\r\n BLD    NEG\r\n LEU    NEG\r\n BIL    NEG\r\n UBG   NORM\r\n KET    NEG\r\n GLU    NEG\r\n PRO    NEG\r\n pH       6\r\n NIT    NEG\r\n SG   1.020\r\n------------------------\r\n'
+
+TEXT:
+Seq.No:  0001
+ID:      MANJU DEVI
+20.04.2026     15:14
+........................
+ BLD    NEG
+ LEU    NEG
+ BIL    NEG
+ UBG   NORM
+ KET    NEG
+ GLU    NEG
+ PRO    NEG
+ pH       6
+ NIT    NEG
+ SG   1.020
+------------------------
+
+------------------------------------------------------------
+
+RAW:
+b'\x03\x02DekaPHAN LAURA\r\n'
+
+TEXT:
+DekaPHAN LAURA
+
+------------------------------------------------------------
+
+RAW:
+b'Seq.No:  0001\r\nID:      MANJU DEVI\r\n20.04.2026     12:10\r\n........................\r\n BLD    NEG\r\n LEU    NEG\r\n BIL    NEG\r\n UBG   NORM\r\n KET    NEG\r\n GLU    NEG\r\n PRO    NEG\r\n pH       6\r\n NIT    NEG\r\n SG   1.010\r\n------------------------\r\n\x03\x02DekaPHAN LAURA\r\n'
+
+TEXT:
+Seq.No:  0001
+ID:      MANJU DEVI
+20.04.2026     12:10
+........................
+ BLD    NEG
+ LEU    NEG
+ BIL    NEG
+ UBG   NORM
+ KET    NEG
+ GLU    NEG
+ PRO    NEG
+ pH       6
+ NIT    NEG
+ SG   1.010
+------------------------
+DekaPHAN LAURA
+
+------------------------------------------------------------
+
+RAW:
+b'Seq.No:  0001\r\nID:      ANU DEVI\r\n26.03.2026     10:53\r\n........................\r\n*BLD     2+      \r\n LEU    NEG\r\n BIL    NEG\r\n UBG   NORM\r\n KET    NEG\r\n GLU    NEG\r\n*PRO     1+      \r\n pH       6\r\n*NIT    POS      \r\n SG   1.010\r\n------------------------\r\n'
+
+TEXT:
+Seq.No:  0001
+ID:      ANU DEVI
+26.03.2026     10:53
+........................
+*BLD     2+
+ LEU    NEG
+ BIL    NEG
+ UBG   NORM
+ KET    NEG
+ GLU    NEG
+*PRO     1+
+ pH       6
+*NIT    POS
+ SG   1.010
+------------------------
+
+------------------------------------------------------------
+
+RAW:
+b'\x03\x02Seq.No:  0001\r\nID:      UPENDAR KUMAR\r\n04.02.2026     14:55\r\n........................\r\nMeasurement error!\r\n------------------------\r\n\x03\x02DekaPHAN LAURA\r\n'
+
+TEXT:
+Seq.No:  0001
+ID:      UPENDAR KUMAR
+04.02.2026     14:55
+........................
+Measurement error!
+------------------------
+DekaPHAN LAURA
+
+------------------------------------------------------------
+
+RAW:
+b'Seq.No:  0001\r\nID:      VIJAY THAKUR\r\n04.02.2026     12:22\r\n........................\r\n BLD    NEG\r\n LEU    NEG\r\n BIL    NEG\r\n UBG   NORM\r\n KET    NEG\r\n GLU    NEG\r\n PRO    NEG\r\n pH     6.5\r\n NIT    NEG\r\n SG   1.015\r\n------------------------\r\n'
+
+TEXT:
+Seq.No:  0001
+ID:      VIJAY THAKUR
+04.02.2026     12:22
+........................
+ BLD    NEG
+ LEU    NEG
+ BIL    NEG
+ UBG   NORM
+ KET    NEG
+ GLU    NEG
+ PRO    NEG
+ pH     6.5
+ NIT    NEG
+ SG   1.015
+------------------------
+
+------------------------------------------------------------
+
+RAW:
+b'\x03\x02DekaPHAN LAURA\r\n'
+
+TEXT:
+DekaPHAN LAURA
+
+------------------------------------------------------------
+
+RAW:
+b'Seq.No:  0001\r\nID:      DEOPAL ORAON\r\n22.12.2025     11:27\r\n........................\r\n BLD    NEG\r\n LEU    NEG\r\n BIL    NEG\r\n*UBG     1+      \r\n KET    NEG\r\n GLU    NEG\r\n*PRO     1+      \r\n pH     7.5\r\n NIT    NEG\r\n SG   1.010\r\n------------------------\r\n\x03\x02DekaPHAN LAURA\r\n'
+
+TEXT:
+Seq.No:  0001
+ID:      DEOPAL ORAON
+22.12.2025     11:27
+........................
+ BLD    NEG
+ LEU    NEG
+ BIL    NEG
+*UBG     1+
+ KET    NEG
+ GLU    NEG
+*PRO     1+
+ pH     7.5
+ NIT    NEG
+ SG   1.010
+------------------------
+DekaPHAN LAURA
+
+------------------------------------------------------------
+
+RAW:
+b'Seq.No:  0001\r\nID:      PRITI KUMARI\r\n20.12.2025     14:34\r\n........................\r\n BLD    NEG\r\n LEU    NEG\r\n BIL    NEG\r\n*UBG     2+      \r\n*KET     2+      \r\n GLU    NEG\r\n*PRO     1+      \r\n pH     6.5\r\n NIT    NEG\r\n SG   1.030\r\n------------------------\r\n'
+
+TEXT:
+Seq.No:  0001
+ID:      PRITI KUMARI
+20.12.2025     14:34
+........................
+ BLD    NEG
+ LEU    NEG
+ BIL    NEG
+*UBG     2+
+*KET     2+
+ GLU    NEG
+*PRO     1+
+ pH     6.5
+ NIT    NEG
+ SG   1.030
+------------------------
+
+------------------------------------------------------------
+
+RAW:
+b'\x03\x02DekaPHAN LAURA\r\n'
+
+TEXT:
+DekaPHAN LAURA
+
+------------------------------------------------------------
+
+RAW:
+b'Seq.No:  0002\r\nID:      MUNTJIR ANSARI\r\n19.12.2025     13:32\r\n........................\r\n BLD    NEG\r\n LEU    NEG\r\n BIL    NEG\r\n UBG   NORM\r\n*KET     +-      \r\n*GLU     2+      \r\n*PRO     1+      \r\n pH       6\r\n NIT    NEG\r\n SG   1.025\r\n------------------------\r\n'
+
+TEXT:
+Seq.No:  0002
+ID:      MUNTJIR ANSARI
+19.12.2025     13:32
+........................
+ BLD    NEG
+ LEU    NEG
+ BIL    NEG
+ UBG   NORM
+*KET     +-
+*GLU     2+
+*PRO     1+
+ pH       6
+ NIT    NEG
+ SG   1.025
+------------------------
+
+------------------------------------------------------------
+
+RAW:
+b'\x03\x02DekaPHAN LAURA\r\nSeq.No:  0001\r\nID:      BADAL LAKARA\r\n19.12.2025     13:21\r\n........................\r\n BLD    NEG\r\n LEU    NEG\r\n BIL    NEG\r\n UBG   NORM\r\n KET    NEG\r\n GLU    NEG\r\n PRO    NEG\r\n pH      '
+
+TEXT:
+DekaPHAN LAURA
+Seq.No:  0001
+ID:      BADAL LAKARA
+19.12.2025     13:21
+........................
+ BLD    NEG
+ LEU    NEG
+ BIL    NEG
+ UBG   NORM
+ KET    NEG
+ GLU    NEG
+ PRO    NEG
+ pH
+------------------------------------------------------------
+
+RAW:
+b' 6\r\n NIT    NEG\r\n SG   1.020\r\n------------------------\r\n\x03\x02DekaPHAN LAURA\r\n'
+
+TEXT:
+ 6
+ NIT    NEG
+ SG   1.020
+------------------------
+DekaPHAN LAURA
+
+------------------------------------------------------------
+
+RAW:
+b'Seq.No:  0001\r\nID:      ARVIND KR VERMA\r\n13.12.2025     13:08\r\n........................\r\n*BLD     1+      \r\n*LEU     3+      \r\n BIL    NEG\r\n UBG   NORM\r\n KET    NEG\r\n*GLU     1+      \r\n PRO    NEG\r\n pH       6\r\n NIT    NEG\r\n SG   1.020\r\n------------------------\r\n'
+
+TEXT:
+Seq.No:  0001
+ID:      ARVIND KR VERMA
+13.12.2025     13:08
+........................
+*BLD     1+
+*LEU     3+
+ BIL    NEG
+ UBG   NORM
+ KET    NEG
+*GLU     1+
+ PRO    NEG
+ pH       6
+ NIT    NEG
+ SG   1.020
+------------------------
+
+------------------------------------------------------------
+
+RAW:
+b'\x03\x02DekaPHAN LAURA\r\n'
+
+TEXT:
+DekaPHAN LAURA
+
+------------------------------------------------------------
+
+RAW:
+b'Seq.No:  0001\r\nID:      RAJESHWAR MAHTO\r\n11.12.2025     11:22\r\n........................\r\n BLD    NEG\r\n LEU    NEG\r\n BIL    NEG\r\n UBG   NORM\r\n KET    NEG\r\n GLU    NEG\r\n PRO    NEG\r\n pH       6\r\n NIT    NEG\r\n SG   1.025\r\n------------------------\r\n'
+
+TEXT:
+Seq.No:  0001
+ID:      RAJESHWAR MAHTO
+11.12.2025     11:22
+........................
+ BLD    NEG
+ LEU    NEG
+ BIL    NEG
+ UBG   NORM
+ KET    NEG
+ GLU    NEG
+ PRO    NEG
+ pH       6
+ NIT    NEG
+ SG   1.025
+------------------------
+
+------------------------------------------------------------
+
+RAW:
+b'\x03'
+
+TEXT:
+
+------------------------------------------------------------

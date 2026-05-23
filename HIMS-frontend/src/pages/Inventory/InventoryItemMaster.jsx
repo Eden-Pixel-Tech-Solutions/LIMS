@@ -12,7 +12,7 @@ import Alert from '../../components/Alert';
 import { useAlert } from '../../hooks/useAlert';
 import '../../assets/CSS/InventoryVendors.css';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://172.16.11.160:7005';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:7005';
 
 function InventoryItemMaster() {
   const { alert, showAlert, hideAlert } = useAlert();
