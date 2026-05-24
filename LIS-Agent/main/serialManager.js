@@ -473,7 +473,15 @@ async function startBackgroundListener(machine, win) {
   port.open((err) => {
     pendingPorts.delete(machine.port);
     if (err) {
-      console.error(`❌ Port ${machine.port} open error: ${err.message}`);
+      const isAccessDenied = err.message && (
+        err.message.toLowerCase().includes('access denied') ||
+        err.message.toLowerCase().includes('access is denied')
+      );
+      if (isAccessDenied) {
+        console.warn(`⚠️ ${machine.port} access denied — previous process may still be releasing it. Reconnect watcher will retry in ~5s automatically.`);
+      } else {
+        console.error(`❌ Port ${machine.port} open error: ${err.message}`);
+      }
       return;
     }
     console.log(`✅ Port ${machine.port} ACTIVE (${machine.model}).`);

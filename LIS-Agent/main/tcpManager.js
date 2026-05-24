@@ -339,8 +339,23 @@ async function startTCPServer(machine, win) {
     });
 
     server.on('error', (err) => {
-        console.error(`❌ TCP Server Error on port ${portNum}:`, err.message);
         pendingPorts.delete(machine.port);
+        if (err.code === 'EADDRINUSE') {
+            console.warn(`⚠️ Port ${portNum} is busy (EADDRINUSE). Retrying in 4 seconds...`);
+            // Schedule a retry — the port will be freed once the old process dies
+            setTimeout(() => {
+                if (!activeServers.has(machine.port) && !pendingPorts.has(machine.port)) {
+                    console.log(`🔄 Retrying TCP Server on port ${portNum}...`);
+                    pendingPorts.add(machine.port);
+                    startTCPServer(machine, win).catch(retryErr => {
+                        console.error(`❌ TCP Retry failed for port ${portNum}:`, retryErr.message);
+                        pendingPorts.delete(machine.port);
+                    });
+                }
+            }, 4000);
+        } else {
+            console.error(`❌ TCP Server Error on port ${portNum}:`, err.message);
+        }
     });
 }
 
