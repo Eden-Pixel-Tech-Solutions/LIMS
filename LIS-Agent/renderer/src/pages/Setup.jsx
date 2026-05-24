@@ -52,18 +52,29 @@ export default function Setup() {
         window.electronAPI.getLocalIp().then(setLocalIp);
 
         // Listen for real-time status changes
+        let cleanup;
         if (window.electronAPI && window.electronAPI.onDeviceStatus) {
-            const cleanup = window.electronAPI.onDeviceStatus(() => {
+            cleanup = window.electronAPI.onDeviceStatus(() => {
                 refreshStatus();
             });
-            return cleanup;
         }
+
+        // Poll connection status every 5 seconds to keep ONLINE/OFFLINE live
+        const pollInterval = setInterval(() => {
+            refreshStatus();
+        }, 5000);
+
+        return () => {
+            if (cleanup) cleanup();
+            clearInterval(pollInterval);
+        };
     }, [location]);
 
     const refreshStatus = async () => {
         if (window.electronAPI && window.electronAPI.getActivePorts) {
             const active = await window.electronAPI.getActivePorts();
-            setActivePorts(active);
+            // Normalize to strings for consistent comparison
+            setActivePorts(active.map(p => String(p)));
         }
     };
 
@@ -227,7 +238,18 @@ export default function Setup() {
                             setIsEdit(false);
                             setShowAddForm(true);
                             setSearchSerial('');
-                            setFormData({ serialNumber: '', uniqueId: '', labId: '', labName: '', manufacturer: '', model: '', portType: 'USB', port: '', baudRate: '9600' });
+                            // Fully reset form with a new object to clear any stale state
+                            setFormData({
+                                serialNumber: '',
+                                uniqueId: '',
+                                labId: '',
+                                labName: '',
+                                manufacturer: '',
+                                model: '',
+                                portType: 'USB',
+                                port: '',
+                                baudRate: '9600'
+                            });
                         }}
                         style={{ padding: '12px 24px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '10px', fontWeight: '700', cursor: 'pointer' }}
                     >
@@ -256,10 +278,10 @@ export default function Setup() {
                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
                                     <div style={{ display: 'flex', gap: '8px' }}>
                                         <span style={{ padding: '4px 10px', background: '#eff6ff', color: '#2563eb', borderRadius: '6px', fontSize: '10px', fontWeight: '900', border: '1px solid #dbeafe' }}>CLOUD SYNCED</span>
-                                        {activePorts.includes(m.port) ? (
-                                            <span style={{ padding: '4px 10px', background: '#ecfdf5', color: '#059669', borderRadius: '6px', fontSize: '10px', fontWeight: '900', border: '1px solid #d1fae5' }}>ONLINE</span>
+                                        {activePorts.includes(String(m.port)) ? (
+                                            <span style={{ padding: '4px 10px', background: '#ecfdf5', color: '#059669', borderRadius: '6px', fontSize: '10px', fontWeight: '900', border: '1px solid #d1fae5' }}>🟢 ONLINE</span>
                                         ) : (
-                                            <span style={{ padding: '4px 10px', background: '#fef2f2', color: '#ef4444', borderRadius: '6px', fontSize: '10px', fontWeight: '900', border: '1px solid #fee2e2' }}>OFFLINE</span>
+                                            <span style={{ padding: '4px 10px', background: '#fef2f2', color: '#ef4444', borderRadius: '6px', fontSize: '10px', fontWeight: '900', border: '1px solid #fee2e2' }}>🔴 OFFLINE</span>
                                         )}
                                     </div>
                                 <div style={{ display: 'flex', gap: '10px' }}>
@@ -345,7 +367,7 @@ export default function Setup() {
 
                         <div>
                             <label style={{ display: 'block', marginBottom: '8px', fontWeight: '700', color: '#1e293b' }}>Target Laboratory</label>
-                            <select disabled={isEdit} value={formData.labId} onChange={(e) => setFormData({ ...formData, labId: e.target.value })} style={{ width: '100%', padding: '14px', borderRadius: '12px', border: '1.5px solid #e2e8f0', background: isEdit ? '#f8fafc' : 'white' }}>
+                            <select value={formData.labId} onChange={(e) => setFormData({ ...formData, labId: e.target.value })} style={{ width: '100%', padding: '14px', borderRadius: '12px', border: '1.5px solid #e2e8f0', background: 'white' }}>
                                 <option value="">Select Lab</option>
                                 {labs.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
                             </select>
@@ -353,7 +375,7 @@ export default function Setup() {
 
                         <div>
                             <label style={{ display: 'block', marginBottom: '8px', fontWeight: '700', color: '#1e293b' }}>Select Brand</label>
-                            <select disabled={isEdit} value={formData.manufacturer} onChange={(e) => setFormData({ ...formData, manufacturer: e.target.value, model: '' })} style={{ width: '100%', padding: '14px', borderRadius: '12px', border: '1.5px solid #e2e8f0', background: isEdit ? '#f8fafc' : 'white' }}>
+                            <select value={formData.manufacturer} onChange={(e) => setFormData({ ...formData, manufacturer: e.target.value, model: '' })} style={{ width: '100%', padding: '14px', borderRadius: '12px', border: '1.5px solid #e2e8f0', background: 'white' }}>
                                 <option value="">Choose Brand</option>
                                 {Object.keys(manufacturers).map(m => <option key={m} value={m}>{m}</option>)}
                             </select>
@@ -361,7 +383,7 @@ export default function Setup() {
 
                         <div>
                             <label style={{ display: 'block', marginBottom: '8px', fontWeight: '700', color: '#1e293b' }}>Analyzer Model</label>
-                            <select disabled={isEdit || !formData.manufacturer} value={formData.model} onChange={(e) => setFormData({ ...formData, model: e.target.value })} style={{ width: '100%', padding: '14px', borderRadius: '12px', border: '1.5px solid #e2e8f0', background: isEdit ? '#f8fafc' : 'white' }}>
+                            <select disabled={!formData.manufacturer} value={formData.model} onChange={(e) => setFormData({ ...formData, model: e.target.value })} style={{ width: '100%', padding: '14px', borderRadius: '12px', border: '1.5px solid #e2e8f0', background: !formData.manufacturer ? '#f8fafc' : 'white' }}>
                                 <option value="">Select Model</option>
                                 {formData.manufacturer && manufacturers[formData.manufacturer].map(mod => <option key={mod} value={mod}>{mod}</option>)}
                             </select>
