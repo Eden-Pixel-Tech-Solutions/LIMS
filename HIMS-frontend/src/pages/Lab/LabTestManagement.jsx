@@ -537,6 +537,7 @@ const LabTestManagement = () => {
                   <option value="CelQuant Edge">Merilyzer CelQuant Edge (3-Part)</option>
                   <option value="HDC-Lyte Plus">HDC Lyte Pro (Electrolytes)</option>
                   <option value="LAURA Smart">Erba Mannheim LAURA Smart (Urine)</option>
+                  <option value="ALTA Hematology">Athenese Dx ALTA Hematology (CBC)</option>
                 </select>
                 
                 {selectedAnalyzer && (

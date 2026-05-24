@@ -556,57 +556,60 @@ export const mapAnalyzerTests = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Lab ID and Analyzer Name are required' });
     }
 
+    const HDC_LYTE_TEMPLATE = [
+      {
+        test_code: 'ELYTES', test_name: 'Electrolyte Panel', department: 'Biochemistry', sample_type: 'Serum / Plasma',
+        parameters: [
+          { parameter_code: 'NA', parameter_name: 'Sodium', machine_parameter_code: 'Na', parameter_unit: 'mmol/L', min_value: 135, max_value: 145 },
+          { parameter_code: 'K', parameter_name: 'Potassium', machine_parameter_code: 'K', parameter_unit: 'mmol/L', min_value: 3.5, max_value: 5.5 },
+          { parameter_code: 'CL', parameter_name: 'Chloride', machine_parameter_code: 'Cl', parameter_unit: 'mmol/L', min_value: 98, max_value: 107 }
+        ]
+      },
+      {
+        test_code: 'SE', test_name: 'Serum Electrolytes', department: 'Biochemistry', sample_type: 'Serum',
+        parameters: [
+          { parameter_code: 'NA', parameter_name: 'Sodium', machine_parameter_code: 'Na', parameter_unit: 'mmol/L', min_value: 135, max_value: 145 },
+          { parameter_code: 'K', parameter_name: 'Potassium', machine_parameter_code: 'K', parameter_unit: 'mmol/L', min_value: 3.5, max_value: 5.5 },
+          { parameter_code: 'CL', parameter_name: 'Chloride', machine_parameter_code: 'Cl', parameter_unit: 'mmol/L', min_value: 98, max_value: 107 }
+        ]
+      },
+      {
+        test_code: 'ELCA', test_name: 'Electrolyte with iCa', department: 'Biochemistry', sample_type: 'Whole Blood / Serum',
+        parameters: [
+          { parameter_code: 'NA', parameter_name: 'Sodium', machine_parameter_code: 'Na', parameter_unit: 'mmol/L', min_value: 135, max_value: 145 },
+          { parameter_code: 'K', parameter_name: 'Potassium', machine_parameter_code: 'K', parameter_unit: 'mmol/L', min_value: 3.5, max_value: 5.5 },
+          { parameter_code: 'CL', parameter_name: 'Chloride', machine_parameter_code: 'Cl', parameter_unit: 'mmol/L', min_value: 98, max_value: 107 },
+          { parameter_code: 'ICA', parameter_name: 'Ionized Calcium', machine_parameter_code: 'iCa', parameter_unit: 'mmol/L', min_value: 1.10, max_value: 1.35 }
+        ]
+      },
+      {
+        test_code: 'ICA', test_name: 'Ionized Calcium', department: 'Biochemistry', sample_type: 'Whole Blood',
+        parameters: [
+          { parameter_code: 'ICA', parameter_name: 'Ionized Calcium', machine_parameter_code: 'iCa', parameter_unit: 'mmol/L', min_value: 1.10, max_value: 1.35 }
+        ]
+      },
+      {
+        test_code: 'LI', test_name: 'Serum Lithium', department: 'Biochemistry', sample_type: 'Serum',
+        parameters: [
+          { parameter_code: 'LI', parameter_name: 'Lithium', machine_parameter_code: 'Li', parameter_unit: 'mmol/L' }
+        ]
+      },
+      {
+        test_code: 'BGE', test_name: 'Blood Gas Electrolytes', department: 'Critical Care', sample_type: 'Arterial Blood',
+        parameters: [
+          { parameter_code: 'PH', parameter_name: 'pH', machine_parameter_code: 'pH', parameter_unit: 'pH', min_value: 7.35, max_value: 7.45 },
+          { parameter_code: 'NA', parameter_name: 'Sodium', machine_parameter_code: 'Na', parameter_unit: 'mmol/L', min_value: 135, max_value: 145 },
+          { parameter_code: 'K', parameter_name: 'Potassium', machine_parameter_code: 'K', parameter_unit: 'mmol/L', min_value: 3.5, max_value: 5.5 },
+          { parameter_code: 'CL', parameter_name: 'Chloride', machine_parameter_code: 'Cl', parameter_unit: 'mmol/L', min_value: 98, max_value: 107 },
+          { parameter_code: 'ICA', parameter_name: 'Ionized Calcium', machine_parameter_code: 'iCa', parameter_unit: 'mmol/L', min_value: 1.10, max_value: 1.35 }
+        ]
+      }
+    ];
+
     // Predefined tests for Auto-Mapping
     const ANALYZER_TEST_TEMPLATES = {
-      'HDC-Lyte Plus': [
-        {
-          test_code: 'ELYTES', test_name: 'Electrolyte Panel', department: 'Biochemistry', sample_type: 'Serum / Plasma',
-          parameters: [
-            { parameter_code: 'NA', parameter_name: 'Sodium', machine_parameter_code: 'Na', parameter_unit: 'mmol/L', min_value: 135, max_value: 145 },
-            { parameter_code: 'K', parameter_name: 'Potassium', machine_parameter_code: 'K', parameter_unit: 'mmol/L', min_value: 3.5, max_value: 5.5 },
-            { parameter_code: 'CL', parameter_name: 'Chloride', machine_parameter_code: 'Cl', parameter_unit: 'mmol/L', min_value: 98, max_value: 107 }
-          ]
-        },
-        {
-          test_code: 'SE', test_name: 'Serum Electrolytes', department: 'Biochemistry', sample_type: 'Serum',
-          parameters: [
-            { parameter_code: 'NA', parameter_name: 'Sodium', machine_parameter_code: 'Na', parameter_unit: 'mmol/L', min_value: 135, max_value: 145 },
-            { parameter_code: 'K', parameter_name: 'Potassium', machine_parameter_code: 'K', parameter_unit: 'mmol/L', min_value: 3.5, max_value: 5.5 },
-            { parameter_code: 'CL', parameter_name: 'Chloride', machine_parameter_code: 'Cl', parameter_unit: 'mmol/L', min_value: 98, max_value: 107 }
-          ]
-        },
-        {
-          test_code: 'ELCA', test_name: 'Electrolyte with iCa', department: 'Biochemistry', sample_type: 'Whole Blood / Serum',
-          parameters: [
-            { parameter_code: 'NA', parameter_name: 'Sodium', machine_parameter_code: 'Na', parameter_unit: 'mmol/L', min_value: 135, max_value: 145 },
-            { parameter_code: 'K', parameter_name: 'Potassium', machine_parameter_code: 'K', parameter_unit: 'mmol/L', min_value: 3.5, max_value: 5.5 },
-            { parameter_code: 'CL', parameter_name: 'Chloride', machine_parameter_code: 'Cl', parameter_unit: 'mmol/L', min_value: 98, max_value: 107 },
-            { parameter_code: 'ICA', parameter_name: 'Ionized Calcium', machine_parameter_code: 'iCa', parameter_unit: 'mmol/L', min_value: 1.10, max_value: 1.35 }
-          ]
-        },
-        {
-          test_code: 'ICA', test_name: 'Ionized Calcium', department: 'Biochemistry', sample_type: 'Whole Blood',
-          parameters: [
-            { parameter_code: 'ICA', parameter_name: 'Ionized Calcium', machine_parameter_code: 'iCa', parameter_unit: 'mmol/L', min_value: 1.10, max_value: 1.35 }
-          ]
-        },
-        {
-          test_code: 'LI', test_name: 'Serum Lithium', department: 'Biochemistry', sample_type: 'Serum',
-          parameters: [
-            { parameter_code: 'LI', parameter_name: 'Lithium', machine_parameter_code: 'Li', parameter_unit: 'mmol/L' }
-          ]
-        },
-        {
-          test_code: 'BGE', test_name: 'Blood Gas Electrolytes', department: 'Critical Care', sample_type: 'Arterial Blood',
-          parameters: [
-            { parameter_code: 'PH', parameter_name: 'pH', machine_parameter_code: 'pH', parameter_unit: 'pH', min_value: 7.35, max_value: 7.45 },
-            { parameter_code: 'NA', parameter_name: 'Sodium', machine_parameter_code: 'Na', parameter_unit: 'mmol/L', min_value: 135, max_value: 145 },
-            { parameter_code: 'K', parameter_name: 'Potassium', machine_parameter_code: 'K', parameter_unit: 'mmol/L', min_value: 3.5, max_value: 5.5 },
-            { parameter_code: 'CL', parameter_name: 'Chloride', machine_parameter_code: 'Cl', parameter_unit: 'mmol/L', min_value: 98, max_value: 107 },
-            { parameter_code: 'ICA', parameter_name: 'Ionized Calcium', machine_parameter_code: 'iCa', parameter_unit: 'mmol/L', min_value: 1.10, max_value: 1.35 }
-          ]
-        }
-      ],
+      'HDC-Lyte Plus': HDC_LYTE_TEMPLATE,
+      'HDC-LYTE PRO': HDC_LYTE_TEMPLATE,
       'CelQuant Edge': [
         {
           test_code: 'CBC', test_name: 'Complete Blood Count (CBC)', department: 'Hematology', sample_type: 'Whole Blood',
@@ -676,6 +679,83 @@ export const mapAnalyzerTests = async (req, res) => {
             { parameter_code: 'UBG', parameter_name: 'Urobilinogen', machine_parameter_code: 'UBG', parameter_unit: '' },
             { parameter_code: 'NIT', parameter_name: 'Nitrite', machine_parameter_code: 'NIT', parameter_unit: '' },
             { parameter_code: 'LEU', parameter_name: 'Leukocytes', machine_parameter_code: 'LEU', parameter_unit: '' }
+          ]
+        },
+        {
+          test_code: 'URE', test_name: 'Urine Routine Examination (URE)', department: 'Clinical Pathology', sample_type: 'Urine',
+          parameters: [
+            { parameter_code: 'SG', parameter_name: 'Specific Gravity', machine_parameter_code: 'SG', parameter_unit: '' },
+            { parameter_code: 'LEU', parameter_name: 'Leukocytes', machine_parameter_code: 'LEU', parameter_unit: '' },
+            { parameter_code: 'NIT', parameter_name: 'Nitrite', machine_parameter_code: 'NIT', parameter_unit: '' },
+            { parameter_code: 'PH', parameter_name: 'pH', machine_parameter_code: 'pH', parameter_unit: 'pH' },
+            { parameter_code: 'PRO', parameter_name: 'Protein', machine_parameter_code: 'PRO', parameter_unit: '' },
+            { parameter_code: 'GLU', parameter_name: 'Glucose', machine_parameter_code: 'GLU', parameter_unit: '' },
+            { parameter_code: 'KET', parameter_name: 'Ketone', machine_parameter_code: 'KET', parameter_unit: '' },
+            { parameter_code: 'UBG', parameter_name: 'Urobilinogen', machine_parameter_code: 'UBG', parameter_unit: '' },
+            { parameter_code: 'BIL', parameter_name: 'Bilirubin', machine_parameter_code: 'BIL', parameter_unit: '' },
+            { parameter_code: 'BLD', parameter_name: 'Blood', machine_parameter_code: 'BLD', parameter_unit: '' }
+          ]
+        },
+        {
+          test_code: 'UTI', test_name: 'UTI Screening', department: 'Clinical Pathology', sample_type: 'Urine',
+          parameters: [
+            { parameter_code: 'LEU', parameter_name: 'Leukocytes', machine_parameter_code: 'LEU', parameter_unit: '' },
+            { parameter_code: 'NIT', parameter_name: 'Nitrite', machine_parameter_code: 'NIT', parameter_unit: '' }
+          ]
+        },
+        {
+          test_code: 'DUS', test_name: 'Diabetes Urine Screening', department: 'Clinical Pathology', sample_type: 'Urine',
+          parameters: [
+            { parameter_code: 'GLU', parameter_name: 'Glucose', machine_parameter_code: 'GLU', parameter_unit: '' },
+            { parameter_code: 'KET', parameter_name: 'Ketone', machine_parameter_code: 'KET', parameter_unit: '' }
+          ]
+        },
+        {
+          test_code: 'KIDNEY', test_name: 'Kidney Screening', department: 'Clinical Pathology', sample_type: 'Urine',
+          parameters: [
+            { parameter_code: 'PRO', parameter_name: 'Protein', machine_parameter_code: 'PRO', parameter_unit: '' },
+            { parameter_code: 'SG', parameter_name: 'Specific Gravity', machine_parameter_code: 'SG', parameter_unit: '' },
+            { parameter_code: 'BLD', parameter_name: 'Blood', machine_parameter_code: 'BLD', parameter_unit: '' }
+          ]
+        },
+        {
+          test_code: 'LIVER', test_name: 'Liver Screening', department: 'Clinical Pathology', sample_type: 'Urine',
+          parameters: [
+            { parameter_code: 'UBG', parameter_name: 'Urobilinogen', machine_parameter_code: 'UBG', parameter_unit: '' },
+            { parameter_code: 'BIL', parameter_name: 'Bilirubin', machine_parameter_code: 'BIL', parameter_unit: '' }
+          ]
+        }
+      ],
+      'ALTA Hematology': [
+        {
+          test_code: 'CBC', test_name: 'Complete Blood Count (CBC)', department: 'Hematology', sample_type: 'Whole Blood',
+          parameters: [
+            { parameter_code: 'WBC', parameter_name: 'WBC', machine_parameter_code: '2006', parameter_unit: '10^3/µL' },
+            { parameter_code: 'NEU_PCT', parameter_name: 'NEU%', machine_parameter_code: '2007', parameter_unit: '%' },
+            { parameter_code: 'LYM_PCT', parameter_name: 'LYM%', machine_parameter_code: '2008', parameter_unit: '%' },
+            { parameter_code: 'MON_PCT', parameter_name: 'MON%', machine_parameter_code: '2009', parameter_unit: '%' },
+            { parameter_code: 'EOS_PCT', parameter_name: 'EOS%', machine_parameter_code: '2010', parameter_unit: '%' },
+            { parameter_code: 'BAS_PCT', parameter_name: 'BAS%', machine_parameter_code: '2011', parameter_unit: '%' },
+            { parameter_code: 'NEU_ABS', parameter_name: 'NEU#', machine_parameter_code: '2012', parameter_unit: '10^3/µL' },
+            { parameter_code: 'LYM_ABS', parameter_name: 'LYM#', machine_parameter_code: '2013', parameter_unit: '10^3/µL' },
+            { parameter_code: 'MON_ABS', parameter_name: 'MON#', machine_parameter_code: '2014', parameter_unit: '10^3/µL' },
+            { parameter_code: 'EOS_ABS', parameter_name: 'EOS#', machine_parameter_code: '2015', parameter_unit: '10^3/µL' },
+            { parameter_code: 'BAS_ABS', parameter_name: 'BAS#', machine_parameter_code: '2016', parameter_unit: '10^3/µL' },
+            { parameter_code: 'RBC', parameter_name: 'RBC', machine_parameter_code: '2017', parameter_unit: '10^6/µL' },
+            { parameter_code: 'HGB', parameter_name: 'HGB', machine_parameter_code: '2018', parameter_unit: 'g/dL' },
+            { parameter_code: 'MCV', parameter_name: 'MCV', machine_parameter_code: '2019', parameter_unit: 'fL' },
+            { parameter_code: 'HCT', parameter_name: 'HCT', machine_parameter_code: '2020', parameter_unit: '%' },
+            { parameter_code: 'MCH', parameter_name: 'MCH', machine_parameter_code: '2021', parameter_unit: 'pg' },
+            { parameter_code: 'MCHC', parameter_name: 'MCHC', machine_parameter_code: '2022', parameter_unit: 'g/dL' },
+            { parameter_code: 'RDW_SD', parameter_name: 'RDW-SD', machine_parameter_code: '2023', parameter_unit: 'fL' },
+            { parameter_code: 'RDW_CV', parameter_name: 'RDW-CV', machine_parameter_code: '2024', parameter_unit: '%' },
+            { parameter_code: 'PLT', parameter_name: 'PLT', machine_parameter_code: '2025', parameter_unit: '10^3/µL' },
+            { parameter_code: 'MPV', parameter_name: 'MPV', machine_parameter_code: '2026', parameter_unit: 'fL' },
+            { parameter_code: 'PCT', parameter_name: 'PCT', machine_parameter_code: '2027', parameter_unit: '%' },
+            { parameter_code: 'PDW', parameter_name: 'PDW', machine_parameter_code: '2028', parameter_unit: '%' },
+            { parameter_code: 'P_LCR', parameter_name: 'P-LCR', machine_parameter_code: '2029', parameter_unit: '%' },
+            { parameter_code: 'P_LCC', parameter_name: 'P-LCC', machine_parameter_code: '2030', parameter_unit: '10^3/µL' },
+            { parameter_code: 'CRP', parameter_name: 'CRP', machine_parameter_code: '2031', parameter_unit: 'mg/L' }
           ]
         }
       ]
@@ -1727,7 +1807,7 @@ export const getPendingVerifications = async (req, res) => {
       LEFT JOIN patients p ON b.patient_id = p.id
       LEFT JOIN users u ON tr.tested_by = u.id
 
-      WHERE ${statusFilter}
+      WHERE ${statusFilter} AND (p.reg_no NOT LIKE 'ANL-%' OR p.reg_no IS NULL)
 
       ORDER BY tr.tested_at DESC`,
       status && status !== 'all' ? [status] : []
@@ -1840,6 +1920,8 @@ export const verifyTest = async (req, res) => {
             p.gender,
             p.dob,
             p.telephone as patient_phone,
+            doc_user.phone as doctor_phone,
+            CONCAT(doc_user.first_name, ' ', doc_user.last_name) as doctor_name,
             CONCAT(ut.first_name, ' ', ut.last_name) as tested_by_name,
             CONCAT(uv.first_name, ' ', uv.last_name) as verified_by_name,
             i.name as lab_name
@@ -1847,6 +1929,9 @@ export const verifyTest = async (req, res) => {
           LEFT JOIN bill_items bi ON tr.sample_id = bi.sample_id
           LEFT JOIN bills b ON bi.bill_id = b.id
           LEFT JOIN patients p ON b.patient_id = p.id
+          LEFT JOIN doctor_lab_orders dlo ON dlo.test_id = bi.test_id AND dlo.patient_reg_no = p.reg_no
+          LEFT JOIN doctors doc_ref ON dlo.doctor_id = doc_ref.id
+          LEFT JOIN users doc_user ON doc_ref.user_id = doc_user.id
           LEFT JOIN users ut ON tr.tested_by = ut.id
           LEFT JOIN users uv ON tr.verified_by = uv.id
           LEFT JOIN infrastructure i ON bi.lab_id = i.id
@@ -1857,8 +1942,9 @@ export const verifyTest = async (req, res) => {
         
         if (rows && rows.length > 0) {
           const report = rows[0];
-          if (report.patient_phone) {
-             let formattedPhone = report.patient_phone.replace(/[^0-9]/g, '');
+          // We prioritize the doctor's phone, but if not available (e.g. unsolicited tests), we silently skip or fallback based on preference
+          if (report.doctor_phone) {
+             let formattedPhone = report.doctor_phone.replace(/[^0-9]/g, '');
              if (formattedPhone.length === 10) formattedPhone = '91' + formattedPhone;
              
              let results = [];
@@ -1926,9 +2012,9 @@ export const verifyTest = async (req, res) => {
                
                const msgData = JSON.stringify({
                  phone: formattedPhone,
-                 text: `🏥 *HIMS Lab Report*\nHello ${report.patient_name}, your ${report.test_name || 'Lab'} result has been verified and approved by ${report.verified_by_name || 'the Doctor'}.\n\nPlease find your secure Lab Report attached below.\n\n🔒 *Password to open:* ${report.patient_reg_no}`,
+                 text: `🏥 *HIMS Lab Report Alert*\nHello Dr. ${report.doctor_name || 'Doctor'},\n\nA new lab report for your patient *${report.patient_name || 'Unknown'}* (${report.patient_reg_no || 'N/A'}) is ready.\n\n*Test:* ${report.test_name || 'Lab Test'}\n*Verified by:* ${report.verified_by_name || 'N/A'}\n\nPlease find the PDF attached below.`,
                  media: base64Pdf,
-                 filename: `${(report.test_name || 'Lab_Report').replace(/[^a-zA-Z0-9]/g, '_')}.pdf`
+                 filename: `${(report.test_name || 'Lab_Report').replace(/[^a-zA-Z0-9]/g, '_')}_${report.patient_name || 'Patient'}.pdf`
                });
                
                const botUrl = new URL(process.env.WHATSAPP_BOT_URL || 'http://localhost:3000');
@@ -2293,5 +2379,149 @@ export const getMachineProtocol = async (req, res) => {
   } catch (error) {
     console.error('Error fetching machine protocol:', error);
     res.status(404).json({ success: false, message: 'Protocol not found for this model' });
+  }
+};
+
+// Create an unsolicited worklist entry for analyzer results that don't match an active test
+export const createUnsolicitedWorklist = async (req, res) => {
+  const connection = await db.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    const { sample_id, patient_name, test_name } = req.body;
+
+    if (!sample_id) {
+      return res.status(400).json({ success: false, message: 'Sample ID is required' });
+    }
+
+    // Check if it already exists
+    const [existing] = await connection.query(`SELECT id FROM bill_items WHERE sample_id = ?`, [sample_id]);
+    if (existing.length > 0) {
+      // Return existing
+      const [rows] = await connection.query(`
+        SELECT bi.id as bill_item_id, b.id as bill_id, p.id as patient_id,
+          CONCAT(p.first_name, ' ', p.last_name) as patient_name,
+          lt.id as test_id, lt.test_name, bi.sample_id, bi.short_id, bi.status
+        FROM bill_items bi JOIN bills b ON bi.bill_id = b.id JOIN patients p ON b.patient_id = p.id
+        LEFT JOIN lab_tests lt ON bi.service_id = lt.id WHERE bi.sample_id = ? LIMIT 1
+      `, [sample_id]);
+      await connection.commit();
+      return res.json({ success: true, test: rows[0] });
+    }
+
+    // 1. Check for or create a "Dummy" patient
+    const pName = patient_name || 'Analyzer Patient';
+    let patientId;
+    const [pts] = await connection.query(`SELECT id FROM patients WHERE first_name = ? LIMIT 1`, ['Analyzer']);
+    if (pts.length > 0) {
+      patientId = pts[0].id;
+    } else {
+      const regNo = `ANL-${Date.now()}`;
+      const [insPt] = await connection.query(`
+        INSERT INTO patients (reg_no, reg_date, first_name, last_name, telephone, gender) 
+        VALUES (?, NOW(), 'Analyzer', ?, '0000000000', 'Other')`, [regNo, pName]);
+      patientId = insPt.insertId;
+    }
+
+    // 2. Find a generic lab test for the analyzer
+    let testId = null;
+    let tName = test_name || 'Unmapped Analyzer Test';
+    const [tests] = await connection.query(`SELECT id, test_name FROM lab_tests WHERE test_name = ? OR test_name = 'Unmapped Analyzer Test' LIMIT 1`, [tName]);
+    if (tests.length > 0) {
+      testId = tests[0].id;
+      tName = tests[0].test_name;
+    } else {
+      const tCode = `UNM-${Date.now().toString().slice(-6)}`;
+      const [cats] = await connection.query('SELECT id FROM lab_categories LIMIT 1');
+      const catId = cats.length > 0 ? cats[0].id : 1;
+      const [insT] = await connection.query(`INSERT INTO lab_tests (test_code, test_name, category_id, sample_type, price) VALUES (?, ?, ?, 'Serum', 0)`, [tCode, tName, catId]);
+      testId = insT.insertId;
+    }
+
+    // 3. Create Bill
+    const date = new Date().toISOString().split('T')[0].replace(/-/g, '');
+    const [billCount] = await connection.query('SELECT COUNT(*) as count FROM bills WHERE DATE(created_at) = CURDATE()');
+    const billNumber = `BILL-${date}-${(billCount[0].count + 1).toString().padStart(4, '0')}`;
+    const [billResult] = await connection.query(
+      `INSERT INTO bills (patient_id, bill_number, total_amount, payment_status, created_at, updated_at) VALUES (?, ?, 0, 'Paid', NOW(), NOW())`,
+      [patientId, billNumber]
+    );
+    const billId = billResult.insertId;
+
+    // 4. Create Bill Item
+    const shortId = sample_id.slice(-4);
+    const [biResult] = await connection.query(
+      `INSERT INTO bill_items (bill_id, service_type, service_id, service_name, unit_price, total_price, status, sample_id, short_id, created_at, updated_at)
+       VALUES (?, 'Laboratory', ?, ?, 0, 0, 'In Progress', ?, ?, NOW(), NOW())`,
+      [billId, testId, tName, sample_id, shortId]
+    );
+
+    await connection.commit();
+
+    const newTest = {
+      bill_item_id: biResult.insertId,
+      bill_id: billId,
+      patient_id: patientId,
+      patient_name: `Analyzer ${pName}`,
+      test_id: testId,
+      test_name: tName,
+      sample_id: sample_id,
+      short_id: shortId,
+      status: 'In Progress'
+    };
+
+    res.json({ success: true, test: newTest });
+  } catch (error) {
+    await connection.rollback();
+    console.error('Error creating unsolicited worklist:', error);
+    res.status(500).json({ success: false, message: 'Server error creating unsolicited worklist' });
+  } finally {
+    connection.release();
+  }
+};
+
+
+export const mapUnmappedTest = async (req, res) => {
+  const connection = await db.getConnection();
+  try {
+    const { sample_id, patient_reg_no } = req.body;
+    if (!sample_id || !patient_reg_no) {
+      return res.status(400).json({ success: false, message: 'Sample ID and Patient CRN are required.' });
+    }
+
+    await connection.beginTransaction();
+
+    // 1. Find the real patient by CRN
+    const [realPatients] = await connection.query(`SELECT id, CONCAT(first_name, ' ', last_name) as name, telephone FROM patients WHERE reg_no = ? LIMIT 1`, [patient_reg_no]);
+    if (realPatients.length === 0) {
+      await connection.rollback();
+      return res.status(404).json({ success: false, message: 'Patient not found with that CRN.' });
+    }
+    const realPatient = realPatients[0];
+
+    // 2. Find the bill item to get the bill_id and test_id
+    const [billItems] = await connection.query(`SELECT bill_id, service_id as test_id FROM bill_items WHERE sample_id = ? LIMIT 1`, [sample_id]);
+    if (billItems.length === 0) {
+      await connection.rollback();
+      return res.status(404).json({ success: false, message: 'Test not found for that Sample ID.' });
+    }
+    const billId = billItems[0].bill_id;
+
+    // 3. Update the bills table to the real patient
+    await connection.query(`UPDATE bills SET patient_id = ? WHERE id = ?`, [realPatient.id, billId]);
+
+    // 4. Update lab_test_result (if it exists) to the real patient
+    await connection.query(`UPDATE lab_test_result SET patient_id = ? WHERE sample_id = ?`, [realPatient.id, sample_id]);
+
+    await connection.commit();
+
+    res.json({ success: true, message: 'Patient successfully mapped.', patient: realPatient.name });
+
+  } catch (error) {
+    await connection.rollback();
+    console.error('Error mapping unsolicited test:', error);
+    res.status(500).json({ success: false, message: 'Server error mapping test.' });
+  } finally {
+    connection.release();
   }
 };

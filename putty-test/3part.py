@@ -19,7 +19,7 @@ from matplotlib.figure import Figure
 import numpy as np
 
 # ── CONFIG ────────────────────────────────────────────────────────────────────
-PORT    = "COM19"
+PORT    = "/dev/tty.usbserial-310"
 BAUD    = 115200
 TIMEOUT = 1
 

@@ -1,3 +1,4 @@
+#HDC-LYTE PRO
 import serial
 import re
 from datetime import datetime
@@ -16,7 +17,7 @@ from reportlab.platypus.flowables import HRFlowable
 # ==========================================
 # SERIAL CONFIGURATION
 # ==========================================
-PORT = 'COM22'
+PORT = '/dev/tty.usbserial-FTB6SPL3'
 BAUD_RATE = 9600
 
 # ==========================================

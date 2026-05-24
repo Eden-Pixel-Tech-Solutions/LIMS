@@ -11,9 +11,12 @@ export default function Dashboard() {
     const [testResults, setTestResults] = useState([]);
     const [showPicker, setShowPicker] = useState(false);
 
+    const [localIp, setLocalIp] = useState("");
+
     // Incoming data from serialManager
     useEffect(() => {
         fetchMachines();
+        window.electronAPI.getLocalIp().then(setLocalIp);
         const cleanup = window.electronAPI.onTestCompleted((data) => {
             console.log("Test Completed Data:", data);
             setTestResults(prev => [data, ...prev]);
@@ -75,6 +78,9 @@ export default function Dashboard() {
                     <h1 style={{ fontSize: '28px', fontWeight: '900', color: '#0f172a', margin: 0 }}>Laboratory Dashboard</h1>
                     <p style={{ color: '#64748b', marginTop: '4px' }}>
                         {selectedMachine ? `Connected to ${selectedMachine.unique_id} (${selectedMachine.model})` : 'No analyzer selected'}
+                    </p>
+                    <p style={{ color: '#2563eb', fontWeight: '600', marginTop: '4px', fontSize: '14px' }}>
+                        LIS Server IP (for Wi-Fi Analyzers): {localIp}
                     </p>
                 </div>
 

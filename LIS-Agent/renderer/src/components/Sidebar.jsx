@@ -18,6 +18,7 @@ const Sidebar = () => {
     { name: 'Dashboard', path: '/dashboard', icon: '📊' },
     { name: 'Worklist', path: '/worklist', icon: '📋' },
     { name: 'Sample List', path: '/sample-list', icon: '🧪' },
+    { name: 'Edit Results', path: '/edit-results', icon: '✏️' },
     { name: 'Activity Logs', path: '/logs', icon: '📝' },
     { name: 'Inventory', path: '/inventory', icon: '📦' },
     { name: 'Machine Setup', path: '/setup', icon: '🛠️' },

@@ -35,7 +35,8 @@ export async function sendWhatsAppMessage(phone, text, media = null, filename = 
   };
 
   if (media) {
-    payload.media = media;
+    // Ensure we send raw base64 to whatsapp-web.js without the data URI scheme
+    payload.media = media.replace(/^data:([A-Za-z-+/]+);base64,/, '');
     payload.filename = filename || 'document.pdf';
   }
 

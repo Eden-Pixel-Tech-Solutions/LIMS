@@ -6,6 +6,7 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:7005';
 const LabVerification = () => {
   const [tests, setTests] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [selectedTest, setSelectedTest] = useState(null);
   const [verificationNote, setVerificationNote] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
@@ -18,14 +19,18 @@ const LabVerification = () => {
   const fetchPendingVerifications = async () => {
     try {
       setLoading(true);
+      setError(null);
       const url = `${API_BASE}/api/lab/pending-verifications${filterStatus !== 'all' ? `?status=${filterStatus}` : ''}`;
       const res = await fetch(url);
       const data = await res.json();
       if (data.success) {
         setTests(data.tests || []);
+      } else {
+        setError(data.message || 'Failed to load tests');
       }
-    } catch (error) {
-      console.error('Error fetching tests:', error);
+    } catch (err) {
+      console.error('Error fetching tests:', err);
+      setError('Connection error: Could not reach the server.');
     } finally {
       setLoading(false);
     }
@@ -135,6 +140,8 @@ const LabVerification = () => {
 
       {loading ? (
         <div className="loading">Loading tests...</div>
+      ) : error ? (
+        <div className="error-message" style={{ color: 'red', textAlign: 'center', padding: '20px' }}>{error}</div>
       ) : (
         <div className="tests-table-container">
           <table className="tests-table">

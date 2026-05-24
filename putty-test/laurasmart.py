@@ -1,9 +1,10 @@
+#Laura Smart
 import serial
 
 # ==========================================
 # SERIAL CONFIGURATION
 # ==========================================
-PORT = 'COM19'
+PORT = '/dev/tty.usbserial-FTB6SPL3'
 BAUD_RATE = 19200
 
 # ==========================================

@@ -8,13 +8,18 @@ import express from 'express';
 dotenv.config();
 
 const app = express();
-app.use(express.json());
-const PORT = process.env.BOT_PORT || 3005;
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
+const PORT = process.env.BOT_PORT || 3000;
+
+app.listen(PORT, () => {
+    console.log(`Chatbot API listening on port ${PORT}`);
+});
 
 const client = new Client({
     authStrategy: new LocalAuth(),
     puppeteer: {
-        headless: true,
+        headless: false,
         args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
@@ -35,9 +40,6 @@ client.on('qr', (qr) => {
 
 client.on('ready', () => {
     console.log('Meril LIS Chatbot is READY!');
-    app.listen(PORT, () => {
-        console.log(`Chatbot API listening on port ${PORT}`);
-    });
 });
 
 app.post('/send-report', async (req, res) => {
@@ -54,6 +56,34 @@ app.post('/send-report', async (req, res) => {
     } catch (error) {
         console.error('Error sending WhatsApp:', error);
         res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// API endpoint to send WhatsApp messages (with optional media)
+app.post('/send-message', async (req, res) => {
+    const { phone, text, media, filename } = req.body;
+
+    if (!phone) {
+        return res.status(400).send('Phone number is required!');
+    }
+
+    if (!client.info) {
+        return res.status(503).send('WhatsApp bot is not ready.');
+    }
+
+    const chatId = phone.includes('@c.us') ? phone : `${phone}@c.us`;
+
+    try {
+        if (media) {
+            const messageMedia = new MessageMedia('application/pdf', media, filename || 'document.pdf');
+            await client.sendMessage(chatId, messageMedia, { caption: text });
+        } else {
+            await client.sendMessage(chatId, text);
+        }
+        res.send('Message sent successfully!');
+    } catch (err) {
+        console.error('WhatsApp send error:', err);
+        res.status(500).send('Failed to send message: ' + err.message);
     }
 });
 

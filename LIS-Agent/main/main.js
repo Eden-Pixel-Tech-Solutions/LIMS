@@ -1,11 +1,15 @@
 const { app, BrowserWindow, ipcMain } = require("electron");
 const path = require("path");
+const os = require("os");
 const { SerialPort } = require('serialport');
 const axios = require('axios');
 const db = require("../db/sqlite");
 const serialManager = require("./serialManager");
+const tcpManager = require("./tcpManager");
 
 let win;
+
+
 
 function createWindow() {
   console.log("Creating window...");
@@ -132,22 +136,44 @@ app.whenReady().then(() => {
   });
 
   ipcMain.handle('start-listening', async (event, testInfo) => {
-    // With background listening, we just re-sync if needed, 
-    // but the background service handles the rest.
+    // If the user clicked "Run Test" from the Lab Worklist UI, 
+    // it sends testInfo which we use to lock the machine to that sample ID.
+    if (testInfo && testInfo.machineId) {
+      serialManager.setManualContext(testInfo);
+      if (tcpManager.setManualContext) tcpManager.setManualContext(testInfo);
+    }
+    await tcpManager.initializeAllServers(win);
     return await serialManager.initializeAllPorts(win);
   });
 
   ipcMain.handle('stop-listening', async () => {
+    await tcpManager.stopListening();
     return await serialManager.stopListening();
   });
 
   ipcMain.handle('get-active-ports', async () => {
-    return Array.from(serialManager.activePorts.keys());
+    const serialPorts = Array.from(serialManager.activePorts.keys());
+    const tcpPorts = Array.from(tcpManager.activeClients.keys());
+    return [...serialPorts, ...tcpPorts];
+  });
+
+  ipcMain.handle('get-local-ip', async () => {
+    const interfaces = os.networkInterfaces();
+    for (const name of Object.keys(interfaces)) {
+      for (const iface of interfaces[name]) {
+        // Skip over internal (i.e. 127.0.0.1) and non-IPv4 addresses
+        if (iface.family === 'IPv4' && !iface.internal) {
+          return iface.address;
+        }
+      }
+    }
+    return '127.0.0.1';
   });
 
   // Sync machines on boot and start background listeners
   syncMachines().then(() => {
     serialManager.initializeAllPorts(win);
+    tcpManager.initializeAllServers(win);
   });
 
   createWindow();

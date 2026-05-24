@@ -36,7 +36,9 @@ import {
   getHospitalCode,
   getMachineProtocol,
   getActivityLogs,
-  mapAnalyzerTests
+  mapAnalyzerTests,
+  createUnsolicitedWorklist,
+  mapUnmappedTest
 } from '../controllers/labController.js';
 import {
   getLabMachines,
@@ -87,6 +89,8 @@ router.post('/generate-parameters', generateTestParameters);
 // Lab Worklist & Sample Collection Routes
 router.get('/worklist', getWorklist);
 router.get('/worklist-by-id/:id', getWorklistById);
+router.post('/unsolicited-worklist', createUnsolicitedWorklist);
+router.post('/map-unmapped-test', mapUnmappedTest);
 router.post('/generate-sample-id', generateSampleId);
 router.post('/acknowledge-test', acknowledgeTest);
 router.post('/update-test-status', updateTestStatus);

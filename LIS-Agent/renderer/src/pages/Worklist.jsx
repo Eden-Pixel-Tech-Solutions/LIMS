@@ -17,6 +17,7 @@ const Worklist = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [departmentFilter, setDepartmentFilter] = useState('all');
   const [isFetchingParams, setIsFetchingParams] = useState(false);
+  const [selectedParams, setSelectedParams] = useState([]);
   const barcodeRef = useRef(null);
 
   const API_BASE = 'http://localhost:7005';
@@ -37,12 +38,28 @@ const Worklist = () => {
   }, [printLabel]);
 
   useEffect(() => {
-    const cleanup = window.electronAPI.onTestCompleted((data) => {
+    const cleanupTest = window.electronAPI.onTestCompleted((data) => {
       if (showProcessModal) {
         setIncomingResults(prev => [...prev, data]);
       }
     });
-    return cleanup;
+    const cleanupPanel = window.electronAPI.onPanelComplete(async (data) => {
+      if (showProcessModal) {
+        // Fetch saved results for the panel and populate incomingResults
+        try {
+          const res = await axios.get(`${API_BASE}/api/lab/test-results/${data.sampleId}`);
+          if (res.data.success) {
+            setIncomingResults(res.data.results);
+          }
+        } catch (err) {
+          console.error("Error fetching completed panel results:", err);
+        }
+      }
+    });
+    return () => {
+      cleanupTest();
+      cleanupPanel();
+    };
   }, [showProcessModal]);
 
   const fetchWorklist = async () => {
@@ -119,7 +136,7 @@ const Worklist = () => {
         const mappedParams = res.data.parameters.map(p => {
           let machineId = null;
 
-          if (protocol && protocol.frame_structure["2"] && protocol.frame_structure["2"].tests) {
+          if (protocol && protocol.frame_structure && protocol.frame_structure["2"] && protocol.frame_structure["2"].tests) {
             // Try matching by name (case-insensitive)
             const match = protocol.frame_structure["2"].tests.find(
               mt => mt.name.toLowerCase() === p.parameter_name.toLowerCase() ||
@@ -183,6 +200,34 @@ const Worklist = () => {
     setCurrentMachine(null);
     setIncomingResults([]);
     fetchWorklist();
+  };
+
+  const handleSaveEdits = async () => {
+    if (!activeItem || incomingResults.length === 0) return;
+    try {
+      const payload = {
+        sample_id: activeItem.sample_id,
+        machine_no: currentMachine?.unique_id,
+        bill_item_id: activeItem.bill_item_id,
+        test_id: activeItem.test_id,
+        test_name: activeItem.test_name,
+        results: incomingResults
+      };
+      const res = await axios.post(`${API_BASE}/api/lab/save-test-results`, payload);
+      if (res.data.success) {
+        alert("Results updated successfully!");
+        handleCloseProcess();
+      }
+    } catch (err) {
+      console.error("Error saving edited results:", err);
+      alert("Failed to save edited results.");
+    }
+  };
+
+  const handleResultChange = (index, value) => {
+    const newResults = [...incomingResults];
+    newResults[index].result_value = value;
+    setIncomingResults(newResults);
   };
 
   const handlePrint = () => {
@@ -392,21 +437,38 @@ const Worklist = () => {
                         background: res.flag === 'H' ? 'rgba(239, 68, 68, 0.05)' : res.flag === 'L' ? 'rgba(59, 130, 246, 0.05)' : 'transparent'
                       }}>
                         <span style={{ color: res.flag === 'H' ? '#ef4444' : res.flag === 'L' ? '#3b82f6' : '#38bdf8' }}>
-                          {res.test_name} {res.flag && res.flag !== 'N' ? `(${res.flag})` : ''}
+                          {res.parameter_name || res.test_name} {res.flag && res.flag !== 'N' ? `(${res.flag})` : ''}
                         </span>
-                        <span style={{
-                          color: res.flag === 'H' ? '#ef4444' : res.flag === 'L' ? '#3b82f6' : '#fff',
-                          fontWeight: '800'
-                        }}>
-                          {res.result_value} {res.unit}
-                        </span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <input 
+                            type="text" 
+                            value={res.result_value} 
+                            onChange={(e) => handleResultChange(i, e.target.value)}
+                            style={{ 
+                              background: 'transparent', 
+                              border: '1px solid #334155', 
+                              color: res.flag === 'H' ? '#ef4444' : res.flag === 'L' ? '#3b82f6' : '#fff', 
+                              fontWeight: '800',
+                              padding: '4px 8px',
+                              borderRadius: '4px',
+                              width: '80px',
+                              textAlign: 'right'
+                            }} 
+                          />
+                          <span style={{ color: '#94a3b8' }}>{res.unit}</span>
+                        </div>
                       </div>
                     ))
                   )}
                 </div>
-                <button onClick={handleCloseProcess} style={{ width: '100%', marginTop: '20px', padding: '16px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '16px', fontWeight: '800', cursor: 'pointer' }}>
-                  Complete & Close Session
-                </button>
+                <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
+                  <button onClick={handleSaveEdits} style={{ flex: 1, padding: '16px', background: '#10b981', color: 'white', border: 'none', borderRadius: '16px', fontWeight: '800', cursor: 'pointer' }}>
+                    Save Edits
+                  </button>
+                  <button onClick={handleCloseProcess} style={{ flex: 1, padding: '16px', background: '#334155', color: 'white', border: 'none', borderRadius: '16px', fontWeight: '800', cursor: 'pointer' }}>
+                    Close Session
+                  </button>
+                </div>
               </div>
             </div>
           </div>

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const API_BASE = 'http://localhost:7005';
 
@@ -16,6 +16,7 @@ export default function Setup() {
     const [searchSerial, setSearchSerial] = useState('');
 
     const navigate = useNavigate();
+    const location = useLocation();
 
     // Form State
     const [formData, setFormData] = useState({
@@ -23,8 +24,8 @@ export default function Setup() {
         uniqueId: '',
         labId: '',
         labName: '',
-        manufacturer: '',
-        model: '',
+        manufacturer: location.state?.prefill?.brand || '',
+        model: location.state?.prefill?.model || '',
         portType: 'USB',
         port: '',
         baudRate: '9600'
@@ -34,14 +35,21 @@ export default function Setup() {
         'Meril': ['CliniQuant Micro', 'CelQuant Edge', 'CelQuant Micro', 'AutoQuant 200i', 'Quantirase'],
         'Sysmex': ['XP-100', 'XN-350', 'XN-550', 'KX-21'],
         'Agape': ['Mispa Viva', 'Mispa i2', 'Mispa i3', 'Mispa CC'],
-        'HDC India': ['HDC-Lyte Plus'],
-        'Erba Mannheim': ['LAURA Smart']
+        'HDC India': ['HDC-Lyte Plus', 'HDC-LYTE PRO'],
+        'Erba Mannheim': ['LAURA Smart'],
+        'Athenese Dx': ['ALTA Hematology']
     };
 
     const baudRates = ["1200", "2400", "4800", "9600", "19200", "38400", "57600", "115200"];
 
+    const [localIp, setLocalIp] = useState('');
+
     useEffect(() => {
+        if (location.state?.prefill) {
+            setShowAddForm(true);
+        }
         fetchInitialData();
+        window.electronAPI.getLocalIp().then(setLocalIp);
 
         // Listen for real-time status changes
         if (window.electronAPI && window.electronAPI.onDeviceStatus) {
@@ -50,7 +58,7 @@ export default function Setup() {
             });
             return cleanup;
         }
-    }, []);
+    }, [location]);
 
     const refreshStatus = async () => {
         if (window.electronAPI && window.electronAPI.getActivePorts) {
@@ -62,6 +70,13 @@ export default function Setup() {
     const fetchInitialData = async () => {
         try {
             const configs = await window.electronAPI.getConfig();
+            
+            // Redirect to onboarding if no machines exist and we didn't just come from onboarding
+            if ((!configs || configs.length === 0) && !location.state?.prefill) {
+                navigate('/onboarding');
+                return;
+            }
+            
             setSavedMachines(Array.isArray(configs) ? configs : []);
 
             const branch_id = localStorage.getItem('branch_id') || '1';
@@ -348,7 +363,9 @@ export default function Setup() {
 
                         <div>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                                <label style={{ fontWeight: '700', color: '#1e293b' }}>Port / IP</label>
+                                <label style={{ fontWeight: '700', color: '#1e293b' }}>
+                                    {formData.portType === 'TCP' ? 'Listening Port' : 'Port'}
+                                </label>
                                 {formData.portType === 'USB' && (
                                     <button
                                         onClick={async (e) => {
@@ -372,7 +389,13 @@ export default function Setup() {
                                     ))}
                                 </select>
                             ) : (
-                                <input type="text" placeholder="192.168.1.100:5000" value={formData.port} onChange={(e) => setFormData({ ...formData, port: e.target.value })} style={{ width: '100%', padding: '14px', borderRadius: '12px', border: '1.5px solid #e2e8f0', boxSizing: 'border-box' }} />
+                                <div>
+                                    <div style={{ fontSize: '13px', color: '#64748b', marginBottom: '8px', padding: '10px', background: '#f8fafc', borderRadius: '8px', border: '1px dashed #cbd5e1' }}>
+                                        <strong>LIS Server IP:</strong> {localIp}<br/>
+                                        <span style={{ fontSize: '11px' }}>(Enter this IP and the port below into your Wi-Fi analyzer)</span>
+                                    </div>
+                                    <input type="text" placeholder="e.g. 9527" value={formData.port} onChange={(e) => setFormData({ ...formData, port: e.target.value })} style={{ width: '100%', padding: '14px', borderRadius: '12px', border: '1.5px solid #e2e8f0', boxSizing: 'border-box' }} />
+                                </div>
                             )}
                         </div>
 

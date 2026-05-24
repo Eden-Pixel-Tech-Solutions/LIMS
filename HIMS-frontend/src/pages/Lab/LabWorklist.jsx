@@ -46,6 +46,9 @@ export default function LabWorklist() {
   const [printLabel, setPrintLabel] = useState(null);
   const [viewResults, setViewResults] = useState(null);
   const [testResults, setTestResults] = useState([]);
+  const [mappingTest, setMappingTest] = useState(null);
+  const [mapCRN, setMapCRN] = useState('');
+  const [mapLoading, setMapLoading] = useState(false);
   const barcodeRef = useRef(null);
   const printLabelRef = useRef(null);
 
@@ -215,6 +218,38 @@ export default function LabWorklist() {
     } catch (error) {
       console.error('Error acknowledging test:', error);
       alert('Failed to acknowledge test. Please try again.');
+    }
+  };
+
+  const handleMapPatient = async () => {
+    if (!mapCRN) {
+      alert("Please enter a CRN to map the patient.");
+      return;
+    }
+    setMapLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/lab/map-unmapped-test`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sample_id: mappingTest.sample_id,
+          patient_reg_no: mapCRN
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert(`Successfully mapped to patient: ${data.patient}`);
+        setMappingTest(null);
+        setMapCRN('');
+        refreshWorklist();
+      } else {
+        alert(data.message || 'Failed to map patient.');
+      }
+    } catch (error) {
+      console.error('Error mapping patient:', error);
+      alert('Error mapping patient. Please check CRN and try again.');
+    } finally {
+      setMapLoading(false);
     }
   };
 
@@ -431,7 +466,15 @@ export default function LabWorklist() {
                         </div>
                       </td>
                       <td>
-                        {item.status === 'Pending' ? (
+                        {item.reg_no && item.reg_no.startsWith('ANL-') ? (
+                          <button
+                            className="btn-primary"
+                            onClick={() => { setMappingTest(item); }}
+                            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', background: '#eab308', borderColor: '#eab308' }}
+                          >
+                            Map Patient
+                          </button>
+                        ) : item.status === 'Pending' ? (
                           <button
                             className="acknowledge-btn"
                             onClick={() => handleAcknowledge(item)}
@@ -528,6 +571,42 @@ export default function LabWorklist() {
               </button>
               <button className="close-btn" onClick={() => setViewResults(null)}>
                 ✕ Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Map Patient Modal */}
+      {mappingTest && (
+        <div className="print-preview-overlay" onClick={() => setMappingTest(null)}>
+          <div className="results-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '400px' }}>
+            <h3>🔗 Map to Patient</h3>
+            <div style={{ marginTop: '16px', marginBottom: '24px' }}>
+              <p style={{ fontSize: '14px', color: '#64748b', marginBottom: '16px' }}>
+                Enter the existing patient's CRN (Registration Number) to link this test result.
+              </p>
+              <div className="form-group">
+                <label className="field-label">Patient CRN</label>
+                <input
+                  type="text"
+                  className="field-input"
+                  placeholder="e.g. CRN-2023-001"
+                  value={mapCRN}
+                  onChange={(e) => setMapCRN(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="preview-actions">
+              <button 
+                className="btn-primary" 
+                onClick={handleMapPatient}
+                disabled={mapLoading}
+              >
+                {mapLoading ? 'Mapping...' : 'Confirm Mapping'}
+              </button>
+              <button className="close-btn" onClick={() => { setMappingTest(null); setMapCRN(''); }}>
+                Cancel
               </button>
             </div>
           </div>
