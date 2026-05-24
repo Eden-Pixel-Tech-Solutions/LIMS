@@ -4,6 +4,7 @@ import path from "path";
 
 export default defineConfig({
   root: path.resolve(__dirname), // 🔥 important
+  base: './', // 🔥 EXTREMELY important for Electron file:// protocol
   plugins: [react()],
   resolve: {
     alias: {
