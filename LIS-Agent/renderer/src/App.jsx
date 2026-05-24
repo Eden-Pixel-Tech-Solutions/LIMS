@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { HashRouter, Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
 import Setup from "./pages/Setup";
 import Onboarding from "./pages/Onboarding";
@@ -18,7 +18,7 @@ import KyroSetupCliniQuant from "./pages/KyroSetupCliniQuant";
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/onboarding" element={<Onboarding />} />
@@ -38,6 +38,6 @@ export default function App() {
         <Route path="/demos/5part" element={<Layout><MERILIYZERMICRO /></Layout>} />
         <Route path="/setup/cliniquant" element={<Layout><KyroSetupCliniQuant /></Layout>} />
       </Routes>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
