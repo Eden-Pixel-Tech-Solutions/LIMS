@@ -18,12 +18,10 @@
       "output": "release"
     },
     "win": {
-      "target": ["nsis"],
-      "icon": "renderer/src/assets/img/meril.png"
+      "target": ["nsis"]
     },
     "mac": {
-      "target": ["dmg"],
-      "icon": "renderer/src/assets/img/meril.png"
+      "target": ["dmg"]
     },
     "files": [
       "main/**/*",
