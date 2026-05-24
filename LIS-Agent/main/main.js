@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require("electron");
+const { app, BrowserWindow, ipcMain, Tray, Menu, nativeImage } = require("electron");
 const path = require("path");
 const os = require("os");
 const { SerialPort } = require('serialport');
@@ -8,6 +8,7 @@ const serialManager = require("./serialManager");
 const tcpManager = require("./tcpManager");
 
 let win;
+let tray = null;
 
 
 
@@ -31,6 +32,51 @@ function createWindow() {
     win.loadURL("http://localhost:5173");
     win.webContents.openDevTools(); // 🔥 important for debugging
   }
+
+  // Hide to tray instead of closing
+  win.on('close', (event) => {
+    if (!app.isQuitting) {
+      event.preventDefault();
+      win.hide();
+    }
+  });
+}
+
+function createTray() {
+  const iconPath = path.join(__dirname, "../build/icon.png");
+  const icon = nativeImage.createFromPath(iconPath).resize({ width: 16, height: 16 });
+  tray = new Tray(icon);
+
+  const contextMenu = Menu.buildFromTemplate([
+    {
+      label: 'Show Meril LIMS',
+      click: () => {
+        if (win) {
+          win.show();
+          win.focus();
+        }
+      }
+    },
+    { type: 'separator' },
+    {
+      label: '🔴 Quit',
+      click: () => {
+        app.isQuitting = true;
+        app.quit();
+      }
+    }
+  ]);
+
+  tray.setToolTip('Meril LIMS — Listening for analyzers...');
+  tray.setContextMenu(contextMenu);
+
+  // Double-click tray icon to restore window
+  tray.on('double-click', () => {
+    if (win) {
+      win.show();
+      win.focus();
+    }
+  });
 }
 
 async function syncMachines() {
@@ -181,8 +227,15 @@ app.whenReady().then(() => {
   });
 
   createWindow();
+  createTray();
 });
 
+// Prevent app from quitting when all windows are closed — keep alive in tray
 app.on("window-all-closed", () => {
-  console.log("All windows closed");
+  // Do NOT quit — stay alive in system tray for 24x7 listening
+  console.log("Window hidden. Listeners still running in background.");
+});
+
+app.on('before-quit', () => {
+  app.isQuitting = true;
 });
