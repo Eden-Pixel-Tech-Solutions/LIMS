@@ -14,6 +14,7 @@ import Layout from "./components/Layout";
 import Demos from "./pages/Demos";
 import MERILIYZERMICRO from "./pages/merilyxermicro";
 import EditResults from "./pages/EditResults";
+import KyroSetupCliniQuant from "./pages/KyroSetupCliniQuant";
 
 export default function App() {
   return (
@@ -35,7 +36,7 @@ export default function App() {
         <Route path="/demos/micro" element={<Layout><MERILIYZERMICRO /></Layout>} />
         <Route path="/demos/3part" element={<Layout><MERILIYZERMICRO /></Layout>} />
         <Route path="/demos/5part" element={<Layout><MERILIYZERMICRO /></Layout>} />
-
+        <Route path="/setup/cliniquant" element={<Layout><KyroSetupCliniQuant /></Layout>} />
       </Routes>
     </BrowserRouter>
   );

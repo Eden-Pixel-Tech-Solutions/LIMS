@@ -237,18 +237,31 @@ export default function Setup() {
             </header>
 
             {!showAddForm ? (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '24px' }}>
-                    {savedMachines.map((m) => (
-                        <div key={m.id} style={{ background: 'white', padding: '24px', borderRadius: '16px', border: '1.5px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
-                                <div style={{ display: 'flex', gap: '8px' }}>
-                                    <span style={{ padding: '4px 10px', background: '#eff6ff', color: '#2563eb', borderRadius: '6px', fontSize: '10px', fontWeight: '900', border: '1px solid #dbeafe' }}>CLOUD SYNCED</span>
-                                    {activePorts.includes(m.port) ? (
-                                        <span style={{ padding: '4px 10px', background: '#ecfdf5', color: '#059669', borderRadius: '6px', fontSize: '10px', fontWeight: '900', border: '1px solid #d1fae5' }}>ONLINE</span>
-                                    ) : (
-                                        <span style={{ padding: '4px 10px', background: '#fef2f2', color: '#ef4444', borderRadius: '6px', fontSize: '10px', fontWeight: '900', border: '1px solid #fee2e2' }}>OFFLINE</span>
-                                    )}
-                                </div>
+                <>
+                    <div style={{ marginBottom: '30px' }}>
+                        <div 
+                            style={{ background: 'linear-gradient(135deg, #1b5cb4 0%, #2563eb 100%)', padding: '20px', borderRadius: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', color: 'white', boxShadow: '0 4px 15px rgba(37, 99, 235, 0.2)' }}
+                            onClick={() => navigate('/setup/cliniquant')}
+                        >
+                            <div>
+                                <h3 style={{ margin: 0, fontSize: '20px', fontWeight: '700' }}>Kyro AI Guided Setup</h3>
+                                <p style={{ margin: '4px 0 0 0', opacity: 0.9, fontSize: '14px' }}>Interactive visual setup for CliniQuant Micro Analyzer</p>
+                            </div>
+                            <div style={{ background: 'rgba(255,255,255,0.2)', padding: '10px 20px', borderRadius: '8px', fontWeight: '600' }}>Start Setup →</div>
+                        </div>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '24px' }}>
+                        {savedMachines.map((m) => (
+                            <div key={m.id} style={{ background: 'white', padding: '24px', borderRadius: '16px', border: '1.5px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
+                                    <div style={{ display: 'flex', gap: '8px' }}>
+                                        <span style={{ padding: '4px 10px', background: '#eff6ff', color: '#2563eb', borderRadius: '6px', fontSize: '10px', fontWeight: '900', border: '1px solid #dbeafe' }}>CLOUD SYNCED</span>
+                                        {activePorts.includes(m.port) ? (
+                                            <span style={{ padding: '4px 10px', background: '#ecfdf5', color: '#059669', borderRadius: '6px', fontSize: '10px', fontWeight: '900', border: '1px solid #d1fae5' }}>ONLINE</span>
+                                        ) : (
+                                            <span style={{ padding: '4px 10px', background: '#fef2f2', color: '#ef4444', borderRadius: '6px', fontSize: '10px', fontWeight: '900', border: '1px solid #fee2e2' }}>OFFLINE</span>
+                                        )}
+                                    </div>
                                 <div style={{ display: 'flex', gap: '10px' }}>
                                     <button
                                         onClick={() => {
@@ -292,6 +305,7 @@ export default function Setup() {
                         </div>
                     )}
                 </div>
+                </>
             ) : (
                 <div style={{ background: 'white', padding: '32px', borderRadius: '24px', border: '1px solid #e2e8f0', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.1)' }}>
 

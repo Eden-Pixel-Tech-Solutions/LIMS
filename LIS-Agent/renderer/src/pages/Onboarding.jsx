@@ -31,59 +31,70 @@ const DIALOGUE = {
   }
 };
 
+import hinWelcomeMp3 from '../assets/mp3/hin-welcome.mp3';
+import hinNextMp3 from '../assets/mp3/hin-next.mp3';
+
 export default function Onboarding() {
   const [step, setStep] = useState(0); // 0: Start, 1: Select Multiple, 2: Queue
   const [lang, setLang] = useState('en');
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [selected, setSelected] = useState([]);
-  const [voices, setVoices] = useState([]);
   const navigate = useNavigate();
-  const synth = window.speechSynthesis;
+  
+  const audioRef = useRef(null);
 
+  // Clean up audio on unmount
   useEffect(() => {
-    const loadVoices = () => setVoices(synth.getVoices());
-    loadVoices();
-    if (synth.onvoiceschanged !== undefined) {
-      synth.onvoiceschanged = loadVoices;
-    }
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+    };
   }, []);
 
-  const speak = (text, langCode) => {
-    synth.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    
-    // Try to find a matching voice for the language
-    const langPrefix = langCode === 'hi' ? 'hi' : 'en';
-    let voice = voices.find(v => v.lang.startsWith(langPrefix) && (v.name.includes('Google') || v.name.includes('Premium')));
-    if (!voice) {
-      voice = voices.find(v => v.lang.startsWith(langPrefix));
+  const speak = (type) => {
+    let src = null;
+    if (type === 'welcome') src = hinWelcomeMp3;
+    if (type === 'next') src = hinNextMp3;
+
+    if (src) {
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+      const audio = new Audio(src);
+      audioRef.current = audio;
+      
+      audio.onplay = () => setIsSpeaking(true);
+      audio.onended = () => setIsSpeaking(false);
+      audio.onerror = (e) => {
+        console.error("Audio error", e);
+        setIsSpeaking(false);
+      };
+      
+      audio.play().catch(e => {
+        console.error("Audio playback failed", e);
+        setIsSpeaking(false);
+      });
     }
-    if (voice) utterance.voice = voice;
-    
-    // Slow down Hindi slightly for better clarity
-    utterance.rate = langCode === 'hi' ? 0.9 : 1.0;
-    
-    utterance.onstart = () => setIsSpeaking(true);
-    utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = () => setIsSpeaking(false);
-    
-    synth.speak(utterance);
   };
 
   const startExperience = () => {
     setStep(1);
-    speak(DIALOGUE[lang].welcome, lang);
+    speak('welcome');
   };
 
   const handleContinue = () => {
     if (selected.length === 0) return;
     setStep(2);
-    speak(DIALOGUE[lang].next, lang);
+    speak('next');
   };
 
   const handleSelectAnalyzer = (machine) => {
-    // Navigate to setup and pass the prefilled data
-    navigate('/setup', { state: { prefill: machine } });
+    if (machine.model === 'CliniQuant Micro') {
+      navigate('/setup/cliniquant', { state: { prefill: machine } });
+    } else {
+      navigate('/setup', { state: { prefill: machine } });
+    }
   };
 
   const toggleSelection = (machine) => {

@@ -7,11 +7,30 @@
   "scripts": {
     "dev": "concurrently \"vite --config renderer/vite.config.js\" \"wait-on http://localhost:5173 && electron .\"",
     "start": "electron .",
-    "build": "vite build"
+    "build:ui": "vite build --config renderer/vite.config.js",
+    "dist:win": "npm run build:ui && electron-builder --win",
+    "dist:mac": "npm run build:ui && electron-builder --mac"
+  },
+  "build": {
+    "appId": "com.poxiatechnologies.lisagent",
+    "productName": "LIS Agent",
+    "directories": {
+      "output": "release"
+    },
+    "win": {
+      "target": ["nsis"]
+    },
+    "mac": {
+      "target": ["dmg"]
+    },
+    "files": [
+      "main/**/*",
+      "dist/**/*",
+      "package.json"
+    ]
   },
   "dependencies": {
     "axios": "^1.16.0",
-    "electron": "^41.5.0",
     "jsbarcode": "^3.12.3",
     "lucide-react": "^1.14.0",
     "react": "^19.2.5",
@@ -23,6 +42,8 @@
   "devDependencies": {
     "@vitejs/plugin-react": "^5.0.0",
     "concurrently": "^9.2.1",
+    "electron": "^41.5.0",
+    "electron-builder": "^26.8.1",
     "vite": "^8.0.10",
     "wait-on": "^9.0.5"
   }
