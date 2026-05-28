@@ -1331,9 +1331,14 @@ export const acknowledgeTest = async (req, res) => {
     // Automated WhatsApp Notification: Ping the NEXT two patients in line
     try {
       const [nextPatientsResult] = await db.query(
-        `SELECT b.patient_name, b.patient_phone, b.id as bill_id, MIN(i.name) as lab_name
-         FROM bill_items bi
-         JOIN bills b ON bi.bill_id = b.id
+        `SELECT 
+        b.patient_name,
+        p.phone as patient_phone,
+        b.id as bill_id,
+        MIN(i.name) as lab_name
+        FROM bill_items bi
+        JOIN bills b ON bi.bill_id = b.id
+        JOIN patients p ON b.patient_id = p.id
          LEFT JOIN infrastructure i ON bi.lab_id = i.id
          WHERE bi.service_type = 'Laboratory' 
            AND bi.status = 'Pending' 
@@ -2067,6 +2072,7 @@ export const verifyTest = async (req, res) => {
 };
 
 // Get approved reports for download
+// Get approved reports for download
 export const getApprovedReports = async (req, res) => {
   try {
     const { search, from, to } = req.query;
@@ -2081,6 +2087,7 @@ export const getApprovedReports = async (req, res) => {
         tr.verified_by,
         CONCAT(p.first_name, ' ', p.last_name) as patient_name,
         p.reg_no as patient_reg_no,
+        p.telephone as patient_phone,
         CONCAT(u.first_name, ' ', u.last_name) as verified_by_name
       FROM lab_test_result tr
       LEFT JOIN patients p ON tr.patient_id = p.id
@@ -2097,6 +2104,7 @@ export const getApprovedReports = async (req, res) => {
         p.last_name LIKE ? OR 
         tr.test_name LIKE ?
       )`;
+
       const searchTerm = `%${search}%`;
       params.push(searchTerm, searchTerm, searchTerm, searchTerm);
     }
@@ -2123,6 +2131,7 @@ export const getApprovedReports = async (req, res) => {
 
   } catch (error) {
     console.error('Error fetching approved reports:', error);
+
     res.status(500).json({
       success: false,
       message: 'Server error fetching approved reports'

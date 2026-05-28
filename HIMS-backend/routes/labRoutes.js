@@ -50,6 +50,7 @@ import {
   deleteLabMachine
 } from '../controllers/labMachineController.js';
 import { generateTestParameters } from '../controllers/aiController.js';
+import { sendWhatsAppMessage } from '../services/whatsappService.js';
 
 const router = express.Router();
 
@@ -114,6 +115,49 @@ router.get('/approved-reports', getApprovedReports);
 router.get('/report-details/:sampleId', getReportDetails);
 router.get('/generate-report-pdf/:sampleId', generateLabReportPDF);
 router.get('/activity-logs', getActivityLogs);
+
+// WhatsApp Report Share Route
+router.post('/whatsapp-send-report', async (req, res) => {
+  const { sampleId, phone, patientName, testName } = req.body;
+
+  if (!sampleId || !phone) {
+    return res.status(400).json({ success: false, message: 'sampleId and phone are required' });
+  }
+
+  try {
+    // Normalize phone number
+    let normalizedPhone = phone.replace(/[\s\-\+]/g, '');
+    if (normalizedPhone.length === 10) normalizedPhone = '91' + normalizedPhone;
+
+    // Fetch PDF from own generate endpoint (internal call)
+    const BACKEND_URL = process.env.BACKEND_INTERNAL_URL || 'http://localhost:7005';
+    const pdfRes = await fetch(`${BACKEND_URL}/api/lab/generate-report-pdf/${sampleId}`);
+    if (!pdfRes.ok) throw new Error('Failed to generate PDF for WhatsApp');
+
+    const pdfBuffer = await pdfRes.arrayBuffer();
+    const base64 = Buffer.from(pdfBuffer).toString('base64');
+
+    const caption = [
+      `🏥 *JHARKHAND STATE DIAGNOSTIC SERVICES*`,
+      `Powered by *Merilyzer LIS*`,
+      ``,
+      `✅ *Report Ready!*`,
+      `👤 *Patient:* ${patientName || 'Patient'}`,
+      `🔬 *Test:* ${testName || 'Lab Test'}`,
+      `🆔 *Sample ID:* ${sampleId}`,
+      ``,
+      `_Please find your lab report attached as PDF._`,
+      `_Thank you for choosing Meril HIMS._`
+    ].join('\n');
+
+    await sendWhatsAppMessage(normalizedPhone, caption, base64, `lab-report-${sampleId}.pdf`);
+
+    res.json({ success: true, message: 'Report sent on WhatsApp successfully' });
+  } catch (err) {
+    console.error('WhatsApp send report error:', err.message);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
 
 // Hospital Code for Machine ID
 router.get('/hospital-code/:userId', getHospitalCode);

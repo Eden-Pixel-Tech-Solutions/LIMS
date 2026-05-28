@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import '../../assets/CSS/Hospitals.css';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:7005';
+const API_BASE = import.meta.env.VITE_API_URL || '';
 
 // ─── Role / Auth Helpers ─────────────────────────────────────────────────────
 const roleLevel = () => localStorage.getItem('role_level') || 'Central';

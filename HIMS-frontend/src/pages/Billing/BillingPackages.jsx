@@ -4,7 +4,7 @@ import { useAlert } from '../../hooks/useAlert';
 import '../../assets/CSS/PatientRegistration.css';
 import '../../assets/CSS/BillingPackages.css';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:7005';
+const API_BASE = import.meta.env.VITE_API_URL || '';
 
 const DEFAULT_ITEMS = [
   { name: 'Consultation Fee', amount: 0 },

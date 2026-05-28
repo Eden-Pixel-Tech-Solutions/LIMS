@@ -5,7 +5,7 @@ import { ScheduleDutyModal } from './ScheduleDutyModal';   // ← new modal
 import '../../assets/CSS/DutyScheduler.css';
 import '../../assets/CSS/ScheduleDutyModal.css';                          // ← new styles
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:7005';
+const API_BASE = import.meta.env.VITE_API_URL || '';
 
 const DutyScheduler = () => {
   const { alert, showAlert, hideAlert } = useAlert();

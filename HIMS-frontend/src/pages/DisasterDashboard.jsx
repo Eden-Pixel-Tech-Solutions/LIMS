@@ -15,7 +15,7 @@ const DisasterDashboard = () => {
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:7005';
+  const API_URL = import.meta.env.VITE_API_URL || '';
 
   const fetchData = async () => {
     setLoading(true);

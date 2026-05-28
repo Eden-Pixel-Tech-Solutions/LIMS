@@ -14,7 +14,7 @@ import {
   FileText
 } from 'lucide-react';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:7005';
+const API_BASE = import.meta.env.VITE_API_URL || '';
 
 const statusColors = {
   Paid: { bg: '#dcfce7', color: '#166534', dot: '#16a34a' },

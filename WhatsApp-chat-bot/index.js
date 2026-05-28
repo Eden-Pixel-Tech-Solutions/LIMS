@@ -10,7 +10,7 @@ dotenv.config();
 const app = express();
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
-const PORT = process.env.BOT_PORT || 3000;
+const PORT = process.env.BOT_PORT || 3005;
 
 app.listen(PORT, () => {
     console.log(`Chatbot API listening on port ${PORT}`);
@@ -19,7 +19,8 @@ app.listen(PORT, () => {
 const client = new Client({
     authStrategy: new LocalAuth(),
     puppeteer: {
-        headless: false,
+        headless: true,
+        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/google-chrome-stable',
         args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
@@ -27,8 +28,11 @@ const client = new Client({
             '--disable-accelerated-2d-canvas',
             '--no-first-run',
             '--no-zygote',
-            '--single-process', // <- this one can help on some systems
-            '--disable-gpu'
+            '--disable-gpu',
+            '--disable-software-rasterizer',
+            '--disable-extensions',
+            '--disable-default-apps',
+            '--mute-audio'
         ],
     }
 });
@@ -103,7 +107,6 @@ client.on('message', async msg => {
     if (sender.length === 12 && sender.startsWith('91')) {
         sender = sender.slice(-10);
     }
-    // If it's 10 digits, keep it. If it's something else, we log it.
 
     console.log('--- NEW MESSAGE ---');
     console.log(`From: ${msg.from}`);
@@ -127,7 +130,9 @@ Please reply with the number:
 (Get your most recent approved test)
 
 2️⃣ *View All Previous Reports*
-(See your full history &  3️⃣ *My Profile Details*
+(See your full history)
+
+3️⃣ *My Profile Details*
 (Check your registration info)
 
 4️⃣ *Test Preparation & FAQ*

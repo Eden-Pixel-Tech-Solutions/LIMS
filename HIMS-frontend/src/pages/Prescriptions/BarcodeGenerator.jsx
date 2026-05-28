@@ -11,7 +11,7 @@ const BarcodeGenerator = () => {
     const [barcodes, setBarcodes] = useState([]);
     const [loading, setLoading] = useState(false);
 
-    const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:7005';
+    const API_BASE = import.meta.env.VITE_API_URL || '';
 
     const generateBarcodes = async () => {
         try {

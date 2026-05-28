@@ -8,11 +8,14 @@ import {
   Eye, 
   Download, 
   Printer, 
-  X 
+  X,
+  MessageCircle,
+  Send,
+  Phone
 } from 'lucide-react';
 import '../../assets/CSS/LabReportDownload.css';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://172.16.11.160:5000';
+const API_BASE = import.meta.env.VITE_API_URL || '';
 
 const LabReportDownload = () => {
   const [reports, setReports] = useState([]);
@@ -23,6 +26,12 @@ const LabReportDownload = () => {
   const [reportDetails, setReportDetails] = useState(null);
   const printRef = useRef(null);
 
+  // WhatsApp share state
+  const [waModal, setWaModal] = useState(null);
+  const [waSending, setWaSending] = useState(false);
+  const [waStatus, setWaStatus] = useState(null); // 'success' | 'error' | null
+  const [waMessage, setWaMessage] = useState('');
+
   useEffect(() => {
     fetchApprovedReports();
   }, []);
@@ -32,9 +41,7 @@ const LabReportDownload = () => {
       setLoading(true);
       const res = await fetch(`${API_BASE}/api/lab/approved-reports`);
       const data = await res.json();
-      if (data.success) {
-        setReports(data.reports || []);
-      }
+      if (data.success) setReports(data.reports || []);
     } catch (error) {
       console.error('Error fetching reports:', error);
     } finally {
@@ -47,20 +54,13 @@ const LabReportDownload = () => {
       setLoading(true);
       let url = `${API_BASE}/api/lab/approved-reports`;
       const params = new URLSearchParams();
-
       if (searchQuery) params.append('search', searchQuery);
       if (dateRange.from) params.append('from', dateRange.from);
       if (dateRange.to) params.append('to', dateRange.to);
-
-      if (params.toString()) {
-        url += `?${params.toString()}`;
-      }
-
+      if (params.toString()) url += `?${params.toString()}`;
       const res = await fetch(url);
       const data = await res.json();
-      if (data.success) {
-        setReports(data.reports || []);
-      }
+      if (data.success) setReports(data.reports || []);
     } catch (error) {
       console.error('Error searching reports:', error);
     } finally {
@@ -100,7 +100,7 @@ const LabReportDownload = () => {
               .section { margin-bottom: 24px; }
               .section-title { font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 700; color: #1d4ed8; background: #eff6ff; padding: 8px 12px; margin-bottom: 15px; border-left: 4px solid #3b82f6; text-transform: uppercase; letter-spacing: 0.1em; }
               .info-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
-              .info-row { display: flex; flexDirection: column; gap: 4px; }
+              .info-row { display: flex; flex-direction: column; gap: 4px; }
               .info-label { font-family: 'IBM Plex Mono', monospace; font-size: 9px; font-weight: 600; color: #94a3b8; text-transform: uppercase; }
               .info-value { font-size: 13px; color: #0f172a; font-weight: 600; }
               table { width: 100%; border-collapse: collapse; margin-top: 10px; }
@@ -120,32 +120,23 @@ const LabReportDownload = () => {
               .signature-box { text-align: center; }
               .signature-line { border-top: 1px solid #94a3b8; width: 200px; margin-top: 40px; padding-top: 8px; font-size: 11px; color: #64748b; font-weight: 600; text-transform: uppercase; }
               .report-footer-note { text-align: center; margin-top: 30px; font-size: 11px; color: #94a3b8; font-family: 'IBM Plex Mono', monospace; border-top: 1px dashed #e2e8f0; padding-top: 15px; }
-              @media print {
-                body { margin: 0; }
-                .no-print { display: none; }
-              }
+              @media print { body { margin: 0; } .no-print { display: none; } }
             </style>
           </head>
           <body>
-            <div class="report-preview">
-              ${printRef.current.innerHTML}
-            </div>
+            <div class="report-preview">${printRef.current.innerHTML}</div>
           </body>
         </html>
       `);
       printWindow.document.close();
-      setTimeout(() => {
-        printWindow.print();
-      }, 500);
+      setTimeout(() => { printWindow.print(); }, 500);
     }
   };
 
   const handleDownloadPDF = async (sampleId) => {
     try {
       const res = await fetch(`${API_BASE}/api/lab/generate-report-pdf/${sampleId}`);
-      if (!res.ok) {
-        throw new Error('Failed to generate PDF');
-      }
+      if (!res.ok) throw new Error('Failed to generate PDF');
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -161,19 +152,96 @@ const LabReportDownload = () => {
     }
   };
 
+  const handlePrintRealPDF = async (sampleId) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/lab/generate-report-pdf/${sampleId}`);
+      if (!res.ok) throw new Error('Failed to generate PDF');
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      iframe.src = url;
+      document.body.appendChild(iframe);
+      iframe.onload = () => {
+        setTimeout(() => {
+          iframe.contentWindow.print();
+          setTimeout(() => {
+            document.body.removeChild(iframe);
+            window.URL.revokeObjectURL(url);
+          }, 1000);
+        }, 100);
+      };
+    } catch (error) {
+      console.error('Error printing PDF:', error);
+      alert('Failed to print PDF. Please try again.');
+    }
+  };
+
+  // ── WhatsApp Share ─────────────────────────────────────────
+  const openWhatsAppModal = (report) => {
+    setWaModal({
+      sampleId: report.sample_id,
+      patientName: report.patient_name,
+      testName: report.test_name,
+      phone: report.patient_phone || report.telephone || ''
+    });
+    setWaStatus(null);
+    setWaMessage('');
+  };
+
+  const handleSendWhatsApp = async () => {
+    if (!waModal.phone) {
+      setWaStatus('error');
+      setWaMessage('Patient phone number not available in database.');
+      return;
+    }
+
+    setWaSending(true);
+    setWaStatus(null);
+    setWaMessage('');
+
+    try {
+      // Normalize phone
+      let phone = waModal.phone.replace(/[\s\-\+]/g, '');
+      if (phone.length === 10) phone = '91' + phone;
+
+      // Call backend — backend handles PDF fetch + WhatsApp send internally
+      const sendRes = await fetch(`${API_BASE}/api/lab/whatsapp-send-report`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sampleId: waModal.sampleId,
+          phone,
+          patientName: waModal.patientName,
+          testName: waModal.testName
+        })
+      });
+
+      const data = await sendRes.json();
+      if (!sendRes.ok) throw new Error(data.message || 'Failed to send');
+
+      setWaStatus('success');
+      setWaMessage(`Report sent to ${waModal.phone} on WhatsApp successfully!`);
+    } catch (err) {
+      console.error('WhatsApp send error:', err);
+      setWaStatus('error');
+      setWaMessage(err.message || 'Failed to send. Is the WhatsApp bot running?');
+    } finally {
+      setWaSending(false);
+    }
+  };
+
+  // ──────────────────────────────────────────────────────────
+
   const formatDate = (dateStr) => {
     if (!dateStr) return '-';
     return new Date(dateStr).toLocaleDateString('en-IN', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric'
+      day: '2-digit', month: 'short', year: 'numeric'
     });
   };
 
   const getFlagClass = (result) => {
     let flag = (result.result_flag || 'normal').toLowerCase();
-    
-    // Auto-calculate if normal
     if ((flag === 'normal' || flag === 'n' || !flag) && result.reference_range && result.result_value !== undefined) {
       const val = parseFloat(result.result_value);
       const range = result.reference_range;
@@ -199,31 +267,23 @@ const LabReportDownload = () => {
   const formatDateTime = (dateStr) => {
     if (!dateStr) return '-';
     return new Date(dateStr).toLocaleString('en-IN', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+      day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
     });
   };
 
   const handleExportCSV = () => {
     if (reports.length === 0) return;
-
     const headers = ['Sample ID', 'Patient Name', 'Test Name', 'Tested Date', 'Approved Date'];
     const csvRows = [headers.join(',')];
-
     reports.forEach(report => {
-      const row = [
+      csvRows.push([
         report.sample_id,
         `"${report.patient_name}"`,
         `"${report.test_name}"`,
         formatDate(report.tested_at),
         formatDate(report.verified_at)
-      ];
-      csvRows.push(row.join(','));
+      ].join(','));
     });
-
     const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -237,11 +297,9 @@ const LabReportDownload = () => {
 
   const handleDownloadAllPDFs = async () => {
     if (reports.length === 0) return;
-    if (!window.confirm(`Are you sure you want to download ${reports.length} reports as PDF? Your browser may ask for permission to download multiple files.`)) return;
-
+    if (!window.confirm(`Are you sure you want to download ${reports.length} reports as PDF?`)) return;
     for (const report of reports) {
       await handleDownloadPDF(report.sample_id);
-      // Add a small delay to prevent browser blocking
       await new Promise(resolve => setTimeout(resolve, 800));
     }
   };
@@ -269,19 +327,11 @@ const LabReportDownload = () => {
           </div>
           <div className="filter-group">
             <label>From Date</label>
-            <input
-              type="date"
-              value={dateRange.from}
-              onChange={(e) => setDateRange({ ...dateRange, from: e.target.value })}
-            />
+            <input type="date" value={dateRange.from} onChange={(e) => setDateRange({ ...dateRange, from: e.target.value })} />
           </div>
           <div className="filter-group">
             <label>To Date</label>
-            <input
-              type="date"
-              value={dateRange.to}
-              onChange={(e) => setDateRange({ ...dateRange, to: e.target.value })}
-            />
+            <input type="date" value={dateRange.to} onChange={(e) => setDateRange({ ...dateRange, to: e.target.value })} />
           </div>
           <button className="search-btn" onClick={handleSearch} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Search size={16} /> Search
@@ -334,9 +384,18 @@ const LabReportDownload = () => {
                     <td>{report.test_name}</td>
                     <td className="date-cell">{formatDate(report.tested_at)}</td>
                     <td className="date-cell">{formatDate(report.verified_at)}</td>
-                    <td>
-                      <button className="view-btn" onClick={() => handleViewReport(report)} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <Eye size={14} /> View / Download
+                    <td style={{ display: 'flex', gap: '6px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                      <button className="view-btn" onClick={() => handleViewReport(report)} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Eye size={14} /> View
+                      </button>
+                      <button className="view-btn" onClick={() => handleDownloadPDF(report.sample_id)} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#3b82f6', color: 'white', border: 'none' }}>
+                        <Download size={14} /> Download
+                      </button>
+                      <button className="view-btn" onClick={() => handlePrintRealPDF(report.sample_id)} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#10b981', color: 'white', border: 'none' }}>
+                        <Printer size={14} /> Print
+                      </button>
+                      <button className="view-btn" onClick={() => openWhatsAppModal(report)} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#25d366', color: 'white', border: 'none' }}>
+                        <MessageCircle size={14} /> WhatsApp
                       </button>
                     </td>
                   </tr>
@@ -347,7 +406,94 @@ const LabReportDownload = () => {
         </div>
       )}
 
-      {/* Report Preview Modal */}
+      {/* ── WhatsApp Share Modal ──────────────────────────────── */}
+      {waModal && createPortal(
+        <div className="modal-overlay" onClick={() => { setWaModal(null); setWaStatus(null); }}>
+          <div className="report-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '480px' }}>
+            <div className="modal-header" style={{ background: '#075e54' }}>
+              <h2 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <MessageCircle size={18} /> Share Report on WhatsApp
+              </h2>
+              <div className="modal-actions">
+                <button className="close-modal-btn" onClick={() => { setWaModal(null); setWaStatus(null); }}>
+                  <X size={18} />
+                </button>
+              </div>
+            </div>
+
+            <div style={{ padding: '28px 28px 24px' }}>
+              {/* Report summary */}
+              <div style={{ background: '#f0fdf4', border: '1px solid #86efac', borderRadius: '10px', padding: '14px 16px', marginBottom: '22px' }}>
+                <div style={{ fontSize: '11px', fontWeight: 700, color: '#166534', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>Report Summary</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                  <div>
+                    <div style={{ fontSize: '9px', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Sample ID</div>
+                    <div style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a', fontFamily: 'monospace' }}>{waModal.sampleId}</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '9px', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Patient</div>
+                    <div style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a' }}>{waModal.patientName}</div>
+                  </div>
+                  <div style={{ gridColumn: '1 / -1' }}>
+                    <div style={{ fontSize: '9px', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Test</div>
+                    <div style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>{waModal.testName}</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Status feedback */}
+              {waStatus === 'success' && (
+                <div style={{ background: '#f0fdf4', border: '1.5px solid #86efac', borderRadius: '10px', padding: '12px 16px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span style={{ fontSize: '20px' }}>✅</span>
+                  <span style={{ fontSize: '13px', color: '#166534', fontWeight: 600 }}>{waMessage}</span>
+                </div>
+              )}
+              {waStatus === 'error' && (
+                <div style={{ background: '#fff1f2', border: '1.5px solid #fda4af', borderRadius: '10px', padding: '12px 16px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span style={{ fontSize: '20px' }}>❌</span>
+                  <span style={{ fontSize: '13px', color: '#881337', fontWeight: 600 }}>{waMessage}</span>
+                </div>
+              )}
+
+              {/* Action buttons */}
+              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                <button
+                  onClick={() => { setWaModal(null); setWaStatus(null); }}
+                  style={{ padding: '10px 20px', borderRadius: '9999px', border: '1.5px solid #e2e8f0', background: '#f8fafc', color: '#475569', fontWeight: 600, fontSize: '13px', cursor: 'pointer' }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSendWhatsApp}
+                  disabled={waSending}
+                  style={{
+                    padding: '10px 24px', borderRadius: '9999px', border: 'none',
+                    background: waSending ? '#a7f3d0' : '#25d366',
+                    color: 'white', fontWeight: 700, fontSize: '13px',
+                    cursor: waSending ? 'not-allowed' : 'pointer',
+                    display: 'flex', alignItems: 'center', gap: '8px',
+                    boxShadow: '0 4px 14px rgba(37,211,102,0.3)',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  {waSending ? (
+                    <>
+                      <span style={{ display: 'inline-block', width: '14px', height: '14px', border: '2px solid white', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+                      Sending...
+                    </>
+                  ) : (
+                    <><Send size={14} /> Send via WhatsApp</>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        </div>,
+        document.body
+      )}
+
+      {/* ── Report Preview Modal ──────────────────────────────── */}
       {selectedReport && reportDetails && createPortal(
         <div className="modal-overlay" onClick={() => setSelectedReport(null)}>
           <div className="report-modal" onClick={e => e.stopPropagation()}>
@@ -356,6 +502,12 @@ const LabReportDownload = () => {
               <div className="modal-actions">
                 <button className="download-btn" onClick={() => handleDownloadPDF(reportDetails?.sample_id)} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <Download size={16} /> Download PDF
+                </button>
+                <button
+                  onClick={() => { setSelectedReport(null); openWhatsAppModal(selectedReport); }}
+                  style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '7px 16px', background: '#25d366', color: 'white', border: 'none', borderRadius: '9999px', fontFamily: 'Roboto, sans-serif', fontSize: '12.5px', fontWeight: 600, cursor: 'pointer' }}
+                >
+                  <MessageCircle size={14} /> WhatsApp
                 </button>
                 <button className="print-btn" onClick={handlePrint} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <Printer size={16} /> Print
@@ -367,7 +519,6 @@ const LabReportDownload = () => {
             </div>
 
             <div className="report-preview" ref={printRef}>
-              {/* Report Header */}
               <div className="report-header">
                 <div className="hospital-logo-placeholder">LIS</div>
                 <div className="hospital-info">
@@ -383,7 +534,6 @@ const LabReportDownload = () => {
                 </div>
               </div>
 
-              {/* Patient Info */}
               <div className="section">
                 <div className="section-title">Patient Demographics</div>
                 <div className="info-grid">
@@ -414,7 +564,6 @@ const LabReportDownload = () => {
                 </div>
               </div>
 
-              {/* Test Results */}
               <div className="section">
                 <div className="section-title">Clinical Findings</div>
                 <table className="results-table">
@@ -433,15 +582,11 @@ const LabReportDownload = () => {
                       return (
                         <tr key={idx}>
                           <td style={{ fontWeight: 500 }}>{result.parameter_name}</td>
-                          <td className={`result-value ${flagClass}`}>
-                            {result.result_value}
-                          </td>
+                          <td className={`result-value ${flagClass}`}>{result.result_value}</td>
                           <td style={{ fontFamily: 'IBM Plex Mono' }}>{result.unit}</td>
                           <td style={{ color: '#64748b', fontSize: '12px' }}>{result.reference_range}</td>
                           <td>
-                            <span className={`flag-badge ${flagClass}`}>
-                              {flagClass.toUpperCase()}
-                            </span>
+                            <span className={`flag-badge ${flagClass}`}>{flagClass.toUpperCase()}</span>
                           </td>
                         </tr>
                       );
@@ -450,7 +595,6 @@ const LabReportDownload = () => {
                 </table>
               </div>
 
-              {/* Notes */}
               {reportDetails.notes && (
                 <div className="section">
                   <div className="section-title">Clinical Notes</div>
@@ -458,28 +602,27 @@ const LabReportDownload = () => {
                 </div>
               )}
 
-              {/* Footer with Signatures */}
               <div className="footer">
                 <div className="audit-row">
                   <div className="audit-item">
                     <span className="info-label">Tested By:</span>
-                    <span className="info-value" style={{ fontSize: '12px' }}>{reportDetails.tested_by_name} <span style={{ color: '#94a3b8', fontWeight: 400 }}>({formatDateTime(reportDetails.tested_at)})</span></span>
+                    <span className="info-value" style={{ fontSize: '12px' }}>
+                      {reportDetails.tested_by_name}{' '}
+                      <span style={{ color: '#94a3b8', fontWeight: 400 }}>({formatDateTime(reportDetails.tested_at)})</span>
+                    </span>
                   </div>
                   <div className="audit-item">
                     <span className="info-label verified-by">Verified & Approved By:</span>
-                    <span className="info-value approved-by" style={{ fontSize: '12px' }}>{reportDetails.verified_by_name} <span style={{ color: '#94a3b8', fontWeight: 400 }}>({formatDateTime(reportDetails.verified_at)})</span></span>
+                    <span className="info-value approved-by" style={{ fontSize: '12px' }}>
+                      {reportDetails.verified_by_name}{' '}
+                      <span style={{ color: '#94a3b8', fontWeight: 400 }}>({formatDateTime(reportDetails.verified_at)})</span>
+                    </span>
                   </div>
                 </div>
-
                 <div className="signature-section">
-                  <div className="signature-box">
-                    <div className="signature-line">Lab Technician</div>
-                  </div>
-                  <div className="signature-box">
-                    <div className="signature-line">Pathologist / Lab Head</div>
-                  </div>
+                  <div className="signature-box"><div className="signature-line">Lab Technician</div></div>
+                  <div className="signature-box"><div className="signature-line">Pathologist / Lab Head</div></div>
                 </div>
-
                 <div className="report-footer-note">
                   <p>This is a computer-generated report verified digitally in the HIMS LIS system.</p>
                   <p>*** END OF REPORT ***</p>

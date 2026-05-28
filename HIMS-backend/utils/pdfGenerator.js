@@ -516,8 +516,9 @@ export async function generateLabReportPDFStream(reportData) {
   };
 
   if (reportData.patient_reg_no && reportData.patient_reg_no !== 'N/A') {
-    options.userPassword  = reportData.patient_reg_no;
-    options.ownerPassword = reportData.patient_reg_no;
+    // Password lock removed per user request
+    // options.userPassword  = reportData.patient_reg_no;
+    // options.ownerPassword = reportData.patient_reg_no;
   }
 
   const doc = new PDFDocument(options);

@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import '../assets/CSS/Dashboard.css';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:7005';
+const API_BASE = import.meta.env.VITE_API_URL || '';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 const fmt = (n) => new Intl.NumberFormat('en-IN').format(Math.round(n || 0));

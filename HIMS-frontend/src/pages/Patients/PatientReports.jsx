@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import '../../assets/CSS/LabWorklist.css';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:7005';
+const API_BASE = import.meta.env.VITE_API_URL || '';
 
 function PatientReports() {
   const [reports, setReports] = useState([]);

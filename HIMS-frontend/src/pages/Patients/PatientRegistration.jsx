@@ -29,7 +29,7 @@ function PatientRegistration() {
 
   const fetchLabName = async () => {
     try {
-      const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:7005';
+      const API_BASE = import.meta.env.VITE_API_URL || '';
       const res = await fetch(`${API_BASE}/api/infra?type=Lab&branch_id=${branchId}`);
       const data = await res.json();
       if (data.success && data.items.length > 0) {
@@ -80,7 +80,7 @@ function PatientRegistration() {
     if (!searchQuery.trim()) return;
     setIsSearching(true);
     try {
-      const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:7005';
+      const API_BASE = import.meta.env.VITE_API_URL || '';
       const res = await fetch(`${API_BASE}/api/patients/search?q=${encodeURIComponent(searchQuery)}`);
       const result = await res.json();
 

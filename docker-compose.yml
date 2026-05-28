@@ -1,63 +1,85 @@
 version: '3.8'
 
 services:
+
+  mysql:
+    image: mysql:8.0
+    container_name: hims_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: meril-hims
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
   backend:
     build:
       context: ./HIMS-backend
       dockerfile: Dockerfile
     container_name: hims_backend
+    restart: unless-stopped
     ports:
       - "7005:7005"
     environment:
-      - PORT=7005
-      # Use host.docker.internal to connect to the MySQL database running on your Mac host
-      - DB_HOST=host.docker.internal
-      - DB_USER=root
-      - DB_PASSWORD=root
-      - DB_NAME=meril-hims
-      - JWT_SECRET=super_secret_jwt_key_here
-      - SMTP_HOST=smtp.gmail.com
-      - SMTP_PORT=587
-      - SMTP_USER=jbstevejerald.official@gmail.com
-      - SMTP_PASS=yifkzyeetnlklhjz
-      - SMTP_FROM_NAME=LIS-mail
-      - WHATSAPP_BOT_URL=http://bot:3005
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    restart: unless-stopped
+      PORT: 7005
+      DB_HOST: mysql
+      DB_USER: root
+      DB_PASSWORD: rootpassword
+      DB_PORT: 3306
+      DB_NAME: meril-hims
+      JWT_SECRET: super_secret_jwt_key_here
+
+      SMTP_HOST: smtp.gmail.com
+      SMTP_PORT: 587
+      SMTP_USER: jbstevejerald.official@gmail.com
+      SMTP_PASS: yifkzyeetnlklhjz
+      SMTP_FROM_NAME: LIS-mail
+
+      WHATSAPP_BOT_URL: http://bot:3005
+
+    depends_on:
+      - mysql
 
   frontend:
     build:
       context: ./HIMS-frontend
       dockerfile: Dockerfile
-      args:
-        - VITE_API_URL=http://localhost:7005
     container_name: hims_frontend
+    restart: unless-stopped
     ports:
       - "5000:80"
     depends_on:
       - backend
-    restart: unless-stopped
 
   bot:
     build:
       context: ./WhatsApp-chat-bot
       dockerfile: Dockerfile
     container_name: hims_bot
+    restart: unless-stopped
     ports:
       - "3005:3005"
     environment:
-      - BOT_PORT=3005
-      - API_BASE_URL=http://backend:7005
-      - DB_HOST=host.docker.internal
-      - DB_USER=root
-      - DB_PASSWORD=root
-      - DB_NAME=meril-hims
+      BOT_PORT: 3005
+      API_BASE_URL: http://backend:7005
+
+      DB_HOST: mysql
+      DB_USER: root
+      DB_PASSWORD: rootpassword
+      DB_PORT: 3306
+      DB_NAME: meril-hims
+
+      PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: "false"
+
+    depends_on:
+      - backend
+      - mysql
+
     volumes:
       - ./WhatsApp-chat-bot/.wwebjs_auth:/app/.wwebjs_auth
       - ./WhatsApp-chat-bot/.wwebjs_cache:/app/.wwebjs_cache
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    depends_on:
-      - backend
-    restart: unless-stopped
+
+volumes:
+  mysql_data:

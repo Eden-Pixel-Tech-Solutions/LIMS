@@ -11,7 +11,7 @@ const PrescriptionScan = () => {
     const [proposedData, setProposedData] = useState(null);
     const [isFinalizing, setIsFinalizing] = useState(false);
 
-    const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:7005';
+    const API_BASE = import.meta.env.VITE_API_URL || '';
 
     const captureImage = async () => {
         const screenshot = webcamRef.current.getScreenshot();

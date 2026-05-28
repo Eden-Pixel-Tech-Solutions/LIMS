@@ -5,7 +5,7 @@ import { useAlert } from '../../hooks/useAlert';
 import JsBarcode from 'jsbarcode';
 import '../../assets/CSS/PatientRegistration.css';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:7005';
+const API_BASE = import.meta.env.VITE_API_URL || '';
 
 
 

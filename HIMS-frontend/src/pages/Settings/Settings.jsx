@@ -16,7 +16,7 @@ import {
 import Alert from '../../components/Alert';
 import { useAlert } from '../../hooks/useAlert';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:7005';
+const API_URL = import.meta.env.VITE_API_URL || '';
 
 function Settings() {
   const { alert, showAlert, hideAlert } = useAlert();

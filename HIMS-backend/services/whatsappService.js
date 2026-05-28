@@ -4,7 +4,7 @@
  * The bot must be running separately: cd WhatsApp-chat-bot && node server.js
  */
 
-const WHATSAPP_BOT_URL = process.env.WHATSAPP_BOT_URL || 'http://172.16.11.160:3000';
+const WHATSAPP_BOT_URL = process.env.WHATSAPP_BOT_URL || 'http://bot:3005';
 
 /**
  * Send a WhatsApp message via the local whatsapp-web.js bot.
