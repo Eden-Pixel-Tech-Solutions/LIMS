@@ -4,7 +4,7 @@ import socket
 import json
 
 HOST = "0.0.0.0"
-PORT = 9527
+PORT = 9528
 
 # HL7 control characters
 VT = b'\x0b'
