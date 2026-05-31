@@ -1107,54 +1107,28 @@ export const getWorklistById = async (req, res) => {
 // Generate sample ID sequence
 export const generateSampleId = async (req, res) => {
   try {
-    const { date, department } = req.body;
+    const { date } = req.body;
 
-    let startRange = 7000;
-    let endRange = 9999;
-    
-    if (department) {
-      const dep = department.toLowerCase();
-      if (dep.includes('hematology') || dep.includes('haematology')) {
-        startRange = 1;
-        endRange = 2999;
-      } else if (dep.includes('biochem')) {
-        startRange = 3000;
-        endRange = 4999;
-      } else if (dep.includes('serology') || dep.includes('microbiology') || dep.includes('pathology') || dep.includes('urine')) {
-        startRange = 5000;
-        endRange = 6999;
-      }
-    }
-
-    // Get max short_id for today within this specific range
     const [rows] = await db.query(
-      `SELECT MAX(CAST(short_id AS UNSIGNED)) as max_seq 
+      `SELECT COUNT(*) as total
        FROM bill_items 
-       WHERE DATE(created_at) = CURDATE() 
-       AND CAST(short_id AS UNSIGNED) >= ? 
-       AND CAST(short_id AS UNSIGNED) <= ?`,
-      [startRange, endRange]
+       WHERE DATE(created_at) = CURDATE()
+       AND service_type = 'Laboratory'
+       AND short_id IS NOT NULL`
     );
 
-    const maxSeq = rows[0]?.max_seq;
-    let sequence = startRange;
-    
-    if (maxSeq && maxSeq >= startRange && maxSeq < endRange) {
-      sequence = maxSeq + 1;
-    }
-
-    // strictly 4 digits
+    const sequence = (rows[0]?.total || 0) + 1;
     const shortId = sequence.toString().padStart(4, '0');
 
     res.json({
       success: true,
-      sequence: sequence,
+      sequence,
       sampleId: `LAB-${date}-${shortId}`,
-      shortId: shortId
+      shortId
     });
   } catch (error) {
     console.error('Error generating sample ID:', error);
-    res.status(500).json({ success: false, message: 'Server error generating barcode' });
+    res.status(500).json({ success: false, message: 'Server error generating sample ID' });
   }
 };
 
