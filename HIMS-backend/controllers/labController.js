@@ -1105,29 +1105,51 @@ export const getWorklistById = async (req, res) => {
 };
 
 // Generate sample ID sequence
-const sampleIdCounters = {};
 export const generateSampleId = async (req, res) => {
   try {
-    const { date } = req.body;
+    const { date, department } = req.body;
 
-    // Get count of samples for today from database
+    let startRange = 7000;
+    let endRange = 9999;
+    
+    if (department) {
+      const dep = department.toLowerCase();
+      if (dep.includes('hematology') || dep.includes('haematology')) {
+        startRange = 1;
+        endRange = 2999;
+      } else if (dep.includes('biochem')) {
+        startRange = 3000;
+        endRange = 4999;
+      } else if (dep.includes('serology') || dep.includes('microbiology') || dep.includes('pathology') || dep.includes('urine')) {
+        startRange = 5000;
+        endRange = 6999;
+      }
+    }
+
+    // Get max short_id for today within this specific range
     const [rows] = await db.query(
-      `SELECT COUNT(*) as count FROM bill_items 
-       WHERE sample_id LIKE ? 
-       AND created_at >= CURDATE()`,
-      [`LAB-${date}%`]
+      `SELECT MAX(CAST(short_id AS UNSIGNED)) as max_seq 
+       FROM bill_items 
+       WHERE DATE(created_at) = CURDATE() 
+       AND CAST(short_id AS UNSIGNED) >= ? 
+       AND CAST(short_id AS UNSIGNED) <= ?`,
+      [startRange, endRange]
     );
 
-    const count = rows[0]?.count || 0;
-    const sequence = count + 1;
+    const maxSeq = rows[0]?.max_seq;
+    let sequence = startRange;
     
-    const day = date.slice(-2); // Last 2 chars of date (DD)
-    const shortId = `${day}${sequence.toString().padStart(4, '0')}`;
+    if (maxSeq && maxSeq >= startRange && maxSeq < endRange) {
+      sequence = maxSeq + 1;
+    }
+
+    // strictly 4 digits
+    const shortId = sequence.toString().padStart(4, '0');
 
     res.json({
       success: true,
       sequence: sequence,
-      sampleId: `LAB-${date}-${sequence.toString().padStart(4, '0')}`,
+      sampleId: `LAB-${date}-${shortId}`,
       shortId: shortId
     });
   } catch (error) {
@@ -2092,21 +2114,41 @@ export const getApprovedReports = async (req, res) => {
       FROM lab_test_result tr
       LEFT JOIN patients p ON tr.patient_id = p.id
       LEFT JOIN users u ON tr.verified_by = u.id
+      LEFT JOIN bill_items bi ON tr.sample_id = bi.sample_id
+      LEFT JOIN bills b ON bi.bill_id = b.id
       WHERE tr.status = 'Approved'
     `;
 
     const params = [];
 
     if (search) {
-      query += ` AND (
-        tr.sample_id LIKE ? OR 
-        p.first_name LIKE ? OR 
-        p.last_name LIKE ? OR 
-        tr.test_name LIKE ?
-      )`;
-
-      const searchTerm = `%${search}%`;
-      params.push(searchTerm, searchTerm, searchTerm, searchTerm);
+      // Check if search is purely numeric (could be a Token No)
+      const isNumeric = !isNaN(search) && search.trim() !== '';
+      
+      if (isNumeric) {
+        query += ` AND (
+          tr.sample_id LIKE ? OR 
+          p.first_name LIKE ? OR 
+          p.last_name LIKE ? OR 
+          tr.test_name LIKE ? OR
+          (
+            SELECT COUNT(DISTINCT b2.id) 
+            FROM bills b2 
+            WHERE DATE(b2.created_at) = DATE(b.created_at) AND b2.id <= b.id
+          ) = ?
+        )`;
+        const searchTerm = `%${search}%`;
+        params.push(searchTerm, searchTerm, searchTerm, searchTerm, parseInt(search));
+      } else {
+        query += ` AND (
+          tr.sample_id LIKE ? OR 
+          p.first_name LIKE ? OR 
+          p.last_name LIKE ? OR 
+          tr.test_name LIKE ?
+        )`;
+        const searchTerm = `%${search}%`;
+        params.push(searchTerm, searchTerm, searchTerm, searchTerm);
+      }
     }
 
     if (from) {
@@ -2418,18 +2460,34 @@ export const createUnsolicitedWorklist = async (req, res) => {
       return res.json({ success: true, test: rows[0] });
     }
 
-    // 1. Check for or create a "Dummy" patient
-    const pName = patient_name || 'Analyzer Patient';
+    // 1. Resolve Patient
+    let pName = patient_name ? patient_name.replace(/\^/g, ' ').trim() : 'Unknown Patient';
     let patientId;
-    const [pts] = await connection.query(`SELECT id FROM patients WHERE first_name = ? LIMIT 1`, ['Analyzer']);
-    if (pts.length > 0) {
-      patientId = pts[0].id;
+    
+    // If we have a real name, try to find them, else create a new patient
+    if (pName !== 'Unknown Patient') {
+      const [pts] = await connection.query(`SELECT id FROM patients WHERE CONCAT(first_name, ' ', last_name) = ? OR first_name = ? LIMIT 1`, [pName, pName]);
+      if (pts.length > 0) {
+        patientId = pts[0].id;
+      } else {
+        const regNo = `ANL-${Date.now()}`;
+        const [insPt] = await connection.query(`
+          INSERT INTO patients (reg_no, reg_date, first_name, last_name, telephone, gender) 
+          VALUES (?, NOW(), ?, '', '0000000000', 'Other')`, [regNo, pName]);
+        patientId = insPt.insertId;
+      }
     } else {
-      const regNo = `ANL-${Date.now()}`;
-      const [insPt] = await connection.query(`
-        INSERT INTO patients (reg_no, reg_date, first_name, last_name, telephone, gender) 
-        VALUES (?, NOW(), 'Analyzer', ?, '0000000000', 'Other')`, [regNo, pName]);
-      patientId = insPt.insertId;
+      // Fallback dummy patient
+      const [pts] = await connection.query(`SELECT id FROM patients WHERE first_name = 'Unknown Patient' LIMIT 1`);
+      if (pts.length > 0) {
+        patientId = pts[0].id;
+      } else {
+        const regNo = `ANL-${Date.now()}`;
+        const [insPt] = await connection.query(`
+          INSERT INTO patients (reg_no, reg_date, first_name, last_name, telephone, gender) 
+          VALUES (?, NOW(), 'Unknown Patient', '', '0000000000', 'Other')`, [regNo]);
+        patientId = insPt.insertId;
+      }
     }
 
     // 2. Find a generic lab test for the analyzer
@@ -2471,7 +2529,7 @@ export const createUnsolicitedWorklist = async (req, res) => {
       bill_item_id: biResult.insertId,
       bill_id: billId,
       patient_id: patientId,
-      patient_name: `Analyzer ${pName}`,
+      patient_name: pName,
       test_id: testId,
       test_name: tName,
       sample_id: sample_id,
