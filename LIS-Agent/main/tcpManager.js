@@ -76,14 +76,15 @@ function parseAltaHL7(message) {
         } else if (segment === 'OBX') {
             const test_info = fields.length > 3 ? fields[3] : '';
             const value = fields.length > 5 ? fields[5] : '';
+            const unit = fields.length > 6 ? fields[6] : '';
+            const ref_range = fields.length > 7 ? fields[7] : '';
             const code_parts = test_info.split('^');
 
             if (code_parts.length > 0) {
                 const code = code_parts[0];
-                if (parameter_map[code]) {
-                    results[parameter_map[code]] = value;
-                } else if (code) {
-                    results[code] = value;
+                const paramName = parameter_map[code] || code;
+                if (paramName) {
+                    results[paramName] = { value, unit, ref_range };
                 }
             }
         }
@@ -225,25 +226,25 @@ async function processAltaHL7(message, machine) {
 
     let newResultsCount = 0;
 
-    for (const [param, val] of Object.entries(parsed.results)) {
+    for (const [param, data] of Object.entries(parsed.results)) {
         if (session.results.some(r => r.parameter_name.toLowerCase() === param.toLowerCase())) continue;
 
         session.results.push({
             parameter_name: param,
-            result_value: val,
-            unit: '',
-            ref_range: '',
+            result_value: data.value,
+            unit: data.unit || '',
+            ref_range: data.ref_range || '',
             flag: ''
         });
         newResultsCount++;
 
-        console.log(`📍 ALTA Recorded: ${param} = ${val}`);
+        console.log(`📍 ALTA Recorded: ${param} = ${data.value} (Unit: ${data.unit}, Ref: ${data.ref_range})`);
 
         mainWindow?.webContents?.send('test-completed', {
             sampleId: session.sampleId,
             test_name: param,
-            result_value: val,
-            unit: '',
+            result_value: data.value,
+            unit: data.unit || '',
             flag: ''
         });
     }
