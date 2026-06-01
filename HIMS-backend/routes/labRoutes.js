@@ -38,7 +38,8 @@ import {
   getActivityLogs,
   mapAnalyzerTests,
   createUnsolicitedWorklist,
-  mapUnmappedTest
+  mapUnmappedTest,
+  getKioskReports
 } from '../controllers/labController.js';
 import {
   getLabMachines,
@@ -158,6 +159,9 @@ router.post('/whatsapp-send-report', async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 });
+
+// Kiosk: lookup reports by phone or ABHA number
+router.get('/kiosk-reports', getKioskReports);
 
 // Hospital Code for Machine ID
 router.get('/hospital-code/:userId', getHospitalCode);

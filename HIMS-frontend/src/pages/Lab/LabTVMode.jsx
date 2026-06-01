@@ -1,31 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { FileText, X, CheckCircle, Smartphone, Languages, Calendar, Delete } from 'lucide-react';
+import { FileText, X, CheckCircle, Delete, ChevronLeft } from 'lucide-react';
 import '../../assets/CSS/LabTVMode.css';
 
 const API_BASE = import.meta.env.VITE_API_URL || '';
 
-const translations = {
-  en: {
-    getResults: "View Reports",
-    modalTitle: "Patient Test Reports",
-    modalSub: "Select a date and enter your Token No.",
-    enterToken: "Enter Token No",
-    sending: "Sending report to WhatsApp...",
-    sent: "Report Sent to WhatsApp!",
-    error: "Failed to send report. Please try again.",
-    back: "Back",
-  },
-  hi: {
-    getResults: "रिपोर्ट देखें",
-    modalTitle: "मरीज की रिपोर्ट",
-    modalSub: "तारीख चुनें और अपना टोकन नंबर दर्ज करें",
-    enterToken: "टोकन नंबर दर्ज करें",
-    sending: "WhatsApp पर रिपोर्ट भेजी जा रही है...",
-    sent: "रिपोर्ट WhatsApp पर भेज दी गई!",
-    error: "रिपोर्ट भेजने में विफल. कृपया पुनः प्रयास करें.",
-    back: "वापस",
-  }
-};
+// Kiosk auto-close after 60 s of inactivity
+const KIOSK_TIMEOUT = 60000;
 
 // ─── Utilities ───────────────────────────────────────────────────────────────
 const getLast7Days = () => {
@@ -71,16 +51,18 @@ function LabTVMode() {
   const [loading, setLoading]   = useState(true);
   const now                     = useClock();
   
-  // Language State
-  const [lang, setLang] = useState('en');
-  const t = translations[lang];
+  // Kiosk modal state
+  const [showModal, setShowModal]     = useState(false);
+  const [kioskInput, setKioskInput]   = useState('');        // phone / ABHA being typed
+  const [kioskStep, setKioskStep]     = useState('input');   // 'input' | 'results'
+  const [patient, setPatient]         = useState(null);
+  const [reports, setReports]         = useState([]);
+  const [searching, setSearching]     = useState(false);
+  const [searchErr, setSearchErr]     = useState('');
+  const [sendingId, setSendingId]     = useState(null);      // sample_id being sent
+  const [sentId, setSentId]           = useState(null);      // last successfully sent
+  const inactivityTimer               = useRef(null);
 
-  // Kiosk Modal State
-  const [showModal, setShowModal] = useState(false);
-  const [searchToken, setSearchToken] = useState('');
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [whatsappStatus, setWhatsappStatus] = useState('idle'); // idle, sending, success, error
-  
   const datesList = useRef(getLast7Days()).current;
 
   // ── Data Fetching ────────────────────────────────────────────────────────
@@ -105,94 +87,87 @@ function LabTVMode() {
     return () => clearInterval(interval);
   }, [fetchWorklist]);
 
-  // ── Auto-Send Logic ───────────────────────────────────────────────────────
-  const handleSearchAndSend = async () => {
-    if (!searchToken) return;
-    setWhatsappStatus('sending');
+  // ── Inactivity timer — auto-close kiosk after 60 s ───────────────────────
+  const resetTimer = useCallback(() => {
+    clearTimeout(inactivityTimer.current);
+    inactivityTimer.current = setTimeout(closeAndResetModal, KIOSK_TIMEOUT);
+  }, []);
 
-    try {
-      // 1. Fetch approved reports matching the Token No (search query) and Date
-      // We format the selected date as YYYY-MM-DD for the API using local time
-      const tzoffset = selectedDate.getTimezoneOffset() * 60000; // offset in milliseconds
-      const localISOTime = (new Date(selectedDate.getTime() - tzoffset)).toISOString().slice(0, 10);
-      
-      const params = new URLSearchParams({
-        search: searchToken,
-        from: localISOTime,
-        to: localISOTime
-      });
+  const closeAndResetModal = () => {
+    clearTimeout(inactivityTimer.current);
+    setShowModal(false);
+    setKioskInput('');
+    setKioskStep('input');
+    setPatient(null);
+    setReports([]);
+    setSearchErr('');
+    setSendingId(null);
+    setSentId(null);
+  };
 
-      const searchRes = await fetch(`${API_BASE}/api/lab/approved-reports?${params.toString()}`);
-      const searchData = await searchRes.json();
+  const openModal = () => {
+    setShowModal(true);
+    resetTimer();
+  };
 
-      if (!searchRes.ok || !searchData.success || !searchData.reports || searchData.reports.length === 0) {
-        throw new Error(t.error + ' (Report not found for this date & token)');
-      }
-
-      // Take the first matching report
-      const report = searchData.reports[0];
-      const phoneRaw = report.patient_phone || report.telephone || '';
-
-      if (!phoneRaw) {
-        throw new Error(t.error + ' (No phone number registered)');
-      }
-
-      // Normalize phone
-      let phone = phoneRaw.replace(/[\s\-\+]/g, '');
-      if (phone.length === 10) phone = '91' + phone;
-
-      // 2. Call WhatsApp send endpoint
-      const sendRes = await fetch(`${API_BASE}/api/lab/whatsapp-send-report`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sampleId: report.sample_id,
-          phone: phone,
-          patientName: report.patient_name,
-          testName: report.test_name
-        })
-      });
-
-      const sendData = await sendRes.json();
-      if (!sendRes.ok || !sendData.success) {
-        throw new Error(sendData.message || t.error);
-      }
-
-      // Success!
-      setWhatsappStatus('success');
-      
-      // Auto close/reset after a few seconds of showing success
-      setTimeout(() => {
-        closeAndResetModal();
-      }, 4000);
-
-    } catch (error) {
-      console.error('Kiosk Auto-Send Error:', error);
-      setWhatsappStatus('error');
+  // ── Numeric keypad press ──────────────────────────────────────────────────
+  const handleKey = (key) => {
+    resetTimer();
+    if (key === 'BACKSPACE') {
+      setKioskInput(prev => prev.slice(0, -1));
+      setSearchErr('');
+    } else if (key === 'CLEAR') {
+      setKioskInput('');
+      setSearchErr('');
+    } else if (key === 'SEARCH') {
+      handleSearch();
+    } else {
+      setKioskInput(prev => (prev.length < 14 ? prev + key : prev));
+      setSearchErr('');
     }
   };
 
-  const closeAndResetModal = () => {
-    setShowModal(false);
-    setSearchToken('');
-    setWhatsappStatus('idle');
-    setSelectedDate(new Date());
+  // ── Lookup reports by phone or ABHA ──────────────────────────────────────
+  const handleSearch = async () => {
+    if (kioskInput.length < 4) { setSearchErr('Enter at least 4 digits'); return; }
+    setSearching(true); setSearchErr('');
+    try {
+      const res  = await fetch(`${API_BASE}/api/lab/kiosk-reports?query=${encodeURIComponent(kioskInput)}`);
+      const data = await res.json();
+      if (!data.success) throw new Error(data.message);
+      if (!data.patient) { setSearchErr('No patient found with this number'); return; }
+      setPatient(data.patient);
+      setReports(data.reports || []);
+      setKioskStep('results');
+      resetTimer();
+    } catch (e) {
+      setSearchErr(e.message || 'Search failed. Try again.');
+    } finally {
+      setSearching(false);
+    }
   };
 
-  const toggleLang = () => {
-    setLang(prev => prev === 'en' ? 'hi' : 'en');
-  };
-
-  // ── Keyboard Interaction ──────────────────────────────────────────────────
-  const handleKeyPress = (key) => {
-    if (whatsappStatus !== 'idle') return; // block input while sending
-    
-    if (key === 'BACKSPACE') {
-      setSearchToken(prev => prev.slice(0, -1));
-    } else if (key === 'ENTER') {
-      handleSearchAndSend();
-    } else {
-      setSearchToken(prev => prev + key);
+  // ── Send single report via WhatsApp ──────────────────────────────────────
+  const handleSendWhatsApp = async (report) => {
+    resetTimer();
+    if (!patient?.phone) { alert('No phone number registered for this patient.'); return; }
+    setSendingId(report.sample_id);
+    try {
+      let phone = patient.phone.replace(/[\s\-\+]/g, '');
+      if (phone.length === 10) phone = '91' + phone;
+      const res  = await fetch(`${API_BASE}/api/lab/whatsapp-send-report`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sampleId: report.sample_id, phone, patientName: patient.name, testName: report.test_name })
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.message);
+      setSentId(report.sample_id);
+      setTimeout(() => setSentId(null), 4000);
+    } catch (e) {
+      alert('Failed to send: ' + e.message);
+    } finally {
+      setSendingId(null);
     }
   };
 
@@ -203,41 +178,34 @@ function LabTVMode() {
   const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   const dateString = now.toLocaleDateString([], { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase();
 
-  // ── Render Keyboard ──────────────────────────────────────────────────────
-  const renderKeyboard = () => {
-    const rows = [
-      ['1','2','3','4','5','6','7','8','9','0'],
-      ['Q','W','E','R','T','Y','U','I','O','P'],
-      ['A','S','D','F','G','H','J','K','L'],
-      ['Z','X','C','V','B','N','M']
-    ];
-
-    return (
-      <div className="kiosk-keyboard">
-        {rows.map((row, i) => (
-          <div key={i} className="keyboard-row">
-            {row.map(key => (
-              <button key={key} className="key-btn" onClick={() => handleKeyPress(key)}>
-                {key}
-              </button>
-            ))}
-          </div>
-        ))}
-        <div className="keyboard-row action-row">
-          <button className="key-btn backspace-btn" onClick={() => handleKeyPress('BACKSPACE')}>
-            <Delete size={24} />
-          </button>
-          <button 
-            className="key-btn enter-btn" 
-            onClick={() => handleKeyPress('ENTER')}
-            disabled={!searchToken}
-          >
-            Enter / Send
-          </button>
+  // ── Numeric keypad ────────────────────────────────────────────────────────
+  const renderNumpad = () => (
+    <div className="kiosk-keyboard">
+      {[['1','2','3'],['4','5','6'],['7','8','9'],['CLEAR','0','BACKSPACE']].map((row, i) => (
+        <div key={i} className="keyboard-row">
+          {row.map(k => (
+            <button
+              key={k}
+              className={`key-btn ${k === 'BACKSPACE' ? 'backspace-btn' : ''} ${k === 'CLEAR' ? 'clear-btn' : ''}`}
+              onClick={() => handleKey(k)}
+            >
+              {k === 'BACKSPACE' ? <Delete size={22} /> : k}
+            </button>
+          ))}
         </div>
+      ))}
+      <div className="keyboard-row">
+        <button
+          className="key-btn enter-btn"
+          onClick={() => handleKey('SEARCH')}
+          disabled={kioskInput.length < 4 || searching}
+          style={{ width: '100%' }}
+        >
+          {searching ? 'Searching…' : '🔍 Search'}
+        </button>
       </div>
-    );
-  };
+    </div>
+  );
 
   // ── Render ───────────────────────────────────────────────────────────────
   return (
@@ -322,85 +290,121 @@ function LabTVMode() {
       </div>
 
       {/* ── Floating Action Button ──────────────────────────────────────── */}
-      <button 
-        className="kiosk-fab" 
-        onClick={() => setShowModal(true)}
-      >
+      <button className="kiosk-fab" onClick={openModal}>
         <FileText size={24} />
-        <span>{t.getResults}</span>
+        <span>Get My Reports</span>
       </button>
 
-      {/* ── Floating Modal ──────────────────────────────────────────────── */}
+      {/* ── Kiosk Modal ─────────────────────────────────────────────────── */}
       {showModal && (
-        <div className="kiosk-modal-overlay">
-          <div className="kiosk-modal large-modal">
-            
+        <div className="kiosk-modal-overlay" onClick={closeAndResetModal}>
+          <div className="kiosk-modal large-modal" onClick={e => e.stopPropagation()}>
+
             <button className="kiosk-modal-close" onClick={closeAndResetModal}>
               <X size={24} />
             </button>
-            
-            <button className="kiosk-lang-toggle" onClick={toggleLang}>
-              <Languages size={18} />
-              {lang === 'en' ? 'हिंदी' : 'English'}
-            </button>
-            
-            {whatsappStatus === 'idle' ? (
+
+            {/* ── Step 1: Input ────────────────────────────────────────── */}
+            {kioskStep === 'input' && (
               <>
                 <div className="kiosk-service-header">
-                  <h2>{t.modalTitle}</h2>
-                  <p>{t.modalSub}</p>
+                  <h2>Get Your Reports</h2>
+                  <p>Enter your registered mobile number or ABHA number</p>
                 </div>
 
-                {/* Date Selector Row */}
-                <div className="date-selector-row">
-                  {datesList.map((d, i) => {
-                    const isSelected = selectedDate.toDateString() === d.toDateString();
-                    return (
-                      <button 
-                        key={i} 
-                        className={`date-pill ${isSelected ? 'active' : ''}`}
-                        onClick={() => setSelectedDate(d)}
-                      >
-                        <span className="day-name">{d.toLocaleDateString(lang === 'en' ? 'en-US' : 'hi-IN', { weekday: 'short' })}</span>
-                        <span className="date-num">{d.getDate()}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* Token Input Display */}
                 <div className="token-input-display">
-                  <div className="token-placeholder">{searchToken || t.enterToken}</div>
-                  {searchToken && <span className="cursor-blink">|</span>}
+                  <div className="token-placeholder">
+                    {kioskInput
+                      ? kioskInput.replace(/(\d{4})(\d{3})(\d{3,})/, '$1 $2 $3')
+                      : 'Phone / ABHA No.'}
+                  </div>
+                  {kioskInput && <span className="cursor-blink">|</span>}
                 </div>
 
-                {/* On Screen Keyboard */}
-                {renderKeyboard()}
+                {searchErr && (
+                  <div style={{ textAlign:'center', color:'#ef4444', marginBottom:'8px', fontSize:'15px' }}>
+                    {searchErr}
+                  </div>
+                )}
+
+                {renderNumpad()}
               </>
-            ) : (
-              <div className="whatsapp-status-screen">
-                {whatsappStatus === 'sending' && (
-                  <div className="status-sending">
-                    <div className="spinner"></div>
-                    <h3>{t.sending}</h3>
+            )}
+
+            {/* ── Step 2: Results list ─────────────────────────────────── */}
+            {kioskStep === 'results' && (
+              <>
+                <div style={{ display:'flex', alignItems:'center', gap:'12px', marginBottom:'16px' }}>
+                  <button
+                    className="key-btn backspace-btn"
+                    style={{ width:'44px', height:'44px', flexShrink:0 }}
+                    onClick={() => { setKioskStep('input'); resetTimer(); }}
+                  >
+                    <ChevronLeft size={22} />
+                  </button>
+                  <div>
+                    <div style={{ fontSize:'20px', fontWeight:'700', color:'#0a2a6e' }}>
+                      {patient?.name}
+                    </div>
+                    <div style={{ fontSize:'13px', color:'#475569' }}>
+                      Reports from the last 7 days
+                    </div>
+                  </div>
+                </div>
+
+                {reports.length === 0 ? (
+                  <div style={{ textAlign:'center', padding:'40px 0', color:'#64748b' }}>
+                    <div style={{ fontSize:'40px', marginBottom:'12px' }}>📋</div>
+                    <div style={{ fontSize:'16px' }}>No approved reports in the last 7 days</div>
+                  </div>
+                ) : (
+                  <div style={{ display:'flex', flexDirection:'column', gap:'10px', maxHeight:'420px', overflowY:'auto' }}>
+                    {reports.map(r => {
+                      const isSending = sendingId === r.sample_id;
+                      const isSent    = sentId    === r.sample_id;
+                      return (
+                        <div key={r.id} style={{
+                          display:'flex', alignItems:'center', justifyContent:'space-between',
+                          background:'#f8faff', border:'1px solid #dbeafe',
+                          borderRadius:'14px', padding:'14px 18px',
+                        }}>
+                          <div>
+                            <div style={{ fontWeight:'700', fontSize:'16px', color:'#0a2a6e' }}>
+                              {r.test_name}
+                            </div>
+                            <div style={{ fontSize:'12px', color:'#64748b', marginTop:'3px' }}>
+                              {new Date(r.verified_at).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' })}
+                              {' · '}
+                              <span style={{ fontFamily:'monospace', color:'#3b82f6' }}>{r.sample_id}</span>
+                            </div>
+                          </div>
+
+                          <button
+                            onClick={() => { handleSendWhatsApp(r); }}
+                            disabled={isSending || isSent}
+                            style={{
+                              display:'flex', alignItems:'center', gap:'8px',
+                              background: isSent ? '#16a34a' : '#25D366',
+                              color:'#fff', border:'none', borderRadius:'10px',
+                              padding:'10px 18px', fontSize:'14px', fontWeight:'700',
+                              cursor: isSending || isSent ? 'not-allowed' : 'pointer',
+                              flexShrink: 0, minWidth:'150px', justifyContent:'center',
+                            }}
+                          >
+                            {isSent ? (
+                              <><CheckCircle size={18} /> Sent!</>
+                            ) : isSending ? (
+                              <>⏳ Sending…</>
+                            ) : (
+                              <>📲 Send to WhatsApp</>
+                            )}
+                          </button>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
-                {whatsappStatus === 'success' && (
-                  <div className="status-success">
-                    <CheckCircle size={64} className="success-icon animate-pop" />
-                    <h3>{t.sent}</h3>
-                  </div>
-                )}
-                {whatsappStatus === 'error' && (
-                  <div className="status-error">
-                    <X size={64} className="error-icon" />
-                    <h3>{t.error}</h3>
-                    <button className="key-btn enter-btn mt-4" onClick={() => setWhatsappStatus('idle')}>
-                      {t.back}
-                    </button>
-                  </div>
-                )}
-              </div>
+              </>
             )}
 
           </div>

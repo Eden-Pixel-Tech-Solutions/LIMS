@@ -2594,3 +2594,62 @@ export const mapUnmappedTest = async (req, res) => {
     connection.release();
   }
 };
+
+// ── Kiosk: fetch patient reports by phone or ABHA ────────────────────────────
+export const getKioskReports = async (req, res) => {
+  try {
+    const { query } = req.query;
+    if (!query || query.trim().length < 4) {
+      return res.status(400).json({ success: false, message: 'Enter at least 4 digits' });
+    }
+
+    const q = query.trim();
+
+    // Find patient by telephone or abha_id
+    const [patients] = await db.query(
+      `SELECT id, first_name, last_name, telephone, abha_id
+       FROM patients
+       WHERE telephone LIKE ? OR abha_id = ?
+       LIMIT 5`,
+      [`%${q}%`, q]
+    );
+
+    if (patients.length === 0) {
+      return res.json({ success: true, patient: null, reports: [] });
+    }
+
+    const patient = patients[0];
+
+    // Fetch approved reports from last 7 days
+    const [reports] = await db.query(
+      `SELECT
+         tr.id, tr.sample_id, tr.test_name,
+         tr.verified_at, tr.status,
+         bi.service_name,
+         b.bill_number,
+         CONCAT(u.first_name, ' ', u.last_name) as verified_by_name
+       FROM lab_test_result tr
+       LEFT JOIN bill_items bi ON tr.sample_id = bi.sample_id
+       LEFT JOIN bills b       ON bi.bill_id   = b.id
+       LEFT JOIN users u       ON tr.verified_by = u.id
+       WHERE tr.patient_id = ?
+         AND tr.status = 'Approved'
+         AND tr.verified_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+       ORDER BY tr.verified_at DESC`,
+      [patient.id]
+    );
+
+    res.json({
+      success: true,
+      patient: {
+        name: `${patient.first_name} ${patient.last_name}`.trim(),
+        phone: patient.telephone,
+        abha_id: patient.abha_id
+      },
+      reports
+    });
+  } catch (error) {
+    console.error('Kiosk reports error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
