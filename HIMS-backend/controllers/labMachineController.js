@@ -96,29 +96,29 @@ export const syncLabMachine = async (req, res) => {
     const [existing] = await db.query('SELECT id FROM lab_machines WHERE serial_number = ?', [serial_number]);
 
     if (existing.length > 0) {
-      // Update existing record
-      const query = `
-        UPDATE lab_machines 
-        SET lab_id = ?, machine_id = ?, name = ?, model = ?, manufacturer = ?, 
-            interface_type = ?, port_ip = ?, baud_rate = ?, updated_at = NOW()
-        WHERE serial_number = ?
-      `;
-      await db.query(query, [
-        lab_id, machine_id, name, model, manufacturer, 
-        interface_type, port_ip, baud_rate, serial_number
-      ]);
+      await db.query(
+        `UPDATE lab_machines
+         SET lab_id = ?, machine_id = ?, name = ?, model = ?, manufacturer = ?,
+             interface_type = ?, port_ip = ?, baud_rate = ?, updated_at = NOW()
+         WHERE serial_number = ?`,
+        [lab_id, machine_id, name, model, manufacturer, interface_type, port_ip, baud_rate, serial_number]
+      );
+      // Auto-assign all tests for this analyzer to this lab
+      if (model && lab_id) {
+        await db.query(`UPDATE lab_tests SET lab_id = ? WHERE analyzer_name = ?`, [lab_id, model]);
+      }
       res.json({ success: true, message: 'Machine synced (Updated)', id: existing[0].id });
     } else {
-      // Insert new record
-      const query = `
-        INSERT INTO lab_machines 
-        (lab_id, machine_id, name, model, manufacturer, serial_number, interface_type, port_ip, baud_rate)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `;
-      const [result] = await db.query(query, [
-        lab_id, machine_id, name, model, manufacturer, 
-        serial_number, interface_type, port_ip, baud_rate
-      ]);
+      const [result] = await db.query(
+        `INSERT INTO lab_machines
+         (lab_id, machine_id, name, model, manufacturer, serial_number, interface_type, port_ip, baud_rate)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [lab_id, machine_id, name, model, manufacturer, serial_number, interface_type, port_ip, baud_rate]
+      );
+      // Auto-assign all tests for this analyzer to this lab
+      if (model && lab_id) {
+        await db.query(`UPDATE lab_tests SET lab_id = ? WHERE analyzer_name = ?`, [lab_id, model]);
+      }
       res.status(201).json({ success: true, message: 'Machine synced (Created)', id: result.insertId });
     }
   } catch (error) {
@@ -128,11 +128,16 @@ export const syncLabMachine = async (req, res) => {
 };
 
 export const addLabMachine = async (req, res) => {
-  // Keeping for backward compatibility or direct additions
   try {
     const { lab_id, machine_id, name, model, manufacturer } = req.body;
-    const query = 'INSERT INTO lab_machines (lab_id, machine_id, name, model, manufacturer) VALUES (?, ?, ?, ?, ?)';
-    const [result] = await db.query(query, [lab_id, machine_id, name, model || '', manufacturer || '']);
+    const [result] = await db.query(
+      'INSERT INTO lab_machines (lab_id, machine_id, name, model, manufacturer) VALUES (?, ?, ?, ?, ?)',
+      [lab_id, machine_id, name, model || '', manufacturer || '']
+    );
+    // Auto-assign all tests for this analyzer to this lab
+    if (model && lab_id) {
+      await db.query(`UPDATE lab_tests SET lab_id = ? WHERE analyzer_name = ?`, [lab_id, model]);
+    }
     res.status(201).json({ success: true, id: result.insertId });
   } catch (err) { res.status(500).json({ success: false }); }
 };
@@ -149,7 +154,18 @@ export const updateLabMachine = async (req, res) => {
 export const deleteLabMachine = async (req, res) => {
   try {
     const { id } = req.params;
+    // Get the machine before deleting so we can clear lab_tests
+    const [[machine]] = await db.query('SELECT lab_id, model FROM lab_machines WHERE id = ?', [id]);
     await db.query('DELETE FROM lab_machines WHERE id = ?', [id]);
+    // Clear lab assignment on tests for this analyzer if no other machine of same model remains in any lab
+    if (machine?.model) {
+      const [remaining] = await db.query(
+        'SELECT id FROM lab_machines WHERE model = ? LIMIT 1', [machine.model]
+      );
+      if (remaining.length === 0) {
+        await db.query(`UPDATE lab_tests SET lab_id = NULL WHERE analyzer_name = ?`, [machine.model]);
+      }
+    }
     res.json({ success: true });
   } catch (err) { res.status(500).json({ success: false }); }
 };

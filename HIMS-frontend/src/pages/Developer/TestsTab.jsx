@@ -274,12 +274,10 @@ function TestDetail({ test, categories, labs, brands, onSaved, onDeleted }) {
           </div>
           <div>
             <div style={st.fieldLabel}>Assigned Lab</div>
-            {editing ? (
-              <select style={st.input} value={form.lab_id} onChange={e => setForm({ ...form, lab_id: e.target.value })}>
-                <option value="">No Lab</option>
-                {labs.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
-              </select>
-            ) : <span style={st.readVal}>{test.lab_name || '—'}</span>}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', paddingTop: '2px' }}>
+              <span style={st.readVal}>{test.lab_name || '—'}</span>
+              <span style={{ fontSize: '10px', color: '#475569', fontStyle: 'italic' }}>(auto from machine)</span>
+            </div>
           </div>
           <div>
             <div style={st.fieldLabel}>Machine / Analyzer</div>
@@ -337,8 +335,8 @@ function TestDetail({ test, categories, labs, brands, onSaved, onDeleted }) {
 }
 
 // ── Add Test Modal ────────────────────────────────────────────────────────
-function AddTestModal({ categories, labs, brands, onClose, onSaved }) {
-  const [form, setForm]   = useState({ test_code: '', test_name: '', category_id: '', lab_id: '', sample_type: '', tube_color: '', price: '', analyzer_name: '' });
+function AddTestModal({ categories, brands, onClose, onSaved }) {
+  const [form, setForm]   = useState({ test_code: '', test_name: '', category_id: '', sample_type: '', tube_color: '', price: '', analyzer_name: '' });
   const [saving, setSaving] = useState(false);
   const [err, setErr]     = useState('');
 
@@ -388,10 +386,9 @@ function AddTestModal({ categories, labs, brands, onClose, onSaved }) {
             </div>
             <div>
               <div style={st.fieldLabel}>Assigned Lab</div>
-              <select style={st.input} value={form.lab_id} onChange={e => setForm({ ...form, lab_id: e.target.value })}>
-                <option value="">No Lab</option>
-                {labs.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
-              </select>
+              <div style={{ fontSize: '12px', color: '#475569', fontStyle: 'italic', paddingTop: '8px' }}>
+                Auto-assigned when a machine is added to a lab
+              </div>
             </div>
             <div><div style={st.fieldLabel}>Tube Color</div><Input value={form.tube_color} onChange={v => setForm({ ...form, tube_color: v })} placeholder="e.g. Red" /></div>
             <div><div style={st.fieldLabel}>Price (₹)</div><Input value={form.price} onChange={v => setForm({ ...form, price: v })} type="number" /></div>
@@ -535,7 +532,6 @@ export default function TestsTab() {
       {showAdd && (
         <AddTestModal
           categories={categories}
-          labs={labs}
           brands={brands}
           onClose={() => setShowAdd(false)}
           onSaved={() => { setShowAdd(false); loadTests(); }}
