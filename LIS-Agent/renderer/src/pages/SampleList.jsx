@@ -70,7 +70,10 @@ const SampleList = () => {
     try {
       const today = new Date();
       const dateStr = today.toISOString().slice(0, 10).replace(/-/g, '');
-      const resId = await axios.post(`${API_BASE}/api/lab/generate-sample-id`, { date: dateStr });
+      const resId = await axios.post(`${API_BASE}/api/lab/generate-sample-id`, {
+        branch_id: localStorage.getItem('branch_id') || '1',
+        department: item.department
+      });
       if (resId.data.success) {
         const { sampleId, shortId } = resId.data;
         const resAck = await axios.post(`${API_BASE}/api/lab/acknowledge-test`, {
