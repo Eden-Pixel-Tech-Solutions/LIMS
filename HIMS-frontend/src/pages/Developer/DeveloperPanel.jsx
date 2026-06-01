@@ -434,9 +434,17 @@ export default function DeveloperPanel() {
     const token = localStorage.getItem('dev_token');
     if (!token) { navigate('/developer'); return; }
 
+    // Verify token is still valid — only redirect on 401/403
     axios.get(`${API}/api/dev/stats`, { headers: authHeaders() })
       .then(r => setStats(r.data.stats))
-      .catch(() => { localStorage.removeItem('dev_token'); navigate('/developer'); });
+      .catch(err => {
+        const status = err.response?.status;
+        if (status === 401 || status === 403) {
+          localStorage.removeItem('dev_token');
+          navigate('/developer');
+        }
+        // Any other error (500, network) — stay on the page, show empty stats
+      });
 
     axios.get(`${API}/api/dev/hospitals`, { headers: authHeaders() })
       .then(r => setHospitals(r.data.hospitals || []))
