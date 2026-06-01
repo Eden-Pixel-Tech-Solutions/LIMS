@@ -391,7 +391,7 @@ async function initializeAllPorts(win) {
   mainWindow = win;
   try {
     const configs = await db.getConfig();
-    const serialConfigs = configs.filter(c => c.portType !== 'TCP' && !(c.model && c.model.includes('ALTA')));
+    const serialConfigs = configs.filter(c => c.portType !== 'TCP' && !(c.model && (c.model.includes('ALTA') || c.model.includes('CelQuant 5plus'))));
     console.log(`🚀 Initializing background listeners for ${serialConfigs.length} machine(s)...`);
 
     for (const config of serialConfigs) {

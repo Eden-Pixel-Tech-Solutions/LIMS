@@ -6,7 +6,7 @@ export default {
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:7005',
+        target: 'https://lims.poxiatechnologies.com',
         changeOrigin: true,
         secure: false,
       }

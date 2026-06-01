@@ -1,0 +1,115 @@
+(venv) stevejeraldicloud.com@Steves-MacBook-Pro putty-test % python3 cq5.py
+────────────────────────────────────────────────────────────────────
+  CelQuant BF-6900 / BF-6960  —  LIS Server
+  Protocol : HL7 2.3.1 over MLLP
+  Listening: 0.0.0.0:9500
+  Set analyzer LIS → IP: <this machine's IP>  Port: 9500
+────────────────────────────────────────────────────────────────────
+  Waiting for analyzer connection…
+
+
+  [+] Analyzer connected  →  192.168.1.149:47545
+  [-] Analyzer disconnected  →  192.168.1.149:47545
+
+  [+] Analyzer connected  →  192.168.1.149:47546
+
+  [RAW HL7 from 192.168.1.149:47546]
+    i am 01.017.008
+    MSH|^~\&|20170214||LIS||20260531173253||ORU^R01|5|P|2.3.1||||||UTF-8
+    PID|1||257||SABINA ANC|||F|||||||||||||||||||||||27^Y
+    PV1|1|||||||||||||||||||
+    OBR|1||4|1001^CountResults||20260526131022|20260526131025|||||||20260526131022||||||admin||||||||
+    OBX|1|IS|2001^MODE||0||||||F||
+    OBX|2|IS|2002^MODE_EX||1||||||F||
+    OBX|3|IS|2003^Ref||2||||||F||
+    OBX|4|IS|2004^Note||||||||F||
+    OBX|5|NM|2006^V_WBC||10.89|10^9/L|4.00-10.00||||F||
+    OBX|6|NM|2007^V_NEU_p||84.0|%|50.0-70.0||||F||
+    OBX|7|NM|2008^V_LYM_p||10.2|%|20.0-40.0||||F||
+    OBX|8|NM|2009^V_MON_p||5.2|%|3.0-8.0||||F||
+    OBX|9|NM|2010^V_EOS_p||0.3|%|0.5-5.0||||F||
+    OBX|10|NM|2011^V_BAS_p||0.3|%|0.0-1.0||||F||
+    OBX|11|NM|2012^V_NEU_c||9.15|10^9/L|2.00-7.00||||F||
+    OBX|12|NM|2013^V_LYM_c||1.11|10^9/L|0.80-4.00||||F||
+    OBX|13|NM|2014^V_MON_c||0.57|10^9/L|0.12-0.80||||F||
+    OBX|14|NM|2015^V_EOS_c||0.03|10^9/L|0.02-0.50||||F||
+    OBX|15|NM|2016^V_BAS_c||0.03|10^9/L|0.00-0.10||||F||
+    OBX|16|NM|2017^V_RBC||4.37|10^12/L|3.50-5.00||||F||
+    OBX|17|NM|2018^V_HGB||12.1|g/dL|11.0-15.0||||F||
+    OBX|18|NM|2019^V_MCV||81.5|fL|80.0-100.0||||F||
+    OBX|19|NM|2020^V_HCT||35.6|%|35.0-50.0||||F||
+    OBX|20|NM|2021^V_MCH||27.7|pg|27.0-34.0||||F||
+    OBX|21|NM|2022^V_MCHC||34.0|g/dL|32.0-36.0||||F||
+    OBX|22|NM|2023^V_RDW_SD||48.0|fL|35.0-56.0||||F||
+    OBX|23|NM|2024^V_RDW_CV||15.2|%|11.0-16.0||||F||
+    OBX|24|NM|2025^V_PLT||157|10^9/L|100-300||||F||
+    OBX|25|NM|2026^V_MPV||13.4|fL|7.0-13.0||||F||
+    OBX|26|NM|2027^V_PCT||0.210|%|0.100-0.280||||F||
+    OBX|27|NM|2028^V_PDW||23.7|fL|15.0-18.0||||F||
+    OBX|28|NM|2029^V_P_LCR||49.4|%|13.0-43.0||||F||
+    OBX|29|NM|2030^V_P_LCC||78|10^9/L|13-129||||F||
+    OBX|30|ED|2101^V_RBCScattergram.PNG||iVBORw0KGgoAAAANSUhEUgAAAK8AAABkCAIAAAB/3/dVAAAAA3NCSVQICAjb4U/gAAAACXBIWXMAABLDAAASwwFyLQTKAAADMElEQVR4nO3YP0sbYRzA8afF4QIdbnDQzQwOFzpU6CK0L6D6GjqU6BQ69D04Fafi1GpfQMHxOgjJIpyDYpaSdEuHwmUQrmCHbNchJY9NNKb6/Pk98fuZjhOSJzzf/J4zSgE3KcvS9xLgzWNjr7Sg1IKxF4MIo9kQxVGe59lJlp1mux92r95stprZabb3cW94M3mWNI+b2UnWPG7Wt+t+1g0bRjXEi/F5+3x4nR6l6y/WJ2+uPV9TSnW6neEFQjfTSZH380ql8s+tSEWVKL/Ik6dJnufts7aV1cGtaUf98tLyzvudeDGurdZax63hzepKNf2aVqvVXq/X/9mvvaz1L/pOlgrrps2G4ldx+OUwWU0abxtq8Pdm70dvc2OzltS637v1N/Xisojj2MVKYd+0GgaDQfusvfV66+DTQfQkGvtr8buIoqj9rZ0kydLKks1FwpNrnyLr2/X9z/vDm8VlMfwPIm2l8WKslNp4tdHpdtKjND1KG+8avlYO8+7861MUR5Pz4/q3uNsbwD0Hv0WWBCGVud8iZ1NOXEAO1zVAMmqAdt8a7vOYwWEhxGgTmQ3QnNbAMBCO2QDNcw1MC1GYDdCoARo1QHNXw02PCDw6yMFsgEYN0ETUwGEhhIgaIAQ1QHNUw61nAYeFBMwGaNQATVANHBbeCaoB3lEDNFk1cFj45aIG9jgUsmYD/BJXA4PEI3E1wCOJNTAefJFYA3wRWgPjwQuhNcALaoAmtwYOC/es18CmBkTubIB7omtgrjgmugY4Rg3QpNfAYeGS9BrgEjVAC6AGDgtnAqgBztitwdTXmvHgBrMBGjVAC6YGDgsHgqkBDlADtJBq4LCwLaQaYJvFGmx8lRkPVjEboIVXA+PBnvBqgD1B1sB4sMRWDWxYiIKcDYra7Ai1BtgQcA2MB+MCrkERhGlWanC5SQRhUNizYYggTJmHGhRBGDInNSiCMMF8DR53paSJ+5mf2TBCE3e24HsBtoyCeORzFYExXIPAL+XVJVHGdCZrEJjCmMkV0sdVZmqQ38FNbl35g8rlmhr+d2vDTWEW8/3pxoynX5YP6uMDAAAAAAAAAAAAAMT6A/yrzx2rwmwdAAAAAElFTkSuQmCC||||||F||
+    OBX|31|ED|2102^V_PLTScattergram.PNG||iVBORw0KGgoAAAANSUhEUgAAAK8AAABkCAIAAAB/3/dVAAAAA3NCSVQICAjb4U/gAAAACXBIWXMAABLDAAASwwFyLQTKAAADJ0lEQVR4nO3cvWrcQBRA4UlwsaUWXOQR4tKQl7BLGwxh3yOVH8OkCLh0k97pXBmUwiCVDiTgUulTuFQKGYlsvFrNaObOXM35Kv8kMKs5e2dXCzYG2KVt29hLQDRvYy8ACdlZw6pYNU1Tfi+rurr6cmUOXn54d3/X/5ubrzflQ9k0TVVX5UNZHBYCK4ac/qQoDouqrrqvb7/dnp6cbv2wV9VV8Y4OlmDSSVH/qHne5+Bg5Her1er4w/F6vT47Obv+fC22JsQyVsO6WJ9fnD//ed583Dz9ehJbE2IZq6H53Vx+uhRbCqIbq+FVR++PuheSjz8fNxebAEtCMmTvPnGnKy3Ws8GHdsfXb6QXgn/J34scmQeMisiEa9i73wQRk2QNE3eaIKJxqcHphabV/8kliNQ+MJaZDYk9aOyQ7CfaBBSBQA3O+0oQ0pKdDYgg8RoYD6JC18B2apL4bDD0JCloDWykMunPBkNVYlTUACFaamA8SAhXA/unj5bZYMhLgKIaEFygGgI9jxkPYambDQThrN179dTVgIA01sB4CCVEDeyWVhpngyG4QJTWYAjC0qTLpbcGQxDeqa7BEIS9duStpvca5Ldn/9toTKR9NvRowoPF1NChiVkWVkOHJrZMvRp+a0hqD5JajA6LnA09grCz7BoMp4aVxdfQIYhJMqnBEMQUHmtI/3Knv8IQLB51PrMB++VWQ57jYarcajAEMcJXDbouMW87X5fhbOjlEITdY8y5BsOQ2JJ5DR2aeBHlr46naXl//9w6cS81LO+JtbwyJuGk2Cujc4QaJlIXhMuCqWE6dUFYowYrWk4Nx0XOr0HF1fFrsQ+Z2eAm5SDc10YNzrScGhaoYabUgpi1HmqYL50hMXcZM+9FJnIVUtBfiij3Lv1sBJ9TeBf0rvZWc56fjdQQlMeB0Y5+6wevG2TMfG0hdCLPmQ28aLDlMCpELzInRRTdHo83EeHJxkkR0a79jvaWldkQXUIHrvNsSOgxwBdOCgyoAQNqwIAaMKAGDKgBA4caeG+5WMwGDF69F8mzPwft/x+UbH/ftqQAAAAAAAAAAAAAAEjBXxSowG0bPiV3AAAAAElFTkSuQmCC||||||F||
+    OBX|32|ED|2033^V_BASOScattergram.PNG||iVBORw0KGgoAAAANSUhEUgAAAK8AAACvCAIAAAAE8BkiAAAAA3NCSVQICAjb4U/gAAAACXBIWXMAABLDAAASwwFyLQTKAAAFUUlEQVR4nO3dP2gbZxyH8Z+KhuumwYOHDl2dqYEugU7ZGujQDAUrdDId2tXpUNLRdBIZQkKhhG5eCqJgUIaCshiUISAPBWdzhw63BBRoBw+F6+D2vuc7n3S6e99XJ+n5DEKR9Q/u0b3ve6eqZtclSWLYVu+t+g2gRagBQg2Qtaqha9Zd9XvYKsFmkVEviuN4/HI8eT15+tPT7J8Ovj6I43j3g93MvW14Mhyfjsen48GTQZh3iHA19HZ607Pp1fXRb6PbH99O/zR5NTn89vDwu8P0lruf3n3+8/Mwb2ybtWCkiCx6P4rfxlf/2vtoL47jZz8+e/DFg/Qus9ns1t6t3Q93S54CfoTcN8xms9GL0fmb89GLUTohGDwe3Pv8npkd/3J855M76f37+/3Ri9H0bNrf74d5h1jNSDF4PDj46sDMrGtxHE9/n07Pphd/XOTmE1ePuvjzwqIw73HrtGKOPvt7FkWRmd3/7P7xr8cPv3loZta18zfnURRdXl6m93z39p39Y1E3urTLsmeDM0FHir9m49Px5NVk9HLU2+mZ2fBkmJ1ODp4M+l/2zay/3x+fjocnw+nZ9NEPj8K8Q7T4PEXXeju9duzLtkZ7a4B/LVhhojWoAUINEGqAUAOEGiDUAKEGCDVAqAFCDRBqgFADhBog1AChBgg1QKgBQg0QaoBQA4QaINQAoQYINUCoAUINEGqAUAOEGiDUAKEGCDVAqAFCDRBqgFADhBog1AChBgg1QKgBQg0QaoBQA4QaINQAoQYINUCoAUINEGqAUAOEGiDUAKEGCDVAqAFCDRBqgFADhBog1AChBgg1QKgBQg0QaoBQA4QaINQAoQYINUCoAUINEGqAUAOEGiDUAKEGCDVAqAFCDRBqgFADJEQNiSUBXgXNhaihY50Ar4LmGCkg1AChBgg1QALVUFxWsNBYA0nCRtpejBQQaoBQA8RxDYmuJNdvZzqyhpzPIllNrLEWrimoJxhfI4VDnPQKxnENue1WJQ4++u3hrIakcMUKcWTuTAHroMa8Yc4DEj9jBzxxsG+42gEk/18WC6geRNk+g31JGG5GisSsc32rVxkvisomjDfeTiLOuZ835G7xtx5greGcgxoqfkLLDlOiPbyfpyhOIxp+ponJn/o1JJnL+TqZy+YYIPwJ899T5K+gnerXsOwnnhTar04NZSvJMsVuOCrVTt0aj0m3a8UU5hyM8r0KxVIazRuqbMWFxyVJoT0a1eBmb182bMw//wEPmq4w51j4oU/MOknhPIf+1uCpUUvTNcUcVT/AuQUoU4nVcTBvqL3hOvN7qX54C464OU9RI4h5KaS7h+JTE4dPdVaYWdlB36XieHFVBiOIT03XFOlWW2ozLRgjsi+gxyzzAqil0b6h3o6hagqpekMRlufsm3C+ZL9ht/BuaMbBSLHUgL70jkGPLP9+lbHzcKPpCrN4zmLeQaMmn2DOi/vXdE1hhaMO3jdWMTcmFo54/JZsTqMdw39PUZhAEIFTvr77lNtMDlKwwrlwJg2uORgpcjol113KHpu68XglfdTirIbssYf8+QvnU4n5xZFCXU5GiqP0Wm6pmaS3WrGRRXKbnMPS4Xn5NY/kpsuyG2/8U9lzwqtwv+3C8YP2Wd1vu3QKV7Bqfn/bJY/dQLuF/b1IdgPt5nhNgY1SYRZ5VLiCDVFj3/B94Ray2BC1R4qjzGWxDyORTVDreAMbfkNVriG7bzCC2EzVakhTyDWB9bbsvCG7M0inCzfOG7D+Wvgb9AiG/3cNhBog1AChBgg1QKgBQg0QaoBQA4QaINQAyX9vlfMUAAAAWOxfic9gRraXbiAAAAAASUVORK5CYII=||||||F||
+    OBX|33|ED|2034^V_DIFFScattergram.PNG||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||||||F||
+
+────────────────────────────────────────────────────────────────────
+  📥  HL7 MESSAGE  from 192.168.1.149:47546
+────────────────────────────────────────────────────────────────────
+  Instrument   :  (20170214)
+  HL7 Version  : 2.3.1   Charset: UTF-8
+  Message Type : ORU^R01   Control ID: 5
+  Message Time : 2026-05-31 17:32:53
+
+  ── Patient ─────────────────────────────────────────
+  Name         : SABINA ANC
+  Case No.     : 257
+  Sex          : Female
+  Age          : 27 years
+
+  ── Sample ──────────────────────────────────────────
+  Sample ID    : 4
+  Result Type  : Sample Count Results
+  Sampling Time: 2026-05-26 13:10:22
+  Count Time   : 2026-05-26 13:10:25
+
+  ── Test Results ────────────────────────────────────
+  #    Parameter                        Value        Unit         Ref Range          Status
+  ──── ──────────────────────────────── ──────────── ──────────── ────────────────── ──────
+  1    Analysis Mode                    0                                            F
+  2    Measurement Mode                 1                                            F
+  3    Reference Group                  2                                            F
+  4    Remarks                                                                       F
+  5    WBC  (White Blood Cells)         10.89 ▲      10^9/L       4.00-10.00         F
+  6    NEU% (Neutrophil %)              84.0 ▲       %            50.0-70.0          F
+  7    LYM% (Lymphocyte %)              10.2 ▼       %            20.0-40.0          F
+  8    MON% (Monocyte %)                5.2          %            3.0-8.0            F
+  9    EOS% (Eosinophil %)              0.3 ▼        %            0.5-5.0            F
+  10   BAS% (Basophil %)                0.3          %            0.0-1.0            F
+  11   NEU# (Neutrophil count)          9.15 ▲       10^9/L       2.00-7.00          F
+  12   LYM# (Lymphocyte count)          1.11         10^9/L       0.80-4.00          F
+  13   MON# (Monocyte count)            0.57         10^9/L       0.12-0.80          F
+  14   EOS# (Eosinophil count)          0.03         10^9/L       0.02-0.50          F
+  15   BAS# (Basophil count)            0.03         10^9/L       0.00-0.10          F
+  16   RBC  (Red Blood Cells)           4.37         10^12/L      3.50-5.00          F
+  17   HGB  (Hemoglobin)                12.1         g/dL         11.0-15.0          F
+  18   MCV  (Mean Cell Volume)          81.5         fL           80.0-100.0         F
+  19   HCT  (Hematocrit)                35.6         %            35.0-50.0          F
+  20   MCH  (Mean Cell Hgb)             27.7         pg           27.0-34.0          F
+  21   MCHC (Mean Cell Hgb Conc.)       34.0         g/dL         32.0-36.0          F
+  22   RDW-SD                           48.0         fL           35.0-56.0          F
+  23   RDW-CV                           15.2         %            11.0-16.0          F
+  24   PLT  (Platelets)                 157          10^9/L       100-300            F
+  25   MPV  (Mean Platelet Volume)      13.4 ▲       fL           7.0-13.0           F
+  26   PCT  (Plateletcrit)              0.210        %            0.100-0.280        F
+  27   PDW  (Platelet Dist. Width)      23.7 ▲       fL           15.0-18.0          F
+  28   P-LCR (Large Platelet Ratio)     49.4 ▲       %            13.0-43.0          F
+  29   P-LCC (Large Platelet Count)     78           10^9/L       13-129             F
+
+  ── Attached Images (4) ─────────────────────────────
+  [30] RBC Scattergram (PNG/Base64)              [Base64 image, 1212 chars]
+  [31] PLT Scattergram (PNG/Base64)              [Base64 image, 1200 chars]
+  [32] 2033^V_BASOScattergram.PNG                [Base64 image, 1940 chars]
+  [33] 2034^V_DIFFScattergram.PNG                [Base64 image, 3352 chars]
+────────────────────────────────────────────────────────────────────
+  [✓] ACK sent to analyzer

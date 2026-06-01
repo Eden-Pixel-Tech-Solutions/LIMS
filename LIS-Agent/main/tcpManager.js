@@ -74,6 +74,9 @@ function parseAltaHL7(message) {
         } else if (segment === 'OBR') {
             patient['sample_id'] = fields.length > 3 ? fields[3] : '';
         } else if (segment === 'OBX') {
+            const obxType  = fields.length > 2 ? fields[2].trim() : '';
+            if (obxType === 'ED') continue;  // skip base64 image blobs
+
             const test_info = fields.length > 3 ? fields[3] : '';
             const value = fields.length > 5 ? fields[5] : '';
             const unit = fields.length > 6 ? fields[6] : '';
@@ -82,8 +85,8 @@ function parseAltaHL7(message) {
 
             if (code_parts.length > 0) {
                 const code = code_parts[0];
-                const paramName = parameter_map[code] || code;
-                if (paramName) {
+                const paramName = parameter_map[code];  // undefined if not a known clinical param
+                if (paramName && value) {
                     results[paramName] = { value, unit, ref_range };
                 }
             }
@@ -364,7 +367,7 @@ async function initializeAllServers(win) {
     mainWindow = win;
     try {
         const configs = await db.getConfig();
-        const tcpConfigs = configs.filter(c => c.portType === 'TCP' || (c.model && c.model.includes('ALTA')));
+        const tcpConfigs = configs.filter(c => c.portType === 'TCP' || (c.model && (c.model.includes('ALTA') || c.model.includes('CelQuant 5plus'))));
 
         for (const config of tcpConfigs) {
             if (activeServers.has(config.port) || pendingPorts.has(config.port)) {

@@ -32,7 +32,7 @@ export default function Setup() {
     });
 
     const manufacturers = {
-        'Meril': ['CliniQuant Micro', 'CelQuant Edge', 'CelQuant Micro', 'AutoQuant 200i', 'Quantirase'],
+        'Meril': ['CliniQuant Micro', 'CelQuant Edge', 'CelQuant Micro', 'CelQuant 5plus', 'AutoQuant 200i', 'Quantirase'],
         'Sysmex': ['XP-100', 'XN-350', 'XN-550', 'KX-21'],
         'Agape': ['Mispa Viva', 'Mispa i2', 'Mispa i3', 'Mispa CC'],
         'HDC India': ['HDC-Lyte Plus', 'HDC-LYTE PRO'],
