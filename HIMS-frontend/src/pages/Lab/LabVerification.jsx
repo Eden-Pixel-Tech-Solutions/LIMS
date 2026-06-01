@@ -7,9 +7,11 @@ const LabVerification = () => {
   const [tests, setTests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedTest, setSelectedTest] = useState(null);
+  const [selectedTest, setSelectedTest]   = useState(null);
+  const [approveTest, setApproveTest]     = useState(null); // separate state for approve modal
   const [verificationNote, setVerificationNote] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
+  const [approveNote, setApproveNote]     = useState('');
+  const [filterStatus, setFilterStatus]   = useState('all');
 
   useEffect(() => {
     fetchPendingVerifications();
@@ -67,33 +69,33 @@ const LabVerification = () => {
     }
   };
 
-  const handleApprove = async (testId, sampleId) => {
-    if (!window.confirm('Are you sure you want to approve this test?')) return;
-
+  const handleApprove = async () => {
+    if (!approveTest) return;
+    const doctorId = localStorage.getItem('user_id') || JSON.parse(localStorage.getItem('user') || '{}')?.id || 1;
     try {
-      const doctorId = JSON.parse(localStorage.getItem('user'))?.id || 1;
-
       const res = await fetch(`${API_BASE}/api/lab/verify-test`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          test_result_id: testId,
-          sample_id: sampleId,
+          test_result_id: approveTest.id,
+          sample_id: approveTest.sample_id,
           verified_by: doctorId,
           status: 'Approved',
-          notes: verificationNote
+          notes: approveNote
         })
       });
-
       const data = await res.json();
       if (data.success) {
         alert('Test approved successfully!');
-        setSelectedTest(null);
-        setVerificationNote('');
+        setApproveTest(null);
+        setApproveNote('');
         fetchPendingVerifications();
+      } else {
+        alert('Approval failed: ' + (data.message || 'Unknown error'));
       }
     } catch (error) {
       console.error('Error approving test:', error);
+      alert('Network error while approving. Please try again.');
     }
   };
 
@@ -182,7 +184,7 @@ const LabVerification = () => {
                       {test.status === 'Verified' && (
                         <button
                           className="approve-btn"
-                          onClick={() => handleApprove(test.id, test.sample_id)}
+                          onClick={() => { setApproveTest(test); setApproveNote(''); }}
                         >
                           ✓ Approve
                         </button>
@@ -196,6 +198,76 @@ const LabVerification = () => {
               )}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Approve Modal */}
+      {approveTest && (
+        <div className="modal-overlay" onClick={() => setApproveTest(null)}>
+          <div className="verification-modal" onClick={e => e.stopPropagation()}>
+            <h2>Approve Test Results</h2>
+
+            <div className="test-details">
+              <p><strong>Sample ID:</strong> {approveTest.sample_id}</p>
+              <p><strong>Patient:</strong> {approveTest.patient_name}</p>
+              <p><strong>Test:</strong> {approveTest.test_name}</p>
+              <p><strong>Machine:</strong> {approveTest.machine_no || 'N/A'}</p>
+              <p><strong>Verified At:</strong> {formatDateTime(approveTest.verified_at)}</p>
+            </div>
+
+            <div className="results-section">
+              <h3>Test Results</h3>
+              <table className="results-table">
+                <thead>
+                  <tr>
+                    <th>Parameter</th>
+                    <th>Result</th>
+                    <th>Unit</th>
+                    <th>Reference Range</th>
+                    <th>Flag</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {approveTest.results?.map((result, idx) => (
+                    <tr key={idx} className={`flag-${result.result_flag}`}>
+                      <td>{result.parameter_name}</td>
+                      <td className="result-value">{result.result_value}</td>
+                      <td>{result.unit}</td>
+                      <td>{result.reference_range}</td>
+                      <td>
+                        <span className={`flag-badge ${result.result_flag}`}>
+                          {result.result_flag}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="verification-notes">
+              <label>Approval Notes (Optional):</label>
+              <textarea
+                value={approveNote}
+                onChange={(e) => setApproveNote(e.target.value)}
+                placeholder="Add any notes about this approval..."
+                rows="3"
+              />
+            </div>
+
+            <div className="modal-actions">
+              <button className="btn-modal-cancel" onClick={() => setApproveTest(null)}>
+                Cancel
+              </button>
+              <button
+                className="approve-btn"
+                style={{ padding: '10px 24px', fontSize: '15px' }}
+                onClick={handleApprove}
+              >
+                ✓ Approve & Release Report
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
