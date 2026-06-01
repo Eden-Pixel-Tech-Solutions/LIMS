@@ -505,6 +505,44 @@ function drawPageFooter(doc, report, pageNum, totalPages) {
   );
 }
 
+// ─── Scattergram Row (4 images in one row) ───────────────────────────────────
+function drawScattergramRow(doc, scattergrams, y) {
+  if (!scattergrams || scattergrams.length === 0) return y;
+
+  const count    = Math.min(scattergrams.length, 4);
+  const GAP      = 8;
+  const IMG_W    = (CONTENT_W - GAP * (count - 1)) / count;
+  const IMG_H    = IMG_W * 0.75;   // 4:3 aspect ratio
+  const LABEL_H  = 14;
+
+  // Section heading
+  doc.font('Helvetica-Bold').fontSize(7.5).fillColor(C.colHeader);
+  doc.text('SCATTEROGRAMS', MARGIN, y + 3, { width: CONTENT_W });
+  y += 14;
+
+  scattergrams.slice(0, 4).forEach((scatter, i) => {
+    const x = MARGIN + i * (IMG_W + GAP);
+
+    try {
+      const imgBuffer = Buffer.from(scatter.base64, 'base64');
+      doc.image(imgBuffer, x, y, { width: IMG_W, height: IMG_H });
+    } catch (_) {
+      // Fallback placeholder box if image fails
+      rect(doc, x, y, IMG_W, IMG_H, '#EEEEEE');
+      doc.font('Helvetica').fontSize(6).fillColor(C.lightGray);
+      doc.text('Image N/A', x, y + IMG_H / 2 - 4, { width: IMG_W, align: 'center' });
+    }
+
+    // Label centred below each image
+    doc.font('Helvetica').fontSize(6.5).fillColor(C.gray);
+    doc.text(scatter.label || scatter.code, x, y + IMG_H + 2, {
+      width: IMG_W, align: 'center', lineBreak: false,
+    });
+  });
+
+  return y + IMG_H + LABEL_H + 6;
+}
+
 // ─── Main PDF generation ──────────────────────────────────────────────────────
 export async function generateLabReportPDFStream(reportData) {
   // We use bufferPages:true so we can do a second pass for footers
@@ -590,6 +628,20 @@ export async function generateLabReportPDFStream(reportData) {
       addNewPage();
     }
     curY = drawDisclaimer(doc, curY);
+
+    // ── Scattergrams (4 images in one row, only for machines that send them) ─
+    if (test.scattergrams && test.scattergrams.length > 0) {
+      const count   = Math.min(test.scattergrams.length, 4);
+      const gap     = 8;
+      const imgW    = (CONTENT_W - gap * (count - 1)) / count;
+      const imgH    = imgW * 0.75;
+      const scatterBlockH = 14 + imgH + 14 + 6;   // heading + image + label + padding
+
+      if (curY + scatterBlockH > PAGE_BOTTOM) {
+        addNewPage();
+      }
+      curY = drawScattergramRow(doc, test.scattergrams, curY);
+    }
 
     // ── Divider between tests ──────────────────────────────────────────────
     if (ti < tests.length - 1) {
