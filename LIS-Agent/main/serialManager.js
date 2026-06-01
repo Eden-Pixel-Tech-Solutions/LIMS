@@ -425,7 +425,7 @@ async function startBackgroundListener(machine, win) {
   for (let attempt = 1; attempt <= 2; attempt++) {
     try {
       const res = await axios.get(
-        `${API_BASE}/api/lab/machine-protocol/${machine.model}`,
+        `${API_BASE}/api/lab/machine-protocol/${encodeURIComponent(machine.model)}`,
         { timeout: 5000 }
       );
       if (!res.data.success) throw new Error('Backend returned success=false');

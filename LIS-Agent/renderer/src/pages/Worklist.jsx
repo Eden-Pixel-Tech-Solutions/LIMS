@@ -284,7 +284,7 @@ const Worklist = () => {
     setIsFetchingParams(true);
 
     try {
-      const protocolRes = await axios.get(`${API_BASE}/api/lab/machine-protocol/${machine.model}`);
+      const protocolRes = await axios.get(`${API_BASE}/api/lab/machine-protocol/${encodeURIComponent(machine.model)}`);
       const protocol = protocolRes.data.success ? protocolRes.data.protocol : null;
 
       const res = await axios.get(`${API_BASE}/api/lab/tests/${item.test_id}`);

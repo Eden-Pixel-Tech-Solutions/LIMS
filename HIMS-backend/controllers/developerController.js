@@ -2,6 +2,8 @@ import db from '../config/db.js';
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
 import bcrypt from 'bcryptjs';
+import fs from 'fs/promises';
+import path from 'path';
 
 // ── In-memory OTP store ──────────────────────────────────────────────────────
 // { email: { otp, expiry, attempts } }
@@ -332,6 +334,31 @@ export const resetPassword = async (req, res) => {
     const hashed = await bcrypt.hash(password, 10);
     await db.query(`UPDATE users SET password = ? WHERE id = ?`, [hashed, id]);
     res.json({ success: true, message: 'Password reset successfully' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ── MACHINE BRANDS (protocol definitions) ────────────────────────────────────
+export const getBrands = async (req, res) => {
+  try {
+    const dir = path.resolve('./utils/machinesid.json');
+    const files = await fs.readdir(dir);
+    const brands = await Promise.all(
+      files
+        .filter(f => f.endsWith('.json'))
+        .map(async (file) => {
+          const raw  = await fs.readFile(path.join(dir, file), 'utf8');
+          const protocol = JSON.parse(raw);
+          const name = file.replace('.json', '');
+          const protocolType = protocol.protocol_type || protocol.protocol || 'Binary';
+          const paramCount   = protocol.frame_structure?.['2']?.tests?.length
+            || protocol.tests?.length
+            || 0;
+          return { name, file, protocolType, paramCount, protocol };
+        })
+    );
+    res.json({ success: true, brands });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

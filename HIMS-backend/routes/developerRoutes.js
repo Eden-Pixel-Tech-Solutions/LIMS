@@ -4,7 +4,8 @@ import {
   getStats,
   getHospitals, createHospital, updateHospital, deleteHospital, createDistrict,
   getLabs, createLab, updateLab, deleteLab,
-  getUsers, createUser, updateUser, toggleUserStatus, resetPassword
+  getUsers, createUser, updateUser, toggleUserStatus, resetPassword,
+  getBrands
 } from '../controllers/developerController.js';
 
 const router = express.Router();
@@ -28,6 +29,8 @@ router.get('/labs',                     getLabs);
 router.post('/labs',                    createLab);
 router.put('/labs/:id',                 updateLab);
 router.delete('/labs/:id',              deleteLab);
+
+router.get('/brands',                   getBrands);
 
 router.get('/users',                    getUsers);
 router.post('/users',                   createUser);

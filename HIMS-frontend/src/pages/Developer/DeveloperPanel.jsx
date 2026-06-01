@@ -423,6 +423,121 @@ function UsersTab({ hospitals }) {
   );
 }
 
+// ── Brands Tab ────────────────────────────────────────────────────────────
+function BrandsTab() {
+  const [brands, setBrands]       = useState([]);
+  const [selected, setSelected]   = useState(null);
+  const [loading, setLoading]     = useState(true);
+
+  useEffect(() => {
+    axios.get(`${API}/api/dev/brands`, { headers: authHeaders() })
+      .then(r => setBrands(r.data.brands || []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const PROTOCOL_COLOR = {
+    'HL7':      { bg: '#1a2e4a', color: '#38bdf8' },
+    'TCP_HL7':  { bg: '#1a2e4a', color: '#38bdf8' },
+    'TEXT':     { bg: '#1e3a2a', color: '#4ade80' },
+    'Binary':   { bg: '#2d1a4a', color: '#a78bfa' },
+  };
+
+  if (loading) return <div style={S.loading}>Loading machine brands…</div>;
+
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: '20px', height: '100%' }}>
+      {/* Brand list */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        {brands.map(b => {
+          const pc = PROTOCOL_COLOR[b.protocolType] || { bg: '#1e293b', color: '#94a3b8' };
+          const isActive = selected?.name === b.name;
+          return (
+            <div
+              key={b.name}
+              onClick={() => setSelected(b)}
+              style={{
+                background: isActive ? 'rgba(56,189,248,0.1)' : '#1e293b',
+                border: `1px solid ${isActive ? 'rgba(56,189,248,0.4)' : '#334155'}`,
+                borderRadius: '10px', padding: '14px 16px', cursor: 'pointer',
+                transition: 'all .15s',
+              }}
+            >
+              <div style={{ fontWeight: '600', color: '#f1f5f9', fontSize: '14px', marginBottom: '6px', textTransform: 'capitalize' }}>
+                {b.name}
+              </div>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <span style={{ ...S.badge, background: pc.bg, color: pc.color }}>{b.protocolType}</span>
+                <span style={{ fontSize: '12px', color: '#475569' }}>{b.paramCount} params</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Protocol detail */}
+      {selected ? (
+        <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: '12px', padding: '20px', overflow: 'auto' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+            <div style={{ fontSize: '18px', fontWeight: '700', color: '#f1f5f9', textTransform: 'capitalize' }}>{selected.name}</div>
+            <span style={{ ...S.badge, ...(PROTOCOL_COLOR[selected.protocolType] || { bg:'#1e293b', color:'#94a3b8' }) }}>
+              {selected.protocolType}
+            </span>
+          </div>
+
+          {/* Parameters table */}
+          {(selected.protocol.frame_structure?.['2']?.tests || selected.protocol.tests) && (
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ fontSize: '12px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase', marginBottom: '10px' }}>Parameters</div>
+              <table style={S.table}>
+                <thead><tr style={S.thead}>
+                  {['ID / Code', 'Name / Label', 'Unit', 'Ref Range'].map(h => <th key={h} style={S.th}>{h}</th>)}
+                </tr></thead>
+                <tbody>
+                  {(selected.protocol.frame_structure?.['2']?.tests || selected.protocol.tests || []).map((t, i) => (
+                    <tr key={i} style={S.tr}>
+                      <td style={S.td}><span style={S.code}>{t.id ?? t.name}</span></td>
+                      <td style={S.td}>{t.label || t.name}</td>
+                      <td style={S.td}>{t.unit || '—'}</td>
+                      <td style={S.td}>{t.ref_range || '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* Units table (binary protocol) */}
+          {selected.protocol.frame_structure?.['3']?.units && (
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ fontSize: '12px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase', marginBottom: '10px' }}>Unit Codes</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                {selected.protocol.frame_structure['3'].units.map((u, i) => (
+                  <span key={i} style={{ background: '#0f172a', color: '#94a3b8', padding: '4px 10px', borderRadius: '6px', fontSize: '12px', fontFamily: 'monospace' }}>
+                    {u.id} → {u.unit}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Raw JSON */}
+          <div>
+            <div style={{ fontSize: '12px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase', marginBottom: '10px' }}>Raw Protocol JSON</div>
+            <pre style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '8px', padding: '14px', fontSize: '11px', color: '#94a3b8', overflow: 'auto', maxHeight: '300px' }}>
+              {JSON.stringify(selected.protocol, null, 2)}
+            </pre>
+          </div>
+        </div>
+      ) : (
+        <div style={{ background: '#1e293b', border: '1px dashed #334155', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#334155', fontSize: '14px' }}>
+          Select a machine brand to view its protocol
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Main Panel ────────────────────────────────────────────────────────────
 export default function DeveloperPanel() {
   const navigate                  = useNavigate();
@@ -458,6 +573,7 @@ export default function DeveloperPanel() {
     { id: 'hospitals',  label: '🏥 Hospitals' },
     { id: 'labs',       label: '🧪 Labs' },
     { id: 'users',      label: '👥 Users' },
+    { id: 'brands',     label: '🔬 Machine Brands' },
   ];
 
   return (
@@ -497,6 +613,7 @@ export default function DeveloperPanel() {
           {tab === 'hospitals' && <HospitalsTab />}
           {tab === 'labs'      && <LabsTab hospitals={hospitals} />}
           {tab === 'users'     && <UsersTab hospitals={hospitals} />}
+          {tab === 'brands'    && <BrandsTab />}
         </div>
       </div>
     </div>

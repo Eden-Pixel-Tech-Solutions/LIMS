@@ -110,7 +110,7 @@ const SampleList = () => {
 
     try {
       // 1. FETCH MACHINE PROTOCOL FIRST
-      const protocolRes = await axios.get(`${API_BASE}/api/lab/machine-protocol/${machine.model}`);
+      const protocolRes = await axios.get(`${API_BASE}/api/lab/machine-protocol/${encodeURIComponent(machine.model)}`);
       const protocol = protocolRes.data.success ? protocolRes.data.protocol : null;
 
       // 2. FETCH TEST PARAMETERS FROM CLOUD
