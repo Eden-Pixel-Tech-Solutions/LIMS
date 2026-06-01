@@ -1,10 +1,8 @@
-#alta-3part.py
-
 import socket
 import json
 
 HOST = "0.0.0.0"
-PORT = 9529
+PORT = 9527
 
 # HL7 control characters
 VT = b'\x0b'

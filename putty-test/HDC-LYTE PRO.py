@@ -17,7 +17,7 @@ from reportlab.platypus.flowables import HRFlowable
 # ==========================================
 # SERIAL CONFIGURATION
 # ==========================================
-PORT = '/dev/tty.usbserial-FTB6SPL3'
+PORT = '/dev/tty.usbserial-562B0198791'
 BAUD_RATE = 9600
 
 # ==========================================

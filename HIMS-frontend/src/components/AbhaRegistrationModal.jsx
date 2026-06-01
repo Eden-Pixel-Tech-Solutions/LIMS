@@ -14,7 +14,7 @@ export default function AbhaRegistrationModal({ isOpen, onClose, onComplete }) {
   const [emailSent, setEmailSent] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
   const [selectedAddress, setSelectedAddress] = useState('');
-  
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [profileData, setProfileData] = useState(null);
@@ -54,7 +54,7 @@ export default function AbhaRegistrationModal({ isOpen, onClose, onComplete }) {
         if (typeof errorData === 'string') errorMsg = errorData;
         else if (errorData?.error?.message) errorMsg = errorData.error.message;
         else if (errorData?.message) errorMsg = errorData.message;
-        
+
         throw new Error(errorMsg);
       }
     } catch (err) {
@@ -79,14 +79,14 @@ export default function AbhaRegistrationModal({ isOpen, onClose, onComplete }) {
       const res = await fetch(`${API_BASE}/api/abdm/aadhaar/verify-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ txnId, otp: aadhaarOtp, mobile }) 
+        body: JSON.stringify({ txnId, otp: aadhaarOtp, mobile })
       });
       const data = await res.json();
       if (data.success && data.data) {
         // Enrolment successful. We expect ABHA profile details here.
         // Assuming sandbox returns mock profile in data.data or similar.
-        const profile = data.data.profile || data.data.ABHAProfile || data.data; 
-        
+        const profile = data.data.profile || data.data.ABHAProfile || data.data;
+
         // Mock fallback if Sandbox is down but we want to test UI
         // Remove this in prod if we only want real responses
         const mockProfile = {
@@ -106,7 +106,7 @@ export default function AbhaRegistrationModal({ isOpen, onClose, onComplete }) {
 
         setProfileData(mockProfile);
         setTxnId(data.data.txnId || txnId);
-        
+
         // Fetch Suggestions
         try {
           const suggRes = await fetch(`${API_BASE}/api/abdm/abha/suggestions`, {
@@ -118,7 +118,7 @@ export default function AbhaRegistrationModal({ isOpen, onClose, onComplete }) {
           if (suggData.success && suggData.data) {
             setSuggestions(suggData.data.abhaAddresses || ['johndoe@abdm', 'john.doe123@abdm']);
           } else {
-             setSuggestions(['johndoe@abdm', 'john.doe123@abdm']);
+            setSuggestions(['johndoe@abdm', 'john.doe123@abdm']);
           }
         } catch (e) {
           console.error('Failed to fetch suggestions', e);
@@ -132,7 +132,7 @@ export default function AbhaRegistrationModal({ isOpen, onClose, onComplete }) {
         if (typeof errorData === 'string') errorMsg = errorData;
         else if (errorData?.error?.message) errorMsg = errorData.error.message;
         else if (errorData?.message) errorMsg = errorData.message;
-        
+
         throw new Error(errorMsg);
       }
     } catch (err) {
@@ -195,7 +195,7 @@ export default function AbhaRegistrationModal({ isOpen, onClose, onComplete }) {
         if (typeof errorData === 'string') errorMsg = errorData;
         else if (errorData?.error?.message) errorMsg = errorData.error.message;
         else if (errorData?.message) errorMsg = errorData.message;
-        
+
         throw new Error(errorMsg);
       }
     } catch (err) {
@@ -227,7 +227,7 @@ export default function AbhaRegistrationModal({ isOpen, onClose, onComplete }) {
         if (typeof errorData === 'string') errorMsg = errorData;
         else if (errorData?.error?.message) errorMsg = errorData.error.message;
         else if (errorData?.message) errorMsg = errorData.message;
-        
+
         throw new Error(errorMsg);
       }
     } catch (err) {
@@ -253,14 +253,14 @@ export default function AbhaRegistrationModal({ isOpen, onClose, onComplete }) {
       if (data.success) {
         // Mobile successfully verified, update profile mobile
         setProfileData({ ...profileData, mobile });
-        setStep('PROFILE_PREVIEW'); 
+        setStep('PROFILE_PREVIEW');
       } else {
         const errorData = data.error;
         let errorMsg = 'Failed to verify Mobile OTP';
         if (typeof errorData === 'string') errorMsg = errorData;
         else if (errorData?.error?.message) errorMsg = errorData.error.message;
         else if (errorData?.message) errorMsg = errorData.message;
-        
+
         throw new Error(errorMsg);
       }
     } catch (err) {
@@ -292,9 +292,9 @@ export default function AbhaRegistrationModal({ isOpen, onClose, onComplete }) {
         onChange={(e) => setAadhaar(e.target.value.replace(/\D/g, ''))}
         style={{ fontSize: '18px', textAlign: 'center', letterSpacing: '2px', padding: '12px' }}
       />
-      <button 
-        className="btn-primary" 
-        onClick={requestAadhaarOtp} 
+      <button
+        className="btn-primary"
+        onClick={requestAadhaarOtp}
         disabled={loading || aadhaar.length !== 12}
         style={{ marginTop: 24, width: '100%', padding: '12px', justifyContent: 'center' }}
       >
@@ -328,9 +328,9 @@ export default function AbhaRegistrationModal({ isOpen, onClose, onComplete }) {
         onChange={(e) => setMobile(e.target.value.replace(/\D/g, ''))}
         style={{ fontSize: '18px', textAlign: 'center', letterSpacing: '2px', padding: '12px' }}
       />
-      <button 
-        className="btn-primary" 
-        onClick={verifyAadhaarOtp} 
+      <button
+        className="btn-primary"
+        onClick={verifyAadhaarOtp}
         disabled={loading || aadhaarOtp.length < 6 || mobile.length !== 10}
         style={{ marginTop: 24, width: '100%', padding: '12px', justifyContent: 'center' }}
       >
@@ -377,9 +377,9 @@ export default function AbhaRegistrationModal({ isOpen, onClose, onComplete }) {
       <div style={{ fontSize: '12px', color: '#64748b', marginBottom: 16, textAlign: 'center' }}>
         8-18 characters. Must start with a letter. Only letters, numbers, dot (.), and underscore (_).
       </div>
-      <button 
-        className="btn-primary" 
-        onClick={createAbhaAddress} 
+      <button
+        className="btn-primary"
+        onClick={createAbhaAddress}
         disabled={loading || !(/^[a-z][a-z0-9._]{7,17}$/.test(selectedAddress.split('@')[0]))}
         style={{ width: '100%', padding: '12px', justifyContent: 'center' }}
       >
@@ -426,9 +426,9 @@ export default function AbhaRegistrationModal({ isOpen, onClose, onComplete }) {
             onChange={(e) => setMobile(e.target.value.replace(/\D/g, ''))}
             style={{ marginBottom: '16px' }}
           />
-          <button 
-            className="btn-primary" 
-            onClick={requestMobileOtp} 
+          <button
+            className="btn-primary"
+            onClick={requestMobileOtp}
             disabled={loading || mobile.length !== 10}
             style={{ width: '100%', justifyContent: 'center' }}
           >
@@ -447,16 +447,16 @@ export default function AbhaRegistrationModal({ isOpen, onClose, onComplete }) {
             style={{ marginBottom: '16px' }}
           />
           <div style={{ display: 'flex', gap: '12px' }}>
-            <button 
-              className="btn-ghost" 
-              onClick={finishRegistration} 
+            <button
+              className="btn-ghost"
+              onClick={finishRegistration}
               style={{ flex: 1, padding: '12px', justifyContent: 'center' }}
             >
               Skip & Auto-fill
             </button>
-            <button 
-              className="btn-primary" 
-              onClick={requestEmailVerification} 
+            <button
+              className="btn-primary"
+              onClick={requestEmailVerification}
               disabled={loading || !email.includes('@')}
               style={{ flex: 1, padding: '12px', justifyContent: 'center' }}
             >
@@ -470,9 +470,9 @@ export default function AbhaRegistrationModal({ isOpen, onClose, onComplete }) {
             <CheckCircle size={20} />
             <span style={{ fontWeight: 500 }}>Verification email sent successfully!</span>
           </div>
-          <button 
-            className="btn-primary" 
-            onClick={finishRegistration} 
+          <button
+            className="btn-primary"
+            onClick={finishRegistration}
             style={{ width: '100%', padding: '12px', justifyContent: 'center' }}
           >
             Auto-fill Registration Form
@@ -498,9 +498,9 @@ export default function AbhaRegistrationModal({ isOpen, onClose, onComplete }) {
         onChange={(e) => setMobileOtp(e.target.value.replace(/\D/g, ''))}
         style={{ fontSize: '24px', textAlign: 'center', letterSpacing: '4px', padding: '12px' }}
       />
-      <button 
-        className="btn-primary" 
-        onClick={verifyMobileOtp} 
+      <button
+        className="btn-primary"
+        onClick={verifyMobileOtp}
         disabled={loading || mobileOtp.length < 6}
         style={{ marginTop: 24, width: '100%', padding: '12px', justifyContent: 'center' }}
       >
@@ -511,7 +511,7 @@ export default function AbhaRegistrationModal({ isOpen, onClose, onComplete }) {
 
   return (
     <div className="abha-modal-overlay" style={{
-      position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, 
+      position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
       backgroundColor: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(4px)',
       display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999
     }}>
@@ -520,7 +520,7 @@ export default function AbhaRegistrationModal({ isOpen, onClose, onComplete }) {
         boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
         display: 'flex', flexDirection: 'column', position: 'relative'
       }}>
-        
+
         {/* Header */}
         <div style={{ padding: '16px 24px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600, color: '#0f172a' }}>Register with ABHA</h3>
@@ -545,22 +545,22 @@ export default function AbhaRegistrationModal({ isOpen, onClose, onComplete }) {
           {step === 'PROFILE_PREVIEW' && renderStepProfilePreview()}
           {step === 'VERIFY_MOBILE_OTP' && renderStepVerifyMobileOtp()}
         </div>
-        
+
         {/* Footer (Optional back button logic) */}
         {step !== 'ENTER_AADHAAR' && step !== 'PROFILE_PREVIEW' && step !== 'CREATE_ADDRESS' && (
-           <div style={{ padding: '16px 24px', borderTop: '1px solid #e2e8f0', background: '#f8fafc', borderBottomLeftRadius: '16px', borderBottomRightRadius: '16px' }}>
-             <button 
-               className="btn-ghost" 
-               onClick={() => {
-                 if (step === 'VERIFY_AADHAAR_OTP') setStep('ENTER_AADHAAR');
-                 if (step === 'VERIFY_MOBILE_OTP') setStep('PROFILE_PREVIEW');
-                 setError(null);
-               }}
-               style={{ padding: '6px 12px', fontSize: '13px' }}
-             >
-               Go Back
-             </button>
-           </div>
+          <div style={{ padding: '16px 24px', borderTop: '1px solid #e2e8f0', background: '#f8fafc', borderBottomLeftRadius: '16px', borderBottomRightRadius: '16px' }}>
+            <button
+              className="btn-ghost"
+              onClick={() => {
+                if (step === 'VERIFY_AADHAAR_OTP') setStep('ENTER_AADHAAR');
+                if (step === 'VERIFY_MOBILE_OTP') setStep('PROFILE_PREVIEW');
+                setError(null);
+              }}
+              style={{ padding: '6px 12px', fontSize: '13px' }}
+            >
+              Go Back
+            </button>
+          </div>
         )}
 
       </div>

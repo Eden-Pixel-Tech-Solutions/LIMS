@@ -2,12 +2,14 @@
 -- Migration: Branch isolation + atomic lab sample sequence
 -- ============================================================
 
--- 1. Atomic sample ID sequence table (per branch, per day)
-CREATE TABLE IF NOT EXISTS `lab_sample_sequences` (
-  `branch_id` INT  NOT NULL,
-  `seq_date`  DATE NOT NULL,
-  `last_seq`  INT  NOT NULL DEFAULT 0,
-  PRIMARY KEY (`branch_id`, `seq_date`)
+-- 1. Atomic sample ID sequence table (per branch, per department range, per day)
+DROP TABLE IF EXISTS `lab_sample_sequences`;
+CREATE TABLE `lab_sample_sequences` (
+  `branch_id` INT          NOT NULL,
+  `seq_date`  DATE         NOT NULL,
+  `dept_key`  VARCHAR(10)  NOT NULL DEFAULT '7000',
+  `last_seq`  INT          NOT NULL DEFAULT 0,
+  PRIMARY KEY (`branch_id`, `seq_date`, `dept_key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- 2. Helper procedure: add a column only if it doesn't exist

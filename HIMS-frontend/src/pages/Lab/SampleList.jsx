@@ -138,7 +138,7 @@ export default function SampleList() {
       const res = await fetch(`${API_BASE}/api/lab/generate-sample-id`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ branch_id: localStorage.getItem('branch_id') })
+        body: JSON.stringify({ branch_id: localStorage.getItem('branch_id'), department: item.department })
       });
       const data = await res.json();
 

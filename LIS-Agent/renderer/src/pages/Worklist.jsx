@@ -2,6 +2,174 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import JsBarcode from 'jsbarcode';
 
+// ─── Inline barcode for table rows ────────────────────────────────────────────
+const BarcodeImage = ({ value }) => {
+  const svgRef = useRef(null);
+  useEffect(() => {
+    if (svgRef.current && value) {
+      try {
+        JsBarcode(svgRef.current, value, {
+          format: 'CODE128',
+          width: 1.5,
+          height: 35,
+          displayValue: false,
+          margin: 0,
+          background: 'transparent',
+          lineColor: '#0f172a'
+        });
+      } catch(e) { console.error('Barcode render error', e); }
+    }
+  }, [value]);
+  return <svg ref={svgRef}></svg>;
+};
+
+// ─── Self-contained Barcode Popup Modal ───────────────────────────────────────
+// Owns its own ref so JsBarcode always targets a fresh mounted <svg>.
+const BarcodeModal = ({ printLabel, onClose }) => {
+  const barcodeRef = useRef(null);
+
+  useEffect(() => {
+    if (barcodeRef.current && (printLabel.shortId || printLabel.sampleId)) {
+      try {
+        JsBarcode(barcodeRef.current, printLabel.shortId || printLabel.sampleId, {
+          format: 'CODE128',
+          width: 2,
+          height: 60,
+          displayValue: true,
+          fontSize: 14,
+          margin: 10,
+          background: '#ffffff',
+          lineColor: '#0f172a'
+        });
+      } catch(e) { console.error('Barcode modal render error', e); }
+    }
+  }, [printLabel]);
+
+  const handlePrint = () => {
+    const printContent = document.getElementById('barcode-label-content');
+    const win = window.open('', '', 'width=450,height=500');
+    win.document.write(`
+      <html>
+        <head>
+          <title>Print Label</title>
+          <style>
+            body { font-family: sans-serif; text-align: center; padding: 24px; background: #fff; }
+          </style>
+        </head>
+        <body>${printContent.innerHTML}</body>
+      </html>
+    `);
+    win.document.close();
+    win.focus();
+    setTimeout(() => { win.print(); win.close(); onClose(); }, 500);
+  };
+
+  return (
+    <div
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      style={{
+        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+        background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        zIndex: 1000
+      }}
+    >
+      <div style={{
+        background: '#fff', borderRadius: '20px', width: '420px',
+        boxShadow: '0 24px 64px rgba(0,0,0,0.25)', overflow: 'hidden'
+      }}>
+        {/* Header */}
+        <div style={{
+          background: '#0f172a', padding: '20px 28px',
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+        }}>
+          <div>
+            <div style={{ color: '#38bdf8', fontSize: '11px', fontWeight: '700', letterSpacing: '1.5px', textTransform: 'uppercase' }}>
+              Sample Label
+            </div>
+            <div style={{ color: '#fff', fontSize: '18px', fontWeight: '900', marginTop: '2px' }}>
+              {printLabel.patientName}
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            style={{
+              background: '#1e293b', border: 'none', color: '#94a3b8',
+              width: '36px', height: '36px', borderRadius: '50%',
+              cursor: 'pointer', fontSize: '20px', lineHeight: 1,
+              display: 'flex', alignItems: 'center', justifyContent: 'center'
+            }}
+          >×</button>
+        </div>
+
+        {/* Label Body */}
+        <div style={{ padding: '28px' }}>
+          <div
+            id="barcode-label-content"
+            style={{
+              border: '1.5px dashed #cbd5e1', borderRadius: '12px',
+              padding: '24px 20px', textAlign: 'center',
+              background: '#f8fafc', marginBottom: '20px'
+            }}
+          >
+            <div style={{ fontSize: '15px', fontWeight: '800', color: '#0f172a', marginBottom: '2px' }}>
+              {printLabel.patientName}
+            </div>
+            <div style={{ fontSize: '22px', fontWeight: '900', color: '#2563eb', marginBottom: '2px', fontFamily: 'monospace' }}>
+              ID: {printLabel.shortId}
+            </div>
+            {printLabel.sampleType && (
+              <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '14px', fontWeight: '600' }}>
+                {printLabel.sampleType}
+              </div>
+            )}
+            <svg ref={barcodeRef} style={{ maxWidth: '100%' }}></svg>
+          </div>
+
+          {printLabel.testName && (
+            <div style={{
+              display: 'flex', gap: '8px', alignItems: 'center',
+              padding: '10px 14px', background: '#eff6ff',
+              borderRadius: '8px', marginBottom: '20px'
+            }}>
+              <span style={{ fontSize: '14px' }}>🧪</span>
+              <div>
+                <div style={{ fontSize: '10px', color: '#60a5fa', fontWeight: '700', letterSpacing: '0.5px' }}>TEST</div>
+                <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e40af' }}>{printLabel.testName}</div>
+              </div>
+            </div>
+          )}
+
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <button
+              onClick={handlePrint}
+              style={{
+                flex: 1, padding: '14px', background: '#2563eb', color: '#fff',
+                border: 'none', borderRadius: '12px', fontWeight: '800',
+                fontSize: '14px', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
+              }}
+            >
+              🖨️ Print Label
+            </button>
+            <button
+              onClick={onClose}
+              style={{
+                flex: 1, padding: '14px', background: '#f1f5f9', color: '#475569',
+                border: 'none', borderRadius: '12px', fontWeight: '800',
+                fontSize: '14px', cursor: 'pointer'
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ─── Main Worklist Component ───────────────────────────────────────────────────
 const Worklist = () => {
   const [worklist, setWorklist] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -18,7 +186,6 @@ const Worklist = () => {
   const [departmentFilter, setDepartmentFilter] = useState('all');
   const [isFetchingParams, setIsFetchingParams] = useState(false);
   const [selectedParams, setSelectedParams] = useState([]);
-  const barcodeRef = useRef(null);
 
   const API_BASE = 'https://lims.poxiatechnologies.com';
 
@@ -30,14 +197,6 @@ const Worklist = () => {
   }, [search, selectedBranch, statusFilter, departmentFilter]);
 
   useEffect(() => {
-    if (printLabel && barcodeRef.current) {
-      JsBarcode(barcodeRef.current, printLabel.sampleId, {
-        format: 'CODE128', width: 2, height: 50, displayValue: true, fontSize: 14, margin: 10
-      });
-    }
-  }, [printLabel]);
-
-  useEffect(() => {
     const cleanupTest = window.electronAPI.onTestCompleted((data) => {
       if (showProcessModal) {
         setIncomingResults(prev => [...prev, data]);
@@ -45,7 +204,6 @@ const Worklist = () => {
     });
     const cleanupPanel = window.electronAPI.onPanelComplete(async (data) => {
       if (showProcessModal) {
-        // Fetch saved results for the panel and populate incomingResults
         try {
           const res = await axios.get(`${API_BASE}/api/lab/test-results/${data.sampleId}`);
           if (res.data.success) {
@@ -87,7 +245,10 @@ const Worklist = () => {
     try {
       const today = new Date();
       const dateStr = today.toISOString().slice(0, 10).replace(/-/g, '');
-      const resId = await axios.post(`${API_BASE}/api/lab/generate-sample-id`, { date: dateStr });
+      const resId = await axios.post(`${API_BASE}/api/lab/generate-sample-id`, { 
+        date: dateStr, 
+        department: item.department 
+      });
       if (resId.data.success) {
         const { sampleId, shortId } = resId.data;
         const resAck = await axios.post(`${API_BASE}/api/lab/acknowledge-test`, {
@@ -123,48 +284,36 @@ const Worklist = () => {
     setIsFetchingParams(true);
 
     try {
-      // 1. FETCH MACHINE PROTOCOL FIRST
       const protocolRes = await axios.get(`${API_BASE}/api/lab/machine-protocol/${machine.model}`);
       const protocol = protocolRes.data.success ? protocolRes.data.protocol : null;
 
-      // 2. FETCH TEST PARAMETERS FROM CLOUD
       const res = await axios.get(`${API_BASE}/api/lab/tests/${item.test_id}`);
       if (res.data.success && res.data.parameters) {
-
-        // 3. INTELLIGENT MAPPING: 
-        // Match Cloud Parameter Name against Machine Protocol IDs
         const mappedParams = res.data.parameters.map(p => {
           let machineId = null;
-
           if (protocol && protocol.frame_structure && protocol.frame_structure["2"] && protocol.frame_structure["2"].tests) {
-            // Try matching by name (case-insensitive)
             const match = protocol.frame_structure["2"].tests.find(
               mt => mt.name.toLowerCase() === p.parameter_name.toLowerCase() ||
                 mt.name.toLowerCase().replace('-', ' ') === p.parameter_name.toLowerCase().replace('-', ' ')
             );
             if (match) machineId = match.id;
           }
-
-          // Fallback to manual code if no name match found
           if (!machineId) machineId = p.machine_parameter_code;
-
           return {
             id: machineId,
             name: p.parameter_name,
             unit: p.parameter_unit,
             isAutoMapped: !!machineId
           };
-        }).filter(p => p.id); // Only include parameters we can actually track
+        }).filter(p => p.id);
 
         setSelectedParams(mappedParams);
 
-        // Update status to In Progress
         await axios.post(`${API_BASE}/api/lab/acknowledge-test`, {
           bill_item_id: item.bill_item_id, sample_id: item.sample_id, status: 'In Progress'
         });
         fetchWorklist();
 
-        // 4. START LISTENING
         await window.electronAPI.startListening({
           port: machine.port,
           baud: machine.baud,
@@ -230,17 +379,6 @@ const Worklist = () => {
     setIncomingResults(newResults);
   };
 
-  const handlePrint = () => {
-    const printContent = document.getElementById('barcode-label');
-    const win = window.open('', '', 'width=400,height=400');
-    win.document.write('<html><head><title>Print Label</title><style>body{font-family:sans-serif;text-align:center;padding:20px;}</style></head><body>');
-    win.document.write(printContent.innerHTML);
-    win.document.write('</body></html>');
-    win.document.close();
-    win.focus();
-    setTimeout(() => { win.print(); win.close(); setPrintLabel(null); }, 500);
-  };
-
   const getStatusStyle = (status) => {
     const styles = {
       'Pending': { bg: '#fff7ed', color: '#9a3412', border: '#fed7aa' },
@@ -255,6 +393,7 @@ const Worklist = () => {
 
   return (
     <div style={{ padding: '24px', maxWidth: '1400px', margin: '0 auto' }}>
+      {/* ── Header ── */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '32px' }}>
         <div>
           <h1 style={{ fontSize: '28px', fontWeight: '900', color: '#0f172a', margin: 0 }}>Lab Worklist</h1>
@@ -300,11 +439,13 @@ const Worklist = () => {
         </div>
       </div>
 
+      {/* ── Table ── */}
       <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
           <thead>
             <tr style={{ background: '#f8fafc', borderBottom: '2px solid #f1f5f9' }}>
               <th style={{ padding: '20px 24px', fontSize: '12px', fontWeight: '700', color: '#64748b' }}>Sample ID</th>
+              <th style={{ padding: '20px 24px', fontSize: '12px', fontWeight: '700', color: '#64748b' }}>Barcode</th>
               <th style={{ padding: '20px 24px', fontSize: '12px', fontWeight: '700', color: '#64748b' }}>Patient</th>
               <th style={{ padding: '20px 24px', fontSize: '12px', fontWeight: '700', color: '#64748b' }}>Test Name</th>
               <th style={{ padding: '20px 24px', fontSize: '12px', fontWeight: '700', color: '#64748b' }}>Status</th>
@@ -328,6 +469,43 @@ const Worklist = () => {
                   <td style={{ padding: '20px 24px' }}>
                     <div style={{ fontWeight: '800' }}>{item.sample_id || '---'}</div>
                     {item.short_id && <div style={{ fontSize: '11px', color: '#2563eb', fontWeight: '700' }}>Short ID: {item.short_id}</div>}
+                  </td>
+                  <td style={{ padding: '20px 24px' }}>
+                    {item.short_id ? (
+                      <div
+                        style={{
+                          display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-start',
+                          cursor: 'pointer', padding: '6px 8px', borderRadius: '8px',
+                          border: '1px solid transparent', transition: 'all 0.2s'
+                        }}
+                        onMouseOver={(e) => {
+                          e.currentTarget.style.background = '#f1f5f9';
+                          e.currentTarget.style.borderColor = '#e2e8f0';
+                        }}
+                        onMouseOut={(e) => {
+                          e.currentTarget.style.background = 'transparent';
+                          e.currentTarget.style.borderColor = 'transparent';
+                        }}
+                        onClick={() => setPrintLabel({
+                          sampleId: item.sample_id,
+                          shortId: item.short_id,
+                          patientName: item.patient_name,
+                          testName: item.test_name,
+                          sampleType: item.sample_type
+                        })}
+                        title="Click to view & print barcode label"
+                      >
+                        <BarcodeImage value={item.short_id} />
+                        <div style={{ fontSize: '10px', fontWeight: '800', fontFamily: 'monospace', color: '#475569', marginTop: '2px', marginLeft: '2px' }}>
+                          {item.short_id}
+                        </div>
+                        <div style={{ fontSize: '9px', color: '#94a3b8', marginTop: '1px', marginLeft: '2px' }}>
+                          🖨️ Click to print
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{ fontWeight: '700', fontFamily: 'monospace', color: '#475569' }}>---</div>
+                    )}
                   </td>
                   <td style={{ padding: '20px 24px' }}>
                     <div style={{ fontWeight: '700' }}>{item.patient_name}</div>
@@ -369,7 +547,7 @@ const Worklist = () => {
         </table>
       </div>
 
-      {/* Analyzer Selection Modal */}
+      {/* ── Analyzer Selection Modal ── */}
       {showAnalyzerPicker && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100 }}>
           <div style={{ background: 'white', padding: '32px', borderRadius: '24px', width: '450px' }}>
@@ -386,7 +564,7 @@ const Worklist = () => {
         </div>
       )}
 
-      {/* Process Modal */}
+      {/* ── Process Modal ── */}
       {showProcessModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1200 }}>
           <div style={{ background: 'white', padding: '40px', borderRadius: '32px', width: '850px', maxHeight: '90vh', overflowY: 'auto' }}>
@@ -475,24 +653,12 @@ const Worklist = () => {
         </div>
       )}
 
-      {/* Barcode Modal */}
+      {/* ── Barcode Popup Modal (self-contained, owns its own ref) ── */}
       {printLabel && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <div style={{ background: '#fff', padding: '32px', borderRadius: '16px', width: '400px', textAlign: 'center' }}>
-            <h3>Sample Label</h3>
-            <div id="barcode-label" style={{ padding: '20px', border: '1px dashed #cbd5e1', marginBottom: '20px' }}>
-              <div style={{ fontWeight: '800', marginBottom: '4px' }}>{printLabel.patientName}</div>
-              <div style={{ fontSize: '24px', fontWeight: '900', color: '#2563eb', marginBottom: '8px' }}>
-                ID: {printLabel.shortId}
-              </div>
-              <svg ref={barcodeRef}></svg>
-            </div>
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <button onClick={handlePrint} style={{ flex: 1, padding: '12px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: '10px', fontWeight: '700', cursor: 'pointer' }}>Print</button>
-              <button onClick={() => setPrintLabel(null)} style={{ flex: 1, padding: '12px', background: '#f1f5f9', color: '#475569', border: 'none', borderRadius: '10px', fontWeight: '700', cursor: 'pointer' }}>Cancel</button>
-            </div>
-          </div>
-        </div>
+        <BarcodeModal
+          printLabel={printLabel}
+          onClose={() => setPrintLabel(null)}
+        />
       )}
     </div>
   );

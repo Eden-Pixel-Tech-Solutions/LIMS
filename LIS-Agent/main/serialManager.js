@@ -391,7 +391,7 @@ async function initializeAllPorts(win) {
   mainWindow = win;
   try {
     const configs = await db.getConfig();
-    const serialConfigs = configs.filter(c => c.portType !== 'TCP' && !(c.model && c.model.includes('ALTA')));
+    const serialConfigs = configs.filter(c => c.portType !== 'TCP' && !(c.model && (c.model.includes('ALTA') || c.model.includes('CelQuant 5plus'))));
     console.log(`🚀 Initializing background listeners for ${serialConfigs.length} machine(s)...`);
 
     for (const config of serialConfigs) {
@@ -497,7 +497,7 @@ async function startBackgroundListener(machine, win) {
 
   // ── 4. Data handler ──────────────────────────────────────────────────────
   port.on('data', async (chunk) => {
-    console.log(`🔌 [RAW SERIAL DATA] Received ${chunk.length} bytes on ${machine.port}:`, JSON.stringify(chunk.toString('ascii')));
+    console.log(`🔌 [RAW SERIAL DATA] Received ${chunk.length} bytes on ${machine.port}. HEX: ${chunk.toString('hex')}`);
 
     if (isText) {
       if (silenceTimers.has(machine.port)) {
@@ -805,6 +805,7 @@ async function processHL7Message(msg, machine, win) {
 // ─────────────────────────────────────────────────────────────────────────────
 async function processTextMessage(msg, protocol, machine, win) {
   console.log(`📨 Text report received on ${machine.port} (${msg.length} chars)`);
+  console.log(`[RAW REPORT TEXT]:\n${msg}\n[END RAW REPORT]`);
 
   let parsed;
   let PARAMS_LIST = [];

@@ -74,16 +74,20 @@ function parseAltaHL7(message) {
         } else if (segment === 'OBR') {
             patient['sample_id'] = fields.length > 3 ? fields[3] : '';
         } else if (segment === 'OBX') {
+            const obxType  = fields.length > 2 ? fields[2].trim() : '';
+            if (obxType === 'ED') continue;  // skip base64 image blobs
+
             const test_info = fields.length > 3 ? fields[3] : '';
             const value = fields.length > 5 ? fields[5] : '';
+            const unit = fields.length > 6 ? fields[6] : '';
+            const ref_range = fields.length > 7 ? fields[7] : '';
             const code_parts = test_info.split('^');
 
             if (code_parts.length > 0) {
                 const code = code_parts[0];
-                if (parameter_map[code]) {
-                    results[parameter_map[code]] = value;
-                } else if (code) {
-                    results[code] = value;
+                const paramName = parameter_map[code];  // undefined if not a known clinical param
+                if (paramName && value) {
+                    results[paramName] = { value, unit, ref_range };
                 }
             }
         }
@@ -225,25 +229,25 @@ async function processAltaHL7(message, machine) {
 
     let newResultsCount = 0;
 
-    for (const [param, val] of Object.entries(parsed.results)) {
+    for (const [param, data] of Object.entries(parsed.results)) {
         if (session.results.some(r => r.parameter_name.toLowerCase() === param.toLowerCase())) continue;
 
         session.results.push({
             parameter_name: param,
-            result_value: val,
-            unit: '',
-            ref_range: '',
+            result_value: data.value,
+            unit: data.unit || '',
+            ref_range: data.ref_range || '',
             flag: ''
         });
         newResultsCount++;
 
-        console.log(`📍 ALTA Recorded: ${param} = ${val}`);
+        console.log(`📍 ALTA Recorded: ${param} = ${data.value} (Unit: ${data.unit}, Ref: ${data.ref_range})`);
 
         mainWindow?.webContents?.send('test-completed', {
             sampleId: session.sampleId,
             test_name: param,
-            result_value: val,
-            unit: '',
+            result_value: data.value,
+            unit: data.unit || '',
             flag: ''
         });
     }
@@ -363,7 +367,7 @@ async function initializeAllServers(win) {
     mainWindow = win;
     try {
         const configs = await db.getConfig();
-        const tcpConfigs = configs.filter(c => c.portType === 'TCP' || (c.model && c.model.includes('ALTA')));
+        const tcpConfigs = configs.filter(c => c.portType === 'TCP' || (c.model && (c.model.includes('ALTA') || c.model.includes('CelQuant 5plus'))));
 
         for (const config of tcpConfigs) {
             if (activeServers.has(config.port) || pendingPorts.has(config.port)) {

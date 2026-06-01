@@ -1104,29 +1104,44 @@ export const getWorklistById = async (req, res) => {
   }
 };
 
-// Generate sample ID sequence — atomic per branch per day, race-condition-proof
+// Generate sample ID sequence — atomic per branch+department per day, race-condition-proof
 export const generateSampleId = async (req, res) => {
   try {
-    const { branch_id } = req.body;
+    const { branch_id, department } = req.body;
 
     if (!branch_id) {
       return res.status(400).json({ success: false, message: 'branch_id is required' });
     }
 
-    // Single atomic upsert — concurrent requests on the same branch each get a unique sequence
+    // Department-based range (matches lab workflow convention)
+    let startRange = 7000;
+    if (department) {
+      const dep = department.toLowerCase();
+      if (dep.includes('hematology') || dep.includes('haematology')) {
+        startRange = 1;
+      } else if (dep.includes('biochem')) {
+        startRange = 3000;
+      } else if (dep.includes('serology') || dep.includes('microbiology') || dep.includes('pathology') || dep.includes('urine')) {
+        startRange = 5000;
+      }
+    }
+
+    const deptKey = startRange.toString();
+
+    // Single atomic upsert per branch+department — no race condition possible
     await db.query(
-      `INSERT INTO lab_sample_sequences (branch_id, seq_date, last_seq)
-       VALUES (?, CURDATE(), 1)
+      `INSERT INTO lab_sample_sequences (branch_id, seq_date, dept_key, last_seq)
+       VALUES (?, CURDATE(), ?, ?)
        ON DUPLICATE KEY UPDATE last_seq = last_seq + 1`,
-      [branch_id]
+      [branch_id, deptKey, startRange]
     );
 
     const [[row]] = await db.query(
       `SELECT s.last_seq, b.hospital_code
        FROM lab_sample_sequences s
        JOIN branches b ON b.id = s.branch_id
-       WHERE s.branch_id = ? AND s.seq_date = CURDATE()`,
-      [branch_id]
+       WHERE s.branch_id = ? AND s.seq_date = CURDATE() AND s.dept_key = ?`,
+      [branch_id, deptKey]
     );
 
     const dateStr  = new Date().toISOString().slice(0, 10).replace(/-/g, '');
