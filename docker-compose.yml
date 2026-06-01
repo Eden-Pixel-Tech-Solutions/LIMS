@@ -39,6 +39,9 @@ services:
 
       WHATSAPP_BOT_URL: http://bot:3005
 
+      DEVELOPER_EMAIL: stevejerald632@gmail.com
+      DEVELOPER_JWT_SECRET: dev_super_secret_jwt_9x2k7p_lims_2026
+
     depends_on:
       - mysql
 

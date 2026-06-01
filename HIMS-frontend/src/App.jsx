@@ -1,4 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
+import DeveloperLogin from './pages/Developer/DeveloperLogin';
+import DeveloperPanel from './pages/Developer/DeveloperPanel';
 import Login from './pages/Login';
 import Register from './pages/Billing/Register';
 import PatientRegistration from './pages/Patients/PatientRegistration';
@@ -45,6 +47,10 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Developer Portal — standalone, no shared layout */}
+        <Route path="/developer"        element={<DeveloperLogin />} />
+        <Route path="/developer/panel"  element={<DeveloperPanel />} />
+
         {/* Auth Routes */}
         <Route path="/" element={<Login />} />
         <Route path="/register" element={<Register />} />
