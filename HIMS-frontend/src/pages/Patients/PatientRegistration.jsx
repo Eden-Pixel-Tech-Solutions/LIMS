@@ -23,6 +23,7 @@ function PatientRegistration() {
   const [isPatientSaved, setIsPatientSaved] = useState(false);
   const [patientRegNo, setPatientRegNo] = useState(null);
   const [bookingData, setBookingData] = useState(null);
+  const [detailsKey, setDetailsKey] = useState(0);
   const [labName, setLabName] = useState('Loading...');
 
   const branchId = localStorage.getItem('branch_id');
@@ -73,6 +74,14 @@ function PatientRegistration() {
   const handleAppointmentSaved = (data) => {
     setBookingData(data);
     setActiveTab('billing');
+  };
+
+  const handleNewRegistration = () => {
+    setActiveTab('details');
+    setIsPatientSaved(false);
+    setPatientRegNo(null);
+    setBookingData(null);
+    setDetailsKey(k => k + 1);
   };
 
   const executeSearch = async (e) => {
@@ -137,10 +146,17 @@ function PatientRegistration() {
               <span>Complete sections or search for an existing patient</span>
             </div>
 
-            <button className="preg-back-btn" onClick={() => window.history.back()}>
-              <ArrowLeft size={14} />
-              Exit
-            </button>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              {isPatientSaved && (
+                <button className="btn-primary" onClick={handleNewRegistration} style={{ padding: '6px 14px', fontSize: '13px' }}>
+                  + New Registration
+                </button>
+              )}
+              <button className="preg-back-btn" onClick={() => window.history.back()}>
+                <ArrowLeft size={14} />
+                Exit
+              </button>
+            </div>
           </div>
 
           {/* ── Tabs ── */}
@@ -162,7 +178,7 @@ function PatientRegistration() {
 
         {/* ── Content ── */}
         <div style={{ display: activeTab === 'details' ? 'contents' : 'none' }}>
-          <PatientDetails onSaveSuccess={handlePatientSaved} />
+          <PatientDetails key={detailsKey} onSaveSuccess={handlePatientSaved} />
         </div>
         {activeTab === 'appointment' && <AppointmentBooking regNo={patientRegNo} onSaveSuccess={handleAppointmentSaved} />}
         {activeTab === 'billing' && <Billing regNo={patientRegNo} bookingData={bookingData} />}

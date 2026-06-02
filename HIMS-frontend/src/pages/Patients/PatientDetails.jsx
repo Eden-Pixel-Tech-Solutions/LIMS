@@ -9,6 +9,7 @@ import {
 import Alert from '../../components/Alert';
 import { useAlert } from '../../hooks/useAlert';
 import AbhaRegistrationModal from '../../components/AbhaRegistrationModal';
+import AbhaFetchModal from '../../components/AbhaFetchModal';
 import '../../assets/CSS/PatientRegistration.css';
 
 const TITLES = ['Mr.', 'Mrs.', 'Ms.', 'Dr.', 'Prof.'];
@@ -67,6 +68,7 @@ function PatientDetails({ onSaveSuccess }) {
   const [isSearching, setIsSearching] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [isAbhaModalOpen, setIsAbhaModalOpen] = useState(false);
+  const [abhaFetchModal, setAbhaFetchModal] = useState({ open: false, mode: 'mobile' });
   const searchRef = useRef(null);
 
   // Close dropdown if clicked outside
@@ -231,6 +233,7 @@ function PatientDetails({ onSaveSuccess }) {
       formattedDob = `${parts[2]}-${parts[1]}-${parts[0]}`;
     }
 
+    if (profile.profilePhoto) setPhoto(profile.profilePhoto);
     setData(prev => ({
       ...prev,
       firstName: profile.firstName || prev.firstName,
@@ -239,12 +242,44 @@ function PatientDetails({ onSaveSuccess }) {
       dob: formattedDob || prev.dob,
       gender: profile.gender === 'M' ? 'Male' : profile.gender === 'F' ? 'Female' : 'Other',
       abhaId: profile.ABHANumber || prev.abhaId,
+      citizen: 'India',
+      emailId: profile.email || prev.emailId,
       telephone: profile.mobile || prev.telephone,
       address: profile.address || prev.address,
       city: profile.city || prev.city,
+      country: 'India',
       postalCode: profile.postalCode || prev.postalCode
     }));
     showAlert('Patient details auto-filled from ABHA Profile successfully!', 'success');
+  };
+
+  const handleAbhaFetchComplete = (profile) => {
+    const parsedName = profile.name ? profile.name.trim().split(/\s+/) : [];
+    let formattedDob = profile.dob || '';
+    if (formattedDob && /^\d{2}[-/]\d{2}[-/]\d{4}$/.test(formattedDob)) {
+      const parts = formattedDob.split(/[-/]/);
+      formattedDob = `${parts[2]}-${parts[1]}-${parts[0]}`;
+    }
+    const rawPhoto = profile.profilePhoto || profile.photo || '';
+    const photoUrl = rawPhoto ? (rawPhoto.startsWith('data:') ? rawPhoto : `data:image/jpeg;base64,${rawPhoto}`) : '';
+    if (photoUrl) setPhoto(photoUrl);
+    setData(prev => ({
+      ...prev,
+      firstName: profile.firstName || parsedName[0] || prev.firstName,
+      middleName: profile.middleName || (parsedName.length > 2 ? parsedName.slice(1, -1).join(' ') : '') || prev.middleName,
+      lastName: profile.lastName || (parsedName.length > 1 ? parsedName[parsedName.length - 1] : '') || prev.lastName,
+      dob: formattedDob || prev.dob,
+      gender: profile.gender === 'M' ? 'Male' : profile.gender === 'F' ? 'Female' : (prev.gender || 'Other'),
+      abhaId: profile.ABHANumber || profile.abhaNumber || prev.abhaId,
+      citizen: 'India',
+      emailId: profile.email || profile.emailAddress || prev.emailId,
+      telephone: profile.mobile || profile.mobileNumber || prev.telephone,
+      address: profile.address || prev.address,
+      city: profile.districtName || profile.city || prev.city,
+      country: 'India',
+      postalCode: profile.pincode || profile.postalCode || prev.postalCode
+    }));
+    showAlert('Patient details fetched from ABHA successfully!', 'success');
   };
 
   return (
@@ -319,14 +354,27 @@ function PatientDetails({ onSaveSuccess }) {
                 )}
               </div>
 
-              {/* ABHA Button */}
-              <button 
-                className="btn-primary" 
-                onClick={() => setIsAbhaModalOpen(true)}
-                style={{ marginLeft: 16, height: 42, padding: '0 16px', borderRadius: 8 }}
-              >
-                Register with ABHA
-              </button>
+              {/* ABHA Buttons */}
+              <div style={{ display: 'flex', gap: '8px', marginLeft: 16 }}>
+                <button
+                  className="btn-primary"
+                  onClick={() => setIsAbhaModalOpen(true)}
+                  style={{ height: 42, padding: '0 16px', borderRadius: 8, fontSize: 13 }}
+                >
+                  + Register with ABHA
+                </button>
+                <button
+                  onClick={() => setAbhaFetchModal({ open: true, mode: 'mobile' })}
+                  style={{
+                    height: 42, padding: '0 16px', borderRadius: 8, fontSize: 13, fontWeight: 700,
+                    background: '#fff', border: '1.5px solid #005eb8', color: '#005eb8',
+                    cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  ↓ Fetch from ABHA
+                </button>
+              </div>
               
               {/* Avatar */}
               <div className="preg-avatar" onClick={openCam} title="Add Photo (Alt + C)">
@@ -392,7 +440,22 @@ function PatientDetails({ onSaveSuccess }) {
               </Field>
 
               <Field label="ABHA ID" span={1}>
-                <Input type="text" name="abhaId" value={data.abhaId} onChange={ch} placeholder="XX-XXXX-XXXX-XXXX" />
+                <div style={{ display: 'flex', gap: '6px', alignItems: 'stretch' }}>
+                  <Input type="text" name="abhaId" value={data.abhaId} onChange={ch} placeholder="XX-XXXX-XXXX-XXXX" style={{ flex: 1, minWidth: 0 }} />
+                  <button
+                    type="button"
+                    onClick={() => setAbhaFetchModal({ open: true, mode: 'abha' })}
+                    style={{
+                      whiteSpace: 'nowrap', padding: '0 12px', height: '38px',
+                      background: '#005eb8', color: '#fff', border: 'none',
+                      borderRadius: '4px', fontSize: '12px', fontWeight: 700,
+                      cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px',
+                      letterSpacing: '0.02em', flexShrink: 0
+                    }}
+                  >
+                    Search ABHA
+                  </button>
+                </div>
               </Field>
 
               <Field label="Education" span={1}>
@@ -412,9 +475,24 @@ function PatientDetails({ onSaveSuccess }) {
               </Field>
 
               <Field label="Phone Number*">
-                <div className="preg-phone-prefix">
-                  <span className="country-code">+91</span>
-                  <Input type="tel" name="telephone" value={data.telephone} onChange={ch} placeholder="12345 67890" />
+                <div style={{ display: 'flex', gap: '6px', alignItems: 'stretch' }}>
+                  <div className="preg-phone-prefix" style={{ flex: 1, minWidth: 0 }}>
+                    <span className="country-code">+91</span>
+                    <Input type="tel" name="telephone" value={data.telephone} onChange={ch} placeholder="12345 67890" />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setAbhaFetchModal({ open: true, mode: 'mobile' })}
+                    style={{
+                      whiteSpace: 'nowrap', padding: '0 12px', height: '38px',
+                      background: '#005eb8', color: '#fff', border: 'none',
+                      borderRadius: '4px', fontSize: '12px', fontWeight: 700,
+                      cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px',
+                      letterSpacing: '0.02em', flexShrink: 0
+                    }}
+                  >
+                    Get from ABHA
+                  </button>
                 </div>
               </Field>
 
@@ -554,11 +632,21 @@ function PatientDetails({ onSaveSuccess }) {
         </div>
       )}
 
-      {/* ABHA Modal */}
-      <AbhaRegistrationModal 
-        isOpen={isAbhaModalOpen} 
-        onClose={() => setIsAbhaModalOpen(false)} 
-        onComplete={handleAbhaComplete} 
+      {/* ABHA Registration Modal */}
+      <AbhaRegistrationModal
+        isOpen={isAbhaModalOpen}
+        onClose={() => setIsAbhaModalOpen(false)}
+        onComplete={handleAbhaComplete}
+      />
+
+      {/* ABHA Fetch Modal */}
+      <AbhaFetchModal
+        isOpen={abhaFetchModal.open}
+        mode={abhaFetchModal.mode}
+        initialMobile={data.telephone}
+        initialAbhaId={data.abhaId}
+        onClose={() => setAbhaFetchModal(m => ({ ...m, open: false }))}
+        onComplete={handleAbhaFetchComplete}
       />
 
     </>

@@ -3,6 +3,9 @@ import { generateAccessToken } from "../services/abdmAuthService.js";
 import { encryptData } from "../utils/encryption.js";
 import { requestAadhaarOtp } from "../services/abdmAadhaarService.js";
 import { enrolByAadhaar } from "../services/abdmEnrolmentService.js";
+import { enrolByFaceAuth } from "../services/abdmFaceAuthService.js";
+import { initFaceAuth } from "../services/abdmFaceAuthInitService.js";
+import { checkCapturePID } from "../services/abdmCapturePIDService.js";
 import {
   sendMobileOtp,
   verifyMobileOtp
@@ -19,6 +22,14 @@ import {
 import {
   createAbhaAddress
 } from "../services/abdmAddressService.js";
+
+import {
+  searchAbhaByMobile,
+  requestLoginOtpByIndex,
+  requestLoginOtpByAbhaNumber,
+  verifyLoginOtp,
+  fetchProfile
+} from "../services/abdmProfileLoginService.js";
 
 
 export const fetchCertificate = async (req, res) => {
@@ -349,22 +360,12 @@ async (req, res) => {
 
   try {
 
-    const { txnId } =
-      req.body;
+    const { txnId, xToken } = req.body;
 
-    // Generate token
-    const tokenData =
-      await generateAccessToken();
+    const tokenData = await generateAccessToken();
+    const accessToken = tokenData.accessToken;
 
-    const accessToken =
-      tokenData.accessToken;
-
-    // Get suggestions
-    const response =
-      await getAbhaSuggestions(
-        accessToken,
-        txnId
-      );
+    const response = await getAbhaSuggestions(accessToken, txnId, xToken || null);
 
     res.status(200).json({
       success: true,
@@ -380,6 +381,118 @@ async (req, res) => {
         error.message
     });
 
+  }
+};
+
+export const initFaceAuthController = async (req, res) => {
+  try {
+    const tokenData = await generateAccessToken();
+    const accessToken = tokenData.accessToken;
+    const response = await initFaceAuth(accessToken);
+    const txnId = response.txnId;
+    const qrUrl = `https://phrsbx.abdm.gov.in/face-auth?txnId=${txnId}`;
+    res.status(200).json({ success: true, data: { txnId, qrUrl } });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.response?.data || error.message });
+  }
+};
+
+export const checkFaceAuthStatusController = async (req, res) => {
+  try {
+    const { txnId } = req.body;
+    const tokenData = await generateAccessToken();
+    const accessToken = tokenData.accessToken;
+    const response = await checkCapturePID(accessToken, txnId);
+    res.status(200).json({ success: true, data: response });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.response?.data || error.message });
+  }
+};
+
+export const enrollByFaceAuthController = async (req, res) => {
+  try {
+    const { aadhaar, mobile, txnId } = req.body;
+
+    const tokenData = await generateAccessToken();
+    const accessToken = tokenData.accessToken;
+
+    const certData = await getPublicCertificate(accessToken);
+    const encryptedAadhaar = encryptData(certData.publicKey, aadhaar);
+
+    const response = await enrolByFaceAuth(accessToken, txnId, encryptedAadhaar, null, mobile);
+
+    res.status(200).json({ success: true, data: response });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.response?.data || error.message });
+  }
+};
+
+// Mobile flow Step 1: search ABHA accounts by mobile
+export const profileSearchController = async (req, res) => {
+  try {
+    const { mobile } = req.body;
+    const tokenData = await generateAccessToken();
+    const accessToken = tokenData.accessToken;
+    const certData = await getPublicCertificate(accessToken);
+    const encryptedMobile = encryptData(certData.publicKey, mobile);
+    const response = await searchAbhaByMobile(accessToken, encryptedMobile);
+    // response is an array: [{ txnId, ABHA: [{index, ABHANumber, name, gender}] }]
+    const result = Array.isArray(response) ? response[0] : response;
+    res.status(200).json({ success: true, data: { txnId: result.txnId, accounts: result.ABHA || [] } });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.response?.data || error.message });
+  }
+};
+
+// Mobile flow Step 2: send OTP using index from search
+export const profileRequestOtpByIndexController = async (req, res) => {
+  try {
+    const { index, txnId, otpType = 'abdm' } = req.body;
+    const tokenData = await generateAccessToken();
+    const accessToken = tokenData.accessToken;
+    const certData = await getPublicCertificate(accessToken);
+    const encryptedIndex = encryptData(certData.publicKey, String(index));
+    const response = await requestLoginOtpByIndex(accessToken, encryptedIndex, txnId, otpType);
+    res.status(200).json({ success: true, data: response });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.response?.data || error.message });
+  }
+};
+
+// ABHA number flow Step 1: send OTP directly by ABHA number
+export const profileRequestOtpController = async (req, res) => {
+  try {
+    const { abhaNumber } = req.body;
+    const tokenData = await generateAccessToken();
+    const accessToken = tokenData.accessToken;
+    const certData = await getPublicCertificate(accessToken);
+    const encryptedAbha = encryptData(certData.publicKey, abhaNumber.trim());
+    const response = await requestLoginOtpByAbhaNumber(accessToken, encryptedAbha);
+    res.status(200).json({ success: true, data: response });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.response?.data || error.message });
+  }
+};
+
+// Both flows Step final: verify OTP → fetch full profile
+export const profileVerifyOtpController = async (req, res) => {
+  try {
+    const { txnId, otp, otpType = 'abdm' } = req.body;
+    const tokenData = await generateAccessToken();
+    const accessToken = tokenData.accessToken;
+    const certData = await getPublicCertificate(accessToken);
+    const encryptedOtp = encryptData(certData.publicKey, otp);
+    const verifyResponse = await verifyLoginOtp(accessToken, txnId, encryptedOtp, otpType);
+    const xToken = verifyResponse.token;
+    // accounts in verify response has basic info; fetch full profile for DOB/address/gender
+    let profile = verifyResponse.accounts?.[0] || {};
+    try {
+      const fullProfile = await fetchProfile(accessToken, xToken);
+      profile = { ...profile, ...fullProfile };
+    } catch { /* use partial profile from verify response */ }
+    res.status(200).json({ success: true, data: { profile, xToken } });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.response?.data || error.message });
   }
 };
 
