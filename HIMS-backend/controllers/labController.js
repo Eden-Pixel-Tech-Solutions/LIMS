@@ -1560,8 +1560,15 @@ export const saveTestResults = async (req, res) => {
       test_name,
       results, // Array of parameter results
       tested_by,
-      patient_id
+      patient_id,
+      status: requestedStatus,
     } = req.body;
+
+    // Only allow machine-facing statuses; default to 'Test Done' so results
+    // always land in the verification queue rather than being auto-approved.
+    const resultStatus = ['Test Done', 'In Progress'].includes(requestedStatus)
+      ? requestedStatus
+      : 'Test Done';
 
     // Validate required fields
     if (!sample_id || !results || !Array.isArray(results) || results.length === 0) {
@@ -1615,19 +1622,19 @@ export const saveTestResults = async (req, res) => {
       });
 
       await connection.query(
-        `UPDATE lab_test_result 
-         SET results_json = ?, machine_no = ?, tested_at = NOW(), status = 'Test Done'
+        `UPDATE lab_test_result
+         SET results_json = ?, machine_no = ?, tested_at = NOW(), status = ?
          WHERE id = ?`,
-        [JSON.stringify(currentResults), machine_no || null, existing[0].id]
+        [JSON.stringify(currentResults), machine_no || null, resultStatus, existing[0].id]
       );
       var finalResultId = existing[0].id;
     } else {
       // INSERT LOGIC (First parameter for this test)
       const [insertResult] = await connection.query(
-        `INSERT INTO lab_test_result 
+        `INSERT INTO lab_test_result
          (bill_item_id, patient_id, sample_id, machine_no, test_id, test_name,
           results_json, tested_by, tested_at, status)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Test Done')`,
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           bill_item_id || null,
           resolvedPatientId || null,
@@ -1637,25 +1644,26 @@ export const saveTestResults = async (req, res) => {
           test_name || null,
           JSON.stringify(results),
           tested_by || null,
-          testedAt
+          testedAt,
+          resultStatus,
         ]
       );
       var finalResultId = insertResult.insertId;
     }
 
-    // Update bill item status to Test Done if bill_item_id provided
+    // Update bill item to 'Test Done' so it appears in the verification queue.
+    // Do NOT mark as Completed here — that requires explicit doctor verification/approval.
     if (bill_item_id) {
       await connection.query(
         `UPDATE bill_items SET status = 'Test Done', updated_at = NOW() WHERE id = ?`,
         [bill_item_id]
       );
+    } else {
+      await connection.query(
+        `UPDATE bill_items SET status = 'Test Done', updated_at = NOW() WHERE sample_id = ?`,
+        [sample_id]
+      );
     }
-
-    // Update bill_items status to Test Done for this sample
-    await connection.query(
-      `UPDATE bill_items SET status = 'Test Done', updated_at = NOW() WHERE sample_id = ?`,
-      [sample_id]
-    );
 
     // ============================================
     // AUTO-DEDUCT INVENTORY LOGIC
