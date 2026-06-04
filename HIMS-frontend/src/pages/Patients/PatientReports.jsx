@@ -23,7 +23,10 @@ function PatientReports() {
     try {
       setLoading(true);
       setDownloadingId(null);
-      const response = await fetch(`${API_BASE}/api/patients/portal/reports/${phone}`);
+      const token = localStorage.getItem('patient_token');
+      const response = await fetch(`${API_BASE}/api/patients/portal/reports/${phone}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
       const data = await response.json();
 
       if (data.success) {
@@ -45,7 +48,10 @@ function PatientReports() {
     const parsed = JSON.parse(patientData);
     try {
       setDownloadingId(sampleId);
-      const response = await fetch(`${API_BASE}/api/patients/portal/reports/${parsed.phone}/${sampleId}`);
+      const token = localStorage.getItem('patient_token');
+      const response = await fetch(`${API_BASE}/api/patients/portal/reports/${parsed.phone}/${sampleId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
       const data = await response.json();
 
       if (data.success) {
@@ -66,7 +72,10 @@ function PatientReports() {
     const parsed = JSON.parse(patientData);
     try {
       setDownloadingId(sampleId);
-      const response = await fetch(`${API_BASE}/api/patients/portal/reports/${parsed.phone}/${sampleId}/pdf`);
+      const token = localStorage.getItem('patient_token');
+      const response = await fetch(`${API_BASE}/api/patients/portal/reports/${parsed.phone}/${sampleId}/pdf`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
 
       if (response.ok) {
         const blob = await response.blob();

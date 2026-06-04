@@ -3,6 +3,7 @@ import multer from 'multer';
 import fs from 'fs';
 import axios from 'axios';
 import db from '../config/db.js';
+import { authenticateToken, authorizeRole } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -24,6 +25,8 @@ const generateRegNo = () => {
 
 router.post(
   '/process-ai',
+  authenticateToken,
+  authorizeRole(['Admin', 'Doctor', 'Lab Head', 'Lab Technician']),
   upload.single('image'),
   async (req, res) => {
     try {
@@ -127,7 +130,7 @@ Example format:
   }
 );
 
-router.post('/finalize-billing', async (req, res) => {
+router.post('/finalize-billing', authenticateToken, authorizeRole(['Admin', 'Doctor', 'Lab Head', 'Lab Technician']), async (req, res) => {
   const connection = await db.getConnection();
   try {
     const { patientName, abhaId, gender, tests, totalAmount, barcodeId } = req.body;

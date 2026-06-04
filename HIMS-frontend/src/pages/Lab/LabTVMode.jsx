@@ -367,16 +367,16 @@ function LabTVMode() {
                     <div style={{ fontSize:'20px', fontWeight:'700', color:'#0a2a6e' }}>
                       {patient?.name}
                     </div>
-                    <div style={{ fontSize:'13px', color:'#475569' }}>
-                      Reports from the last 7 days
-                    </div>
+                      <div style={{ color:'#4b5563', fontSize:'14px' }}>
+                        Reports from the last 30 days
+                      </div>
                   </div>
                 </div>
 
                 {reports.length === 0 ? (
-                  <div style={{ textAlign:'center', padding:'40px 0', color:'#64748b' }}>
+                  <div style={{ textAlign:'center', padding:'40px 20px', color:'#6b7280' }}>
                     <div style={{ fontSize:'40px', marginBottom:'12px' }}>📋</div>
-                    <div style={{ fontSize:'16px' }}>No approved reports in the last 7 days</div>
+                    <div style={{ fontSize:'16px' }}>No approved reports in the last 30 days</div>
                   </div>
                 ) : (
                   <div style={{ display:'flex', flexDirection:'column', gap:'10px', maxHeight:'420px', overflowY:'auto' }}>

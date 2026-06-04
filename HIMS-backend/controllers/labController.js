@@ -2642,8 +2642,8 @@ export const getKioskReports = async (req, res) => {
        LEFT JOIN users u       ON tr.verified_by = u.id
        WHERE tr.patient_id = ?
          AND tr.status = 'Approved'
-         AND tr.verified_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
-       ORDER BY tr.verified_at DESC`,
+         AND COALESCE(tr.verified_at, tr.tested_at) >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+       ORDER BY COALESCE(tr.verified_at, tr.tested_at) DESC`,
       [patient.id]
     );
 

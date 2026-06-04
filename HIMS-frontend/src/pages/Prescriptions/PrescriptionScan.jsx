@@ -61,7 +61,9 @@ const PrescriptionScan = () => {
     const finalizeBilling = async () => {
         try {
             setIsFinalizing(true);
-            const response = await axios.post(`${API_BASE}/api/prescriptions/finalize-billing`, proposedData);
+            const response = await axios.post(`${API_BASE}/api/prescriptions/finalize-billing`, proposedData, {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            });
 
             if (response.data.success) {
                 alert(`Billing Completed!\nBill No: ${response.data.data.billNumber}\nTotal: ₹${response.data.data.totalAmount}`);

@@ -186,6 +186,7 @@ const Worklist = () => {
   const [departmentFilter, setDepartmentFilter] = useState('all');
   const [isFetchingParams, setIsFetchingParams] = useState(false);
   const [selectedParams, setSelectedParams] = useState([]);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   const API_BASE = 'https://lims.poxiatechnologies.com';
 
@@ -219,6 +220,20 @@ const Worklist = () => {
       cleanupPanel();
     };
   }, [showProcessModal]);
+
+  useEffect(() => {
+    const cleanupDeviceStatus = window.electronAPI.onDeviceStatus((data) => {
+      setMachines(prevMachines => prevMachines.map(m => {
+        if (m.port === data.port) {
+          return { ...m, connectionStatus: data.status };
+        }
+        return m;
+      }));
+    });
+    return () => {
+      cleanupDeviceStatus();
+    };
+  }, []);
 
   const fetchWorklist = async () => {
     try {
@@ -291,7 +306,7 @@ const Worklist = () => {
       if (res.data.success && res.data.parameters) {
         const mappedParams = res.data.parameters.map(p => {
           let machineId = null;
-          if (protocol && protocol.frame_structure && protocol.frame_structure["2"] && protocol.frame_structure["2"].tests) {
+          if (protocol?.frame_structure?.["2"]?.tests) {
             const match = protocol.frame_structure["2"].tests.find(
               mt => mt.name.toLowerCase() === p.parameter_name.toLowerCase() ||
                 mt.name.toLowerCase().replace('-', ' ') === p.parameter_name.toLowerCase().replace('-', ' ')
@@ -318,7 +333,7 @@ const Worklist = () => {
           port: machine.port,
           baud: machine.baud,
           model: machine.model,
-          machineId: machine.unique_id,
+          machineId: machine.unique_id || machine.id,
           sampleId: item.sample_id,
           shortId: item.short_id,
           testId: item.bill_item_id,
@@ -348,6 +363,7 @@ const Worklist = () => {
     setActiveItem(null);
     setCurrentMachine(null);
     setIncomingResults([]);
+    setHasUnsavedChanges(false);
     fetchWorklist();
   };
 
@@ -360,10 +376,17 @@ const Worklist = () => {
         bill_item_id: activeItem.bill_item_id,
         test_id: activeItem.test_id,
         test_name: activeItem.test_name,
-        results: incomingResults
+        results: incomingResults.map(r => ({
+          parameter_name: r.parameter_name || r.test_name || r.parameter,
+          result_value: r.result_value || r.value,
+          unit: r.unit || '',
+          reference_range: r.reference_range || r.ref_range || '',
+          flag: r.flag || ''
+        }))
       };
       const res = await axios.post(`${API_BASE}/api/lab/save-test-results`, payload);
       if (res.data.success) {
+        setHasUnsavedChanges(false);
         alert("Results updated successfully!");
         handleCloseProcess();
       }
@@ -377,6 +400,7 @@ const Worklist = () => {
     const newResults = [...incomingResults];
     newResults[index].result_value = value;
     setIncomingResults(newResults);
+    setHasUnsavedChanges(true);
   };
 
   const getStatusStyle = (status) => {
@@ -554,9 +578,14 @@ const Worklist = () => {
             <h2 style={{ margin: '0 0 8px 0', fontSize: '24px', fontWeight: '900' }}>Select Machine</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '20px' }}>
               {machines.map(m => (
-                <button key={m.id} onClick={() => initiateProcessing(activeItem, m)} style={{ padding: '16px', borderRadius: '12px', border: '2px solid #e2e8f0', background: 'white', textAlign: 'left', cursor: 'pointer' }}>
-                  <div style={{ fontWeight: '800' }}>{m.unique_id}</div>
-                  <div style={{ fontSize: '12px', color: '#64748b' }}>{m.manufacturer} {m.model}</div>
+                <button key={m.id} onClick={() => initiateProcessing(activeItem, m)} style={{ padding: '16px', borderRadius: '12px', border: '2px solid #e2e8f0', background: 'white', textAlign: 'left', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <div style={{ fontWeight: '800' }}>{m.unique_id}</div>
+                    <div style={{ fontSize: '12px', color: '#64748b' }}>{m.manufacturer} {m.model}</div>
+                  </div>
+                  <div style={{ fontSize: '12px', color: m.connectionStatus === 'Connected' ? '#10b981' : (m.connectionStatus === 'Disconnected' ? '#ef4444' : '#f59e0b'), fontWeight: '600', padding: '4px 8px', borderRadius: '8px', background: m.connectionStatus === 'Connected' ? '#d1fae5' : (m.connectionStatus === 'Disconnected' ? '#fee2e2' : '#fef3c7') }}>
+                    {m.connectionStatus || 'Listening'}
+                  </div>
                 </button>
               ))}
             </div>
@@ -583,8 +612,8 @@ const Worklist = () => {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '8px', maxHeight: '350px', overflowY: 'auto', padding: '16px', background: '#f8fafc', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
                   {isFetchingParams ? (
                     <div style={{ textAlign: 'center', padding: '40px' }}>Mapping Protocol...</div>
-                  ) : selectedParams.map(p => (
-                    <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '10px' }}>
+                  ) : selectedParams.map((p, index) => (
+                    <div key={`${p.id}-${index}`} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '10px' }}>
                       <span style={{ color: '#2563eb', fontWeight: '900', fontSize: '10px' }}>ID:{p.id}</span>
                       <div style={{ fontSize: '13px', flex: 1 }}>
                         <div style={{ fontWeight: '700' }}>{p.name}</div>
@@ -640,9 +669,11 @@ const Worklist = () => {
                   )}
                 </div>
                 <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
-                  <button onClick={handleSaveEdits} style={{ flex: 1, padding: '16px', background: '#10b981', color: 'white', border: 'none', borderRadius: '16px', fontWeight: '800', cursor: 'pointer' }}>
-                    Save Edits
-                  </button>
+                  {hasUnsavedChanges && (
+                    <button onClick={handleSaveEdits} style={{ flex: 1, padding: '16px', background: '#10b981', color: 'white', border: 'none', borderRadius: '16px', fontWeight: '800', cursor: 'pointer' }}>
+                      Save Edits
+                    </button>
+                  )}
                   <button onClick={handleCloseProcess} style={{ flex: 1, padding: '16px', background: '#334155', color: 'white', border: 'none', borderRadius: '16px', fontWeight: '800', cursor: 'pointer' }}>
                     Close Session
                   </button>

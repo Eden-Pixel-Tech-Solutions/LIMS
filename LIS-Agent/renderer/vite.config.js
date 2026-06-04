@@ -17,6 +17,16 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    proxy: {
+      '/api': {
+        target: 'https://lims.poxiatechnologies.com',
+        changeOrigin: true,
+        secure: false,
+        headers: {
+          Origin: 'https://lims.poxiatechnologies.com'
+        }
+      }
+    },
     fs: {
       allow: [
         path.resolve(__dirname, ".."),

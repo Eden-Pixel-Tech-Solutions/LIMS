@@ -97,7 +97,7 @@ function parseAltaHL7(message) {
 
             if (code_parts.length > 0) {
                 const code = code_parts[0];
-                const paramName = parameter_map[code];  // undefined if not a known clinical param
+                const paramName = parameter_map[code] || code;  // undefined if not a known clinical param and no fallback
                 if (paramName && value) {
                     results[paramName] = { value, unit, ref_range };
                 }

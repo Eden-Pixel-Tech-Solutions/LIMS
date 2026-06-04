@@ -122,7 +122,7 @@ const SampleList = () => {
         const mappedParams = res.data.parameters.map(p => {
           let machineId = null;
 
-          if (protocol && protocol.frame_structure["2"] && protocol.frame_structure["2"].tests) {
+          if (protocol?.frame_structure?.["2"]?.tests) {
             // Try matching by name (case-insensitive)
             const match = protocol.frame_structure["2"].tests.find(
               mt => mt.name.toLowerCase() === p.parameter_name.toLowerCase() ||
@@ -155,7 +155,7 @@ const SampleList = () => {
           port: machine.port,
           baud: machine.baud,
           model: machine.model,
-          machineId: machine.unique_id,
+          machineId: machine.unique_id || machine.id,
           sampleId: item.sample_id,
           shortId: item.short_id,
           testId: item.bill_item_id,

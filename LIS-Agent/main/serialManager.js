@@ -34,8 +34,9 @@ const manualContexts = new Map();
 
 function setManualContext(testInfo) {
   if (testInfo && testInfo.machineId) {
-    console.log(`📌 Manual context set for machine ${testInfo.machineId} -> Sample ${testInfo.sampleId}`);
-    manualContexts.set(testInfo.machineId, testInfo);
+    const id = testInfo.machineId.toString();
+    console.log(`📌 Manual context set for machine ${id} -> Sample ${testInfo.sampleId}`);
+    manualContexts.set(id, testInfo);
   }
 }
 
@@ -276,7 +277,7 @@ function parseHL7(raw) {
     result[paramName] = { value, unit, range: refRange, flag };
   }
 
-  return result;
+  console.log("DEBUG parseLauraSmartReport returning:", result); return result;
 }
 
 
@@ -308,10 +309,18 @@ function parseLauraSmartReport(raw) {
     const line = rawLine.trim();
     if (!line) continue;
 
-    if (line.startsWith('Seq.No:')) continue;
+    if (line.startsWith('Seq.No:')) {
+      if (!result.patient_id) {
+        result.patient_id = line.substring(7).trim();
+      }
+      continue;
+    }
 
     if (line.startsWith('ID:')) {
-      result.patient_id = line.substring(3).trim();
+      const idVal = line.substring(3).trim();
+      if (idVal) {
+        result.patient_id = idVal;
+      }
       continue;
     }
 
@@ -366,13 +375,7 @@ function parseTextReport(raw) {
     const dt = line.match(/Date.*time:\s*(.*)/i);
     if (dt) { result.date_time = dt[1].trim(); continue; }
 
-    // Header: Patient Name
-    const name = line.match(/Name\s*:\s*(.*)/i);
-    if (name) { result.patient_name = name[1].trim(); continue; }
-
-    // Header: Patient ID
-    const pid = line.match(/Patient ID\s*:\s*(.*)/i);
-    if (pid) { result.patient_id = pid[1].trim(); continue; }
+    // (User requested to strictly skip Patient ID, Name, and Sample No from the raw text for HDC-LYTE PRO)
 
     // Parameter values: PARAM = VALUE
     for (const param of ELECTROLYTE_PARAMS) {
@@ -403,6 +406,7 @@ async function initializeAllPorts(win) {
   try {
     const configs = await db.getConfig();
     const serialConfigs = configs.filter(c => c.port_type !== 'TCP' && !(c.model && (c.model.includes('ALTA') || c.model.includes('CelQuant 5plus'))));
+
     console.log(`🚀 Initializing background listeners for ${serialConfigs.length} machine(s)...`);
 
     for (const config of serialConfigs) {
@@ -658,14 +662,14 @@ async function processIncomingFrame(frame, protocol, machine, win) {
   }
 
   // ── Parse result bytes ──────────────────────────────────────────────────
-  if (frame.length < 13) {
+  if (frame.length < 23) {
     console.warn(`⚠️  Frame too short (${frame.length} bytes) for ${framePatientId}`);
     return;
   }
 
   const testCode = frame[1];
   const unitCode = frame[2];
-  const resultValue = frame.readFloatBE(9).toFixed(2);
+  const resultValue = frame.readFloatBE(10).toFixed(2);  // result at bytes 10-13 per protocol spec
 
   const tests = protocol?.frame_structure?.['2']?.tests ?? [];
   const units = protocol?.frame_structure?.['3']?.units ?? [];
@@ -835,8 +839,26 @@ async function processTextMessage(msg, protocol, machine, win) {
   let sessionKey = parsed.patient_id;
 
   // OVERRIDE: Check manual contexts
-  const machineId = machine.unique_id || machine.id;
+  const machineId = (machine.unique_id || machine.id).toString();
   const manualInfo = manualContexts.get(machineId);
+
+  // HDC-LYTE PRO is manual-only: drop any report that arrives without an active Run Test context.
+  // Use case-insensitive trim comparison to tolerate whitespace or case differences in stored model name.
+  const isHdcLytePro = /hdc.lyte.pro/i.test((machine.model || '').trim());
+  if (isHdcLytePro && (!manualInfo || !manualInfo.sampleId)) {
+    console.log(`🚫 Dropping unsolicited ${machine.model} report (Requires Run Test pop-up).`);
+    return;
+  }
+
+  // For HDC-LYTE PRO: also drop "start of test" header bursts that carry no actual parameter values.
+  // The machine sends [1] Patient Id: / [1] Patient Name: / [1] Sample No: lines before real results.
+  if (isHdcLytePro) {
+    const hasAnyParam = PARAMS_LIST.some(p => parsed[p] !== null);
+    if (!hasAnyParam) {
+      console.log(`ℹ️  ${machine.model} — Header-only burst (no parameter values). Skipping.`);
+      return;
+    }
+  }
 
   if (manualInfo && manualInfo.sampleId) {
     console.log(`📌 MANUAL OVERRIDE: Mapping ${machine.model} report to Sample ID: ${manualInfo.sampleId} (Ignoring native ID: ${sessionKey || 'none'})`);
@@ -1023,19 +1045,7 @@ async function syncSession(session, machine, sessionKey) {
   }
 
   if (isComplete) {
-    console.log(`✅ Panel COMPLETE for ${session.patientName}. Closing session.`);
-
-    // 2. Automate the manual "Mark as Completed" step
-    // This moves the test from Lab Worklist to Doctor's Verification list automatically.
-    try {
-      await axios.post(`${API_BASE}/api/lab/update-test-status`, {
-        bill_item_id: session.testId,
-        status: 'Completed'
-      });
-      console.log(`🚀 Automated: Test marked as COMPLETED for ${session.patientName}`);
-    } catch (err) {
-      console.error(`❌ Auto-completion failed for ${session.patientName}:`, err.message);
-    }
+    console.log(`✅ Panel COMPLETE for ${session.patientName}. Results saved — awaiting doctor verification.`);
   } else {
     const remaining = session.requiredParams
       .filter((p) => !receivedNamesLower.includes(p.name) && !receivedNamesLower.includes(p.id))

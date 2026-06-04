@@ -175,7 +175,10 @@ function PatientDetails({ onSaveSuccess }) {
       const API_BASE = import.meta.env.VITE_API_URL || '';
       const res = await fetch(`${API_BASE}/api/patients/register`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
         body: JSON.stringify(payload)
       });
       const result = await res.json();
@@ -205,7 +208,9 @@ function PatientDetails({ onSaveSuccess }) {
     setShowDropdown(true);
     try {
       const API_BASE = import.meta.env.VITE_API_URL || '';
-      const res = await fetch(`${API_BASE}/api/patients/search?q=${encodeURIComponent(val)}`);
+      const res = await fetch(`${API_BASE}/api/patients/search?q=${encodeURIComponent(val)}`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      });
       const result = await res.json();
       if (result.success) {
         setSearchResults(result.patients || []);
@@ -442,19 +447,6 @@ function PatientDetails({ onSaveSuccess }) {
               <Field label="ABHA ID" span={1}>
                 <div style={{ display: 'flex', gap: '6px', alignItems: 'stretch' }}>
                   <Input type="text" name="abhaId" value={data.abhaId} onChange={ch} placeholder="XX-XXXX-XXXX-XXXX" style={{ flex: 1, minWidth: 0 }} />
-                  <button
-                    type="button"
-                    onClick={() => setAbhaFetchModal({ open: true, mode: 'abha' })}
-                    style={{
-                      whiteSpace: 'nowrap', padding: '0 12px', height: '38px',
-                      background: '#005eb8', color: '#fff', border: 'none',
-                      borderRadius: '4px', fontSize: '12px', fontWeight: 700,
-                      cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px',
-                      letterSpacing: '0.02em', flexShrink: 0
-                    }}
-                  >
-                    Search ABHA
-                  </button>
                 </div>
               </Field>
 
@@ -480,19 +472,6 @@ function PatientDetails({ onSaveSuccess }) {
                     <span className="country-code">+91</span>
                     <Input type="tel" name="telephone" value={data.telephone} onChange={ch} placeholder="12345 67890" />
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setAbhaFetchModal({ open: true, mode: 'mobile' })}
-                    style={{
-                      whiteSpace: 'nowrap', padding: '0 12px', height: '38px',
-                      background: '#005eb8', color: '#fff', border: 'none',
-                      borderRadius: '4px', fontSize: '12px', fontWeight: 700,
-                      cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px',
-                      letterSpacing: '0.02em', flexShrink: 0
-                    }}
-                  >
-                    Get from ABHA
-                  </button>
                 </div>
               </Field>
 

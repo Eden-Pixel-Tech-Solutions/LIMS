@@ -19,7 +19,10 @@ function PatientProfile() {
   const fetchProfile = async (phone) => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_BASE}/api/patients/portal/profile/${phone}`);
+      const token = localStorage.getItem('patient_token');
+      const response = await fetch(`${API_BASE}/api/patients/portal/profile/${phone}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
       const data = await response.json();
 
       if (data.success) {

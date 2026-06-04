@@ -1,6 +1,10 @@
 
 import React, { useState } from "react";
 import axios from "axios";
+import "../../assets/CSS/BarcodeGenerator.css";
+import "../../assets/CSS/App.css";
+import '../../assets/CSS/BillingPackages.css';
+import '../../assets/CSS/StaffManagement.css';
 
 const BarcodeGenerator = () => {
     const [prefix, setPrefix] = useState("RX-JH");
@@ -43,7 +47,7 @@ const BarcodeGenerator = () => {
     return (
         <div className="p-6 bg-gray-100 min-h-screen">
             <div className="bg-white shadow rounded-xl p-6 mb-6">
-                <h1 className="text-2xl font-bold mb-4">
+                <h1 className="heading">
                     Barcode Generator
                 </h1>
 
