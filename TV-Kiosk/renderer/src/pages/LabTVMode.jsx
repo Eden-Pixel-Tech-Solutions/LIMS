@@ -51,7 +51,7 @@ function EmptyIcon() {
 }
 
 // ─── Main Component ───────────────────────────────────────────────────────────
-function LabTVMode() {
+function LabTVMode({ labId, labName }) {
   const [worklist, setWorklist] = useState([]);
   const [loading, setLoading]   = useState(true);
   const now                     = useClock();
@@ -73,7 +73,8 @@ function LabTVMode() {
   // ── Data Fetching ────────────────────────────────────────────────────────
   const fetchWorklist = useCallback(async () => {
     try {
-      const res  = await fetch(`${API_BASE}/api/lab/worklist?department=all`);
+      const url = `${API_BASE}/api/lab/worklist?department=all${labId ? `&branch_id=${labId}` : ''}`;
+      const res  = await fetch(url);
       const data = await res.json();
       if (data.success) {
         setWorklist(data.worklist.filter(item => item.status === 'Pending'));
@@ -83,7 +84,7 @@ function LabTVMode() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [labId]);
 
   useEffect(() => {
     fetchWorklist();
@@ -172,6 +173,19 @@ function LabTVMode() {
     }
   };
 
+  // ── Hidden reset: tap clock area 5× within 4 s ───────────────────────────
+  const clockTaps  = useRef(0);
+  const clockTimer = useRef(null);
+  const handleClockTap = () => {
+    clockTaps.current++;
+    clearTimeout(clockTimer.current);
+    clockTimer.current = setTimeout(() => { clockTaps.current = 0; }, 4000);
+    if (clockTaps.current >= 5) {
+      clockTaps.current = 0;
+      window.kioskAPI.resetConfig();
+    }
+  };
+
   // ── Derived ───────────────────────────────────────────────────────────────
   const nowServing = worklist.length > 0 ? worklist[0]          : null;
   const nextInLine = worklist.length > 1 ? worklist.slice(1, 5) : [];
@@ -219,10 +233,11 @@ function LabTVMode() {
             onError={e => { e.target.style.display = 'none'; }} />
           <div className="tv-logo-text">
             <h1>Jharkhand State Diagnostic Services</h1>
-            <p>Patient Queue Display</p>
+            <p>{labName ? labName.toUpperCase() : 'PATIENT QUEUE DISPLAY'}</p>
           </div>
         </div>
-        <div className="tv-header-right">
+        {/* Tap clock 5× to go back to setup screen */}
+        <div className="tv-header-right" onClick={handleClockTap} style={{ cursor:'default' }}>
           <div className="tv-clock">{timeString}</div>
           <div className="tv-date">{dateString}</div>
           <img src={merilLogo} alt="Meril" className="tv-meril-logo" />
