@@ -45,12 +45,7 @@ const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || 'https://lims.poxiatechn
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow server-to-server requests (no origin) and listed origins
-    if (!origin || ALLOWED_ORIGINS.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
+    callback(null, true);
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
