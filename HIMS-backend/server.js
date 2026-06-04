@@ -33,8 +33,12 @@ import db from './config/db.js';
 import barcodeRoutes from './routes/barcodeRoutes.js';
 import prescriptionRoutes from './routes/prescriptionRoutes.js';
 import abdmRoutes from './routes/abdmRoutes.js';
+import { initCronJobs } from './jobs/cronJobs.js';
 
 dotenv.config();
+
+// Initialize scheduled tasks
+initCronJobs();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
