@@ -16,11 +16,19 @@ export default function SampleDetailScreen({ route }) {
   );
   const [barcodeUri, setBarcodeUri] = useState(null);
   const [loadingBarcode, setLoadingBarcode] = useState(false);
+  const [displaySampleId, setDisplaySampleId] = useState(
+    sample.sample_id || sample.lab_barcode || null
+  );
 
-  const fetchBarcode = async () => {
+  const fetchBarcode = async (sampleId) => {
+    const id = sampleId || displaySampleId;
+    if (!id) {
+      Alert.alert('No Sample ID', 'Sample ID is not assigned yet.');
+      return;
+    }
     setLoadingBarcode(true);
     try {
-      const data = await apiFetch(`/api/barcodes/sample/${encodeURIComponent(sample.sample_id)}`);
+      const data = await apiFetch(`/api/barcodes/sample/${encodeURIComponent(id)}`);
       if (data.success && data.barcodeBase64) {
         setBarcodeUri(data.barcodeBase64);
       } else {
@@ -42,7 +50,7 @@ export default function SampleDetailScreen({ route }) {
         method: 'POST',
         body: JSON.stringify({
           bill_item_id: sample.bill_item_id,
-          sample_id: sample.sample_id,
+          sample_id: sample.sample_id || sample.lab_barcode,
           short_id: sample.short_id,
           status: 'Collected',
           collected_by: userId ? parseInt(userId, 10) : null,
@@ -50,9 +58,11 @@ export default function SampleDetailScreen({ route }) {
       }, token);
 
       if (data.success) {
+        const resolvedId = data.sample_id || sample.sample_id || sample.lab_barcode;
+        setDisplaySampleId(resolvedId);
         setAcknowledged(true);
         Alert.alert('Done', 'Sample acknowledged successfully.');
-        fetchBarcode();
+        fetchBarcode(resolvedId);
       } else {
         Alert.alert('Error', data.message || 'Acknowledgement failed.');
       }
@@ -74,7 +84,7 @@ export default function SampleDetailScreen({ route }) {
           <p style="font-size:13px;margin-bottom:4px;">${sample.patient_name}</p>
           <p style="font-size:11px;color:#555;margin-bottom:8px;">${sample.test_name}</p>
           <img src="${barcodeUri}" style="width:280px;height:auto;" />
-          <p style="font-size:11px;margin-top:4px;">${sample.sample_id}</p>
+          <p style="font-size:11px;margin-top:4px;">${displaySampleId || ''}</p>
         </body>
       </html>
     `;
@@ -92,7 +102,7 @@ export default function SampleDetailScreen({ route }) {
         <Text style={styles.value}>{sample.patient_name}</Text>
 
         <Text style={styles.label}>Sample ID</Text>
-        <Text style={[styles.value, styles.mono]}>{sample.sample_id}</Text>
+        <Text style={[styles.value, styles.mono]}>{displaySampleId || '—'}</Text>
 
         <Text style={styles.label}>Test</Text>
         <Text style={styles.value}>{sample.test_name}</Text>
@@ -138,7 +148,7 @@ export default function SampleDetailScreen({ route }) {
             style={styles.barcodeImage}
             resizeMode="contain"
           />
-          <Text style={styles.barcodeLabel}>{sample.sample_id}</Text>
+          <Text style={styles.barcodeLabel}>{displaySampleId || ''}</Text>
         </View>
       )}
 
