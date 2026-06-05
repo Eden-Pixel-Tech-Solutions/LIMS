@@ -1442,6 +1442,7 @@ export const acknowledgeTest = async (req, res) => {
       success: true,
       message: 'Test acknowledged successfully',
       sample_id: effectiveSampleId,
+      short_id: effectiveShortId,
       status: status || 'Collected'
     });
   } catch (error) {
