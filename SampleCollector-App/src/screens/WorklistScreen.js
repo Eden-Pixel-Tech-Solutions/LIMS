@@ -3,6 +3,7 @@ import {
   View, Text, FlatList, TouchableOpacity, Image,
   TextInput, ScrollView,
   StyleSheet, ActivityIndicator, Alert, RefreshControl,
+  useWindowDimensions,
 } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import { useFocusEffect } from '@react-navigation/native';
@@ -19,16 +20,20 @@ const TUBE_COLORS = {
   'Gray':   '#6b7280',
 };
 
-function TubeChip({ color }) {
+function TubeChip({ color, isTablet }) {
   const bg = TUBE_COLORS[color] || '#64748b';
   return (
-    <View style={[styles.tubeChip, { backgroundColor: bg }]}>
-      <Text style={styles.tubeChipText}>{color || '—'}</Text>
+    <View style={[styles.tubeChip, { backgroundColor: bg, paddingHorizontal: isTablet ? 12 : 10 }]}>
+      <Text style={[styles.tubeChipText, { fontSize: isTablet ? 12 : 11 }]}>{color || '—'}</Text>
     </View>
   );
 }
 
 export default function WorklistScreen({ navigation }) {
+  const { width } = useWindowDimensions();
+  const isTablet = width >= 600;
+  const numCols = isTablet ? 2 : 1;
+
   const [samples, setSamples] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -46,11 +51,8 @@ export default function WorklistScreen({ navigation }) {
         {},
         token
       );
-      if (data && Array.isArray(data.worklist)) {
-        setSamples(data.worklist);
-      } else if (data && Array.isArray(data)) {
-        setSamples(data);
-      }
+      if (data && Array.isArray(data.worklist)) setSamples(data.worklist);
+      else if (data && Array.isArray(data)) setSamples(data);
     } catch {
       Alert.alert('Error', 'Failed to load worklist.');
     } finally {
@@ -59,11 +61,7 @@ export default function WorklistScreen({ navigation }) {
     }
   };
 
-  useFocusEffect(
-    useCallback(() => {
-      fetchWorklist();
-    }, [])
-  );
+  useFocusEffect(useCallback(() => { fetchWorklist(); }, []));
 
   const handleLogout = async () => {
     await SecureStore.deleteItemAsync('hims_token');
@@ -77,25 +75,23 @@ export default function WorklistScreen({ navigation }) {
       headerLeft: () => (
         <Image
           source={require('../Asset/jhlogo.png')}
-          style={styles.headerLogo}
+          style={[styles.headerLogo, { width: isTablet ? 36 : 30, height: isTablet ? 36 : 30 }]}
           resizeMode="contain"
         />
       ),
       headerRight: () => (
         <TouchableOpacity onPress={handleLogout} style={styles.logoutBtn}>
-          <Text style={styles.logoutText}>Logout</Text>
+          <Text style={[styles.logoutText, { fontSize: isTablet ? 15 : 13 }]}>Logout</Text>
         </TouchableOpacity>
       ),
     });
-  }, [navigation]);
+  }, [navigation, isTablet]);
 
-  // Derive unique tube color options from loaded data
   const tubeOptions = useMemo(() => {
     const colors = [...new Set(samples.map(s => s.tube_color).filter(Boolean))];
     return ['All', ...colors];
   }, [samples]);
 
-  // Apply search + tube filter client-side
   const filteredSamples = useMemo(() => {
     const q = search.trim().toLowerCase();
     return samples.filter(s => {
@@ -108,27 +104,30 @@ export default function WorklistScreen({ navigation }) {
     });
   }, [samples, search, tubeFilter]);
 
+  // Card width for 2-column tablet layout
+  const cardWidth = isTablet ? (width - 42) / 2 : undefined;
+
   const renderItem = ({ item }) => (
     <TouchableOpacity
-      style={styles.card}
+      style={[styles.card, cardWidth ? { width: cardWidth } : {}]}
       onPress={() => navigation.navigate('SampleDetail', { sample: item })}
       activeOpacity={0.75}
     >
       <View style={styles.cardAccent} />
-      <View style={styles.cardBody}>
+      <View style={[styles.cardBody, { padding: isTablet ? 18 : 14 }]}>
         <View style={styles.cardTop}>
-          <Text style={styles.patientName} numberOfLines={1}>
+          <Text style={[styles.patientName, { fontSize: isTablet ? 18 : 16 }]} numberOfLines={1}>
             {item.patient_name}
           </Text>
-          <TubeChip color={item.tube_color} />
+          <TubeChip color={item.tube_color} isTablet={isTablet} />
         </View>
         {(item.sample_id || item.short_id) ? (
-          <Text style={styles.sampleId} numberOfLines={1}>
+          <Text style={[styles.sampleId, { fontSize: isTablet ? 12 : 11 }]} numberOfLines={1}>
             {item.sample_id || item.short_id}
           </Text>
         ) : null}
         <View style={styles.cardBottom}>
-          <Text style={styles.testName} numberOfLines={1}>
+          <Text style={[styles.testName, { fontSize: isTablet ? 14 : 13 }]} numberOfLines={1}>
             {item.test_name}
           </Text>
           <Text style={styles.chevron}>›</Text>
@@ -141,7 +140,7 @@ export default function WorklistScreen({ navigation }) {
     return (
       <View style={styles.centered}>
         <ActivityIndicator size="large" color="#2563eb" />
-        <Text style={styles.loadingText}>Loading samples...</Text>
+        <Text style={[styles.loadingText, { fontSize: isTablet ? 16 : 14 }]}>Loading samples...</Text>
       </View>
     );
   }
@@ -150,10 +149,13 @@ export default function WorklistScreen({ navigation }) {
     <View style={styles.container}>
 
       {/* Search bar */}
-      <View style={styles.searchBar}>
-        <Text style={styles.searchIcon}>⌕</Text>
+      <View style={[styles.searchBar, {
+        marginHorizontal: isTablet ? 20 : 14,
+        marginTop: isTablet ? 16 : 12,
+      }]}>
+        <Text style={[styles.searchIcon, { fontSize: isTablet ? 20 : 18 }]}>⌕</Text>
         <TextInput
-          style={styles.searchInput}
+          style={[styles.searchInput, { fontSize: isTablet ? 16 : 14, paddingVertical: isTablet ? 14 : 12 }]}
           placeholder="Search patient, test or sample ID..."
           placeholderTextColor="#94a3b8"
           value={search}
@@ -163,7 +165,7 @@ export default function WorklistScreen({ navigation }) {
         />
         {search.length > 0 && (
           <TouchableOpacity onPress={() => setSearch('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-            <Text style={styles.clearBtn}>✕</Text>
+            <Text style={[styles.clearBtn, { fontSize: isTablet ? 15 : 13 }]}>✕</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -174,7 +176,7 @@ export default function WorklistScreen({ navigation }) {
           horizontal
           showsHorizontalScrollIndicator={false}
           style={styles.filterRow}
-          contentContainerStyle={styles.filterContent}
+          contentContainerStyle={[styles.filterContent, { paddingHorizontal: isTablet ? 20 : 14 }]}
         >
           {tubeOptions.map(opt => {
             const active = tubeFilter === opt;
@@ -182,14 +184,22 @@ export default function WorklistScreen({ navigation }) {
             return (
               <TouchableOpacity
                 key={opt}
-                style={[styles.filterChip, active && styles.filterChipActive]}
+                style={[
+                  styles.filterChip,
+                  active && styles.filterChipActive,
+                  { paddingHorizontal: isTablet ? 16 : 14, paddingVertical: isTablet ? 7 : 5 },
+                ]}
                 onPress={() => setTubeFilter(opt)}
                 activeOpacity={0.7}
               >
                 {opt !== 'All' && (
-                  <View style={[styles.filterDot, { backgroundColor: dotColor }]} />
+                  <View style={[styles.filterDot, { backgroundColor: dotColor, width: isTablet ? 10 : 8, height: isTablet ? 10 : 8 }]} />
                 )}
-                <Text style={[styles.filterChipText, active && styles.filterChipTextActive]}>
+                <Text style={[
+                  styles.filterChipText,
+                  active && styles.filterChipTextActive,
+                  { fontSize: isTablet ? 14 : 13 },
+                ]}>
                   {opt}
                 </Text>
               </TouchableOpacity>
@@ -199,10 +209,10 @@ export default function WorklistScreen({ navigation }) {
       )}
 
       {/* Count bar */}
-      <View style={styles.countBar}>
+      <View style={[styles.countBar, { paddingHorizontal: isTablet ? 20 : 16 }]}>
         <View style={styles.countPill}>
           <View style={styles.countDot} />
-          <Text style={styles.countText}>
+          <Text style={[styles.countText, { fontSize: isTablet ? 13 : 12 }]}>
             {filteredSamples.length}
             {filteredSamples.length !== samples.length ? ` of ${samples.length}` : ''}
             {' '}Pending Sample{filteredSamples.length !== 1 ? 's' : ''}
@@ -211,6 +221,8 @@ export default function WorklistScreen({ navigation }) {
       </View>
 
       <FlatList
+        key={String(numCols)}
+        numColumns={numCols}
         data={filteredSamples}
         keyExtractor={(item, i) => String(item.bill_item_id || item.sample_id || i)}
         renderItem={renderItem}
@@ -225,17 +237,21 @@ export default function WorklistScreen({ navigation }) {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>{search || tubeFilter !== 'All' ? '🔍' : '✓'}</Text>
-            <Text style={styles.emptyTitle}>
+            <Text style={[styles.emptyTitle, { fontSize: isTablet ? 24 : 20 }]}>
               {search || tubeFilter !== 'All' ? 'No matches' : 'All Clear'}
             </Text>
-            <Text style={styles.emptyText}>
+            <Text style={[styles.emptyText, { fontSize: isTablet ? 16 : 14 }]}>
               {search || tubeFilter !== 'All'
                 ? 'Try a different search or filter.'
                 : 'No pending samples at this time.'}
             </Text>
           </View>
         }
-        contentContainerStyle={filteredSamples.length === 0 ? { flex: 1 } : { paddingBottom: 24, paddingTop: 4 }}
+        contentContainerStyle={
+          filteredSamples.length === 0
+            ? { flex: 1 }
+            : { paddingBottom: 24, paddingTop: 4, paddingHorizontal: isTablet ? 6 : 0 }
+        }
       />
     </View>
   );
@@ -244,9 +260,9 @@ export default function WorklistScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F0F4FF' },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 12 },
-  loadingText: { color: '#64748b', fontSize: 14, fontWeight: '500' },
+  loadingText: { color: '#64748b', fontWeight: '500' },
 
-  headerLogo: { width: 30, height: 30, marginLeft: 4, borderRadius: 15 },
+  headerLogo: { marginLeft: 4, borderRadius: 18 },
   logoutBtn: {
     backgroundColor: 'rgba(255,255,255,0.15)',
     borderRadius: 8,
@@ -256,15 +272,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.3)',
   },
-  logoutText: { color: '#fff', fontSize: 13, fontWeight: '600' },
+  logoutText: { color: '#fff', fontWeight: '600' },
 
-  /* Search */
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#fff',
-    marginHorizontal: 14,
-    marginTop: 12,
     marginBottom: 2,
     borderRadius: 12,
     paddingHorizontal: 12,
@@ -275,48 +288,29 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
-  searchIcon: { fontSize: 18, color: '#94a3b8', marginRight: 6 },
-  searchInput: {
-    flex: 1,
-    paddingVertical: 12,
-    fontSize: 14,
-    color: '#0f172a',
-  },
-  clearBtn: { fontSize: 13, color: '#94a3b8', paddingLeft: 6 },
+  searchIcon: { color: '#94a3b8', marginRight: 6 },
+  searchInput: { flex: 1, color: '#0f172a' },
+  clearBtn: { color: '#94a3b8', paddingLeft: 6 },
 
-  /* Filter chips */
-  filterRow: { maxHeight: 48 },
-  filterContent: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    gap: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
+  filterRow: { maxHeight: 52 },
+  filterContent: { paddingVertical: 8, gap: 8, flexDirection: 'row', alignItems: 'center' },
   filterChip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
     backgroundColor: '#fff',
     borderRadius: 20,
-    paddingHorizontal: 14,
-    paddingVertical: 5,
     borderWidth: 1.5,
     borderColor: '#E2E8F0',
   },
-  filterChipActive: {
-    backgroundColor: '#EFF6FF',
-    borderColor: '#2563eb',
-  },
-  filterDot: { width: 8, height: 8, borderRadius: 4 },
-  filterChipText: { fontSize: 13, fontWeight: '600', color: '#64748b' },
+  filterChipActive: { backgroundColor: '#EFF6FF', borderColor: '#2563eb' },
+  filterDot: { borderRadius: 5 },
+  filterChipText: { fontWeight: '600', color: '#64748b' },
   filterChipTextActive: { color: '#2563eb' },
 
-  /* Count bar */
   countBar: {
     backgroundColor: '#fff',
     paddingVertical: 8,
-    paddingHorizontal: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#e2e8f0',
     marginTop: 4,
@@ -334,12 +328,11 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   countDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: '#2563eb' },
-  countText: { color: '#1d4ed8', fontSize: 12, fontWeight: '700' },
+  countText: { color: '#1d4ed8', fontWeight: '700' },
 
-  /* Sample cards */
   card: {
     backgroundColor: '#fff',
-    marginHorizontal: 14,
+    marginHorizontal: 7,
     marginTop: 10,
     borderRadius: 14,
     flexDirection: 'row',
@@ -349,25 +342,26 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 },
     elevation: 3,
+    flex: 1,
   },
   cardAccent: { width: 4, backgroundColor: '#2563eb' },
-  cardBody: { flex: 1, padding: 14 },
+  cardBody: { flex: 1 },
   cardTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 4,
   },
-  patientName: { fontSize: 16, fontWeight: '800', color: '#0f172a', flex: 1, marginRight: 8 },
-  sampleId: { fontFamily: 'monospace', fontSize: 11, color: '#64748b', marginBottom: 6 },
+  patientName: { fontWeight: '800', color: '#0f172a', flex: 1, marginRight: 8 },
+  sampleId: { fontFamily: 'monospace', color: '#64748b', marginBottom: 6 },
   cardBottom: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  testName: { fontSize: 13, color: '#475569', fontWeight: '500', flex: 1 },
+  testName: { color: '#475569', fontWeight: '500', flex: 1 },
   chevron: { fontSize: 22, color: '#93c5fd', fontWeight: '300', lineHeight: 24 },
-  tubeChip: { borderRadius: 20, paddingHorizontal: 10, paddingVertical: 3 },
-  tubeChipText: { color: '#fff', fontSize: 11, fontWeight: '700' },
+  tubeChip: { borderRadius: 20, paddingVertical: 3 },
+  tubeChipText: { color: '#fff', fontWeight: '700' },
 
   emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingBottom: 60 },
   emptyIcon: { fontSize: 44, marginBottom: 12 },
-  emptyTitle: { fontSize: 20, fontWeight: '800', color: '#0d2554', marginBottom: 6 },
-  emptyText: { fontSize: 14, color: '#94a3b8', textAlign: 'center' },
+  emptyTitle: { fontWeight: '800', color: '#0d2554', marginBottom: 6 },
+  emptyText: { color: '#94a3b8', textAlign: 'center' },
 });

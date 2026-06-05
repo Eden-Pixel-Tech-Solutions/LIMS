@@ -2,12 +2,15 @@ import React, { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, Image,
   StyleSheet, ActivityIndicator, Alert, KeyboardAvoidingView,
-  Platform, ScrollView,
+  Platform, ScrollView, useWindowDimensions,
 } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import { apiFetch } from '../api';
 
 export default function LoginScreen({ navigation }) {
+  const { width } = useWindowDimensions();
+  const isTablet = width >= 600;
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -40,6 +43,8 @@ export default function LoginScreen({ navigation }) {
     }
   };
 
+  const r = isTablet ? 1.25 : 1; // scale factor for tablet
+
   return (
     <KeyboardAvoidingView
       style={styles.container}
@@ -50,35 +55,44 @@ export default function LoginScreen({ navigation }) {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        {/* Card */}
-        <View style={styles.card}>
+        <View style={[styles.card, { maxWidth: isTablet ? 560 : 420, padding: isTablet ? 40 : 28 }]}>
 
-          {/* Logos row */}
+          {/* Logos */}
           <View style={styles.logosRow}>
             <Image
               source={require('../Asset/jhlogo.png')}
-              style={styles.jhLogo}
+              style={{ width: 72 * r, height: 72 * r }}
               resizeMode="contain"
             />
-            <View style={styles.logoDivider} />
+            <View style={[styles.logoDivider, { height: 52 * r }]} />
             <Image
               source={require('../Asset/meril.png')}
-              style={styles.merilLogo}
+              style={{ width: 110 * r, height: 38 * r }}
               resizeMode="contain"
             />
           </View>
 
-          {/* App identity */}
-          <Text style={styles.govText}>Government of Jharkhand</Text>
-          <Text style={styles.appTitle}>SAMPLE COLLECTOR</Text>
-          <Text style={styles.appSubtitle}>Health Information Management System</Text>
+          {/* Identity */}
+          <Text style={[styles.govText, { fontSize: isTablet ? 14 : 12 }]}>
+            Government of Jharkhand
+          </Text>
+          <Text style={[styles.appTitle, { fontSize: isTablet ? 32 : 26 }]}>
+            SAMPLE COLLECTOR
+          </Text>
+          <Text style={[styles.appSubtitle, { fontSize: isTablet ? 14 : 12 }]}>
+            Health Information Management System
+          </Text>
 
           <View style={styles.divider} />
 
           {/* Email */}
-          <Text style={styles.fieldLabel}>Email Address</Text>
+          <Text style={[styles.fieldLabel, { fontSize: isTablet ? 13 : 12 }]}>Email Address</Text>
           <TextInput
-            style={[styles.input, emailFocused && styles.inputFocused]}
+            style={[
+              styles.input,
+              emailFocused && styles.inputFocused,
+              { fontSize: isTablet ? 17 : 15, paddingVertical: isTablet ? 17 : 14 },
+            ]}
             placeholder="Enter your email"
             placeholderTextColor="#94a3b8"
             keyboardType="email-address"
@@ -91,9 +105,13 @@ export default function LoginScreen({ navigation }) {
           />
 
           {/* Password */}
-          <Text style={styles.fieldLabel}>Password</Text>
+          <Text style={[styles.fieldLabel, { fontSize: isTablet ? 13 : 12 }]}>Password</Text>
           <TextInput
-            style={[styles.input, passFocused && styles.inputFocused]}
+            style={[
+              styles.input,
+              passFocused && styles.inputFocused,
+              { fontSize: isTablet ? 17 : 15, paddingVertical: isTablet ? 17 : 14 },
+            ]}
             placeholder="Enter your password"
             placeholderTextColor="#94a3b8"
             secureTextEntry
@@ -105,18 +123,24 @@ export default function LoginScreen({ navigation }) {
 
           {/* Login button */}
           <TouchableOpacity
-            style={[styles.button, loading && styles.buttonDisabled]}
+            style={[
+              styles.button,
+              loading && styles.buttonDisabled,
+              { paddingVertical: isTablet ? 20 : 16, borderRadius: isTablet ? 14 : 12 },
+            ]}
             onPress={handleLogin}
             disabled={loading}
             activeOpacity={0.85}
           >
             {loading
               ? <ActivityIndicator color="#fff" />
-              : <Text style={styles.buttonText}>Login  →</Text>
+              : <Text style={[styles.buttonText, { fontSize: isTablet ? 18 : 16 }]}>Login  →</Text>
             }
           </TouchableOpacity>
 
-          <Text style={styles.hint}>Phlebotomy Portal · Lab Staff Only</Text>
+          <Text style={[styles.hint, { fontSize: isTablet ? 13 : 11 }]}>
+            Phlebotomy Portal · Lab Staff Only
+          </Text>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -124,53 +148,33 @@ export default function LoginScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#EFF6FF',
-  },
+  container: { flex: 1, backgroundColor: '#EFF6FF' },
   scroll: {
     flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
     paddingVertical: 40,
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
   },
   card: {
     backgroundColor: '#fff',
     borderRadius: 20,
-    padding: 28,
     width: '100%',
-    maxWidth: 400,
     shadowColor: '#1e40af',
     shadowOpacity: 0.12,
     shadowRadius: 20,
     shadowOffset: { width: 0, height: 8 },
     elevation: 8,
   },
-
   logosRow: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
-    gap: 16,
+    gap: 20,
   },
-  jhLogo: {
-    width: 72,
-    height: 72,
-  },
-  logoDivider: {
-    width: 1,
-    height: 48,
-    backgroundColor: '#e2e8f0',
-  },
-  merilLogo: {
-    width: 100,
-    height: 36,
-  },
-
+  logoDivider: { width: 1, backgroundColor: '#e2e8f0' },
   govText: {
-    fontSize: 12,
     color: '#64748b',
     textAlign: 'center',
     fontWeight: '600',
@@ -178,7 +182,6 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   appTitle: {
-    fontSize: 26,
     fontWeight: '900',
     color: '#0d2554',
     textAlign: 'center',
@@ -186,22 +189,14 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   appSubtitle: {
-    fontSize: 12,
     color: '#2563eb',
     textAlign: 'center',
     fontWeight: '600',
     letterSpacing: 0.3,
     marginBottom: 8,
   },
-
-  divider: {
-    height: 1,
-    backgroundColor: '#e2e8f0',
-    marginVertical: 20,
-  },
-
+  divider: { height: 1, backgroundColor: '#e2e8f0', marginVertical: 20 },
   fieldLabel: {
-    fontSize: 12,
     fontWeight: '700',
     color: '#475569',
     textTransform: 'uppercase',
@@ -213,21 +208,13 @@ const styles = StyleSheet.create({
     borderColor: '#CBD5E1',
     borderRadius: 12,
     paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 15,
     color: '#0f172a',
     backgroundColor: '#F8FAFC',
     marginBottom: 16,
   },
-  inputFocused: {
-    borderColor: '#2563eb',
-    backgroundColor: '#EFF6FF',
-  },
-
+  inputFocused: { borderColor: '#2563eb', backgroundColor: '#EFF6FF' },
   button: {
     backgroundColor: '#2563eb',
-    borderRadius: 12,
-    paddingVertical: 16,
     alignItems: 'center',
     marginTop: 4,
     shadowColor: '#2563eb',
@@ -236,23 +223,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     elevation: 4,
   },
-  buttonDisabled: {
-    backgroundColor: '#93c5fd',
-    shadowOpacity: 0,
-    elevation: 0,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '800',
-    letterSpacing: 0.5,
-  },
-
-  hint: {
-    fontSize: 11,
-    color: '#94a3b8',
-    textAlign: 'center',
-    marginTop: 16,
-    fontWeight: '500',
-  },
+  buttonDisabled: { backgroundColor: '#93c5fd', shadowOpacity: 0, elevation: 0 },
+  buttonText: { color: '#fff', fontWeight: '800', letterSpacing: 0.5 },
+  hint: { color: '#94a3b8', textAlign: 'center', marginTop: 16, fontWeight: '500' },
 });
