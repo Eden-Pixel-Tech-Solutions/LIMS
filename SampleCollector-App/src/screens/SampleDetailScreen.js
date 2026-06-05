@@ -152,6 +152,7 @@ export default function SampleDetailScreen({ route }) {
           <hr class="divider"/>
           <img class="barcode" src="${barcodeUri}" />
           <div class="bc-label">${resolvedShortId}</div>
+          <div style="text-align:right;font-size:4pt;color:#bbb;margin-top:0.5mm;letter-spacing:0.3pt;">Meril LIMS</div>
         </body>
       </html>
     `;
@@ -321,6 +322,7 @@ export default function SampleDetailScreen({ route }) {
             <Text style={styles.barcodeSubtitle}>BARCODE · SHORT CODE</Text>
             <Image source={{ uri: barcodeUri }} style={styles.barcodeImage} resizeMode="contain" />
             <Text style={styles.barcodeRawText}>{resolvedShortId || resolvedSampleId}</Text>
+            <Text style={styles.merilLimsTag}>Meril LIMS</Text>
           </View>
 
           {sample.test_name && (
@@ -561,6 +563,7 @@ const styles = StyleSheet.create({
   },
   barcodeImage: { width: 280, height: 80 },
   barcodeRawText: { fontFamily: 'monospace', fontSize: 11, color: '#475569', marginTop: 6 },
+  merilLimsTag: { fontSize: 9, color: '#cbd5e1', fontWeight: '600', letterSpacing: 0.5, marginTop: 6 },
 
   testChip: {
     flexDirection: 'row',
