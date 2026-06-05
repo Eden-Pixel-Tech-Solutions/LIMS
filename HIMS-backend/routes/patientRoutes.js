@@ -32,7 +32,7 @@ const authenticatePatientPortal = (req, res, next) => {
   }
 };
 
-const STAFF_ROLES = ['Admin', 'Doctor', 'Lab Head', 'Lab Technician', 'Staff'];
+const STAFF_ROLES = ['Admin', 'Doctor', 'Lab Head', 'Lab Technician', 'Staff', 'Receptionist', 'Phlebotomist', 'Super Admin'];
 
 // Staff/Admin routes
 router.post('/register', authenticateToken, authorizeRole(STAFF_ROLES), registerPatient);
