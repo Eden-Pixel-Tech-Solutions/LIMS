@@ -37,7 +37,7 @@ export default function SampleDetailScreen({ route }) {
     setAcknowledging(true);
     try {
       const token = await SecureStore.getItemAsync('hims_token');
-      const userName = await SecureStore.getItemAsync('user_name');
+      const userId = await SecureStore.getItemAsync('user_id');
       const data = await apiFetch('/api/lab/acknowledge-test', {
         method: 'POST',
         body: JSON.stringify({
@@ -45,7 +45,7 @@ export default function SampleDetailScreen({ route }) {
           sample_id: sample.sample_id,
           short_id: sample.short_id,
           status: 'Collected',
-          collected_by: userName || 'Collector',
+          collected_by: userId ? parseInt(userId, 10) : null,
         }),
       }, token);
 

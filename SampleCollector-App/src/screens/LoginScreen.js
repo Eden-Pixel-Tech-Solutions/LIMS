@@ -25,7 +25,7 @@ export default function LoginScreen({ navigation }) {
       if (data.token) {
         await SecureStore.setItemAsync('hims_token', data.token);
         await SecureStore.setItemAsync('branch_id', String(data.branch_id || ''));
-        await SecureStore.setItemAsync('user_name', `${data.firstName || ''} ${data.lastName || ''}`.trim());
+        await SecureStore.setItemAsync('user_id', String(data.id || ''));
         navigation.replace('Worklist');
       } else {
         Alert.alert('Login Failed', data.message || 'Invalid credentials.');
