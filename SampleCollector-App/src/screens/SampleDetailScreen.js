@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useLayoutEffect } from 'react';
 import {
   View, Text, Image, TouchableOpacity,
   StyleSheet, ActivityIndicator, Alert, ScrollView,
@@ -8,7 +8,7 @@ import * as SecureStore from 'expo-secure-store';
 import * as Print from 'expo-print';
 import { apiFetch } from '../api';
 
-export default function SampleDetailScreen({ route }) {
+export default function SampleDetailScreen({ route, navigation }) {
   const { sample } = route.params;
   const { width } = useWindowDimensions();
   const isTablet = width >= 600;
@@ -24,6 +24,27 @@ export default function SampleDetailScreen({ route }) {
   const [barcodeUri, setBarcodeUri] = useState(null);
   const [qrUri, setQrUri] = useState(null);
   const [loadingBarcode, setLoadingBarcode] = useState(false);
+
+  // Keep a ref so the header button always calls the latest handlePrint
+  const handlePrintRef = useRef(null);
+
+  // Wire Print button into the navigation header whenever barcode becomes available
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: barcodeUri
+        ? () => (
+          <TouchableOpacity
+            onPress={() => handlePrintRef.current?.()}
+            style={styles.headerPrintBtn}
+          >
+            <Text style={[styles.headerPrintText, { fontSize: isTablet ? 15 : 13 }]}>
+              Print Label
+            </Text>
+          </TouchableOpacity>
+        )
+        : undefined,
+    });
+  }, [navigation, barcodeUri, isTablet]);
 
   const fetchBarcode = async (id) => {
     const barcodeId = id || shortId || sample.short_id || sampleId || sample.sample_id || sample.lab_barcode;
@@ -165,6 +186,9 @@ export default function SampleDetailScreen({ route }) {
       Alert.alert('Print Error', 'Could not open print dialog.');
     }
   };
+
+  // Always keep the ref current so the header button has the latest closure
+  handlePrintRef.current = handlePrint;
 
   const resolvedSampleId = sampleId || sample.sample_id;
   const resolvedShortId  = shortId  || sample.short_id;
@@ -337,16 +361,6 @@ export default function SampleDetailScreen({ route }) {
               </View>
             )}
           </View>
-        )}
-
-        {barcodeUri && (
-          <TouchableOpacity
-            style={[styles.printButton, { padding: isTablet ? 22 : 18, borderRadius: isTablet ? 16 : 14 }]}
-            onPress={handlePrint}
-            activeOpacity={0.85}
-          >
-            <Text style={[styles.printButtonText, { fontSize: isTablet ? 18 : 16 }]}>Print Label</Text>
-          </TouchableOpacity>
         )}
 
       </View>
@@ -530,14 +544,12 @@ const styles = StyleSheet.create({
   testChipLabel: { color: '#60a5fa', fontWeight: '700', letterSpacing: 0.5 },
   testChipName: { fontWeight: '700', color: '#1e40af' },
 
-  printButton: {
+  headerPrintBtn: {
     backgroundColor: '#16a34a',
-    alignItems: 'center',
-    shadowColor: '#16a34a',
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 4,
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    marginRight: 4,
   },
-  printButtonText: { color: '#fff', fontWeight: '800' },
+  headerPrintText: { color: '#fff', fontWeight: '700' },
 });
