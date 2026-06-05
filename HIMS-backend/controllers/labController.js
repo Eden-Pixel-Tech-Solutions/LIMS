@@ -1331,19 +1331,32 @@ export const acknowledgeTest = async (req, res) => {
   try {
     const { bill_item_id, sample_id, short_id, status, collected_by } = req.body;
 
-    if (!bill_item_id || !sample_id) {
+    if (!bill_item_id) {
       return res.status(400).json({
         success: false,
-        message: 'Bill item ID and sample ID are required'
+        message: 'Bill item ID is required'
       });
     }
 
+    // Fetch existing row so we can keep its sample_id / short_id if the caller didn't supply them
+    const [[existing]] = await db.query(
+      `SELECT sample_id, short_id FROM bill_items WHERE id = ? LIMIT 1`,
+      [bill_item_id]
+    );
+
+    if (!existing) {
+      return res.status(404).json({ success: false, message: 'Bill item not found' });
+    }
+
+    const effectiveSampleId = sample_id || existing.sample_id;
+    const effectiveShortId  = short_id  || existing.short_id;
+
     // Update bill item with sample ID, status and collector
     const [result] = await db.query(
-      `UPDATE bill_items 
+      `UPDATE bill_items
        SET sample_id = ?, short_id = ?, status = ?, collected_by = ?, updated_at = NOW()
        WHERE id = ?`,
-      [sample_id, short_id || null, status || 'Collected', collected_by || null, bill_item_id]
+      [effectiveSampleId, effectiveShortId, status || 'Collected', collected_by || null, bill_item_id]
     );
 
     if (result.affectedRows === 0) {
@@ -1428,7 +1441,7 @@ export const acknowledgeTest = async (req, res) => {
     res.json({
       success: true,
       message: 'Test acknowledged successfully',
-      sample_id,
+      sample_id: effectiveSampleId,
       status: status || 'Collected'
     });
   } catch (error) {
