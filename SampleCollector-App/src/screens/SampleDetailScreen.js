@@ -19,6 +19,7 @@ export default function SampleDetailScreen({ route }) {
   const [shortId, setShortId] = useState(sample.short_id || null);
   const [sampleId, setSampleId] = useState(sample.sample_id || null);
   const [barcodeUri, setBarcodeUri] = useState(null);
+  const [qrUri, setQrUri] = useState(null);
   const [loadingBarcode, setLoadingBarcode] = useState(false);
 
   const fetchBarcode = async (id) => {
@@ -30,9 +31,12 @@ export default function SampleDetailScreen({ route }) {
     }
     setLoadingBarcode(true);
     try {
-      const data = await apiFetch(`/api/barcodes/sample/${encodeURIComponent(String(barcodeId))}`);
+      const fullSampleId = sampleId || sample.sample_id || barcodeId;
+      const url = `/api/barcodes/sample/${encodeURIComponent(String(barcodeId))}?full_id=${encodeURIComponent(String(fullSampleId))}`;
+      const data = await apiFetch(url);
       if (data.success && data.barcodeBase64) {
         setBarcodeUri(data.barcodeBase64);
+        setQrUri(data.qrBase64 || null);
       } else {
         Alert.alert('Error', data.message || 'Barcode generation failed.');
       }
@@ -134,17 +138,25 @@ export default function SampleDetailScreen({ route }) {
           </style>
         </head>
         <body>
-          <div class="patient">${sample.patient_name}</div>
-          <div class="row">
-            <span class="key">Sample ID</span>
-            <span class="val" style="font-size:5pt;max-width:1.6in;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${resolvedSampleId}</span>
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+            <div style="flex:1;padding-right:2mm;">
+              <div class="patient">${sample.patient_name}</div>
+              <div class="row">
+                <span class="key">Sample ID</span>
+                <span class="val" style="font-size:5pt;max-width:1.1in;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${resolvedSampleId}</span>
+              </div>
+              <div class="row">
+                <span class="key">Short</span>
+                <span class="val short">${resolvedShortId}</span>
+              </div>
+              ${sample.test_code ? `<div class="row"><span class="key">Test Code</span><span class="val">${sample.test_code}</span></div>` : ''}
+              ${sample.test_name ? `<div class="row"><span class="key">Test</span><span class="val" style="max-width:1.1in;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${sample.test_name}</span></div>` : ''}
+            </div>
+            ${qrUri ? `<div style="text-align:center;flex-shrink:0;">
+              <img src="${qrUri}" style="width:0.7in;height:0.7in;display:block;" />
+              <div style="font-size:4.5pt;color:#555;margin-top:0.5mm;">FULL ID</div>
+            </div>` : ''}
           </div>
-          <div class="row">
-            <span class="key">Short Code</span>
-            <span class="val short">${resolvedShortId}</span>
-            ${sample.test_code ? `<span class="key" style="margin-left:4mm;">Code</span><span class="val">${sample.test_code}</span>` : ''}
-          </div>
-          ${sample.test_name ? `<div class="row"><span class="key">Test</span><span class="val" style="max-width:1.6in;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${sample.test_name}</span></div>` : ''}
           <hr class="divider"/>
           <img class="barcode" src="${barcodeUri}" />
           <div class="bc-label">${resolvedShortId}</div>
@@ -223,37 +235,46 @@ export default function SampleDetailScreen({ route }) {
 
           {/* Label body */}
           <View style={styles.labelBody}>
-            {/* Patient Name */}
-            <Text style={styles.labelPatient}>{sample.patient_name}</Text>
+            {/* Top row: text fields + QR code */}
+            <View style={styles.labelTopRow}>
+              <View style={styles.labelFields}>
+                <Text style={styles.labelPatient}>{sample.patient_name}</Text>
 
-            {/* Full Sample ID */}
-            <View style={styles.labelRow}>
-              <Text style={styles.labelRowKey}>Sample ID</Text>
-              <Text style={[styles.labelRowVal, styles.mono]} numberOfLines={1} adjustsFontSizeToFit>
-                {sampleId || sample.sample_id || '—'}
-              </Text>
-            </View>
+                <View style={styles.labelRow}>
+                  <Text style={styles.labelRowKey}>Sample ID</Text>
+                  <Text style={[styles.labelRowVal, styles.mono]} numberOfLines={2} adjustsFontSizeToFit>
+                    {sampleId || sample.sample_id || '—'}
+                  </Text>
+                </View>
 
-            {/* Short Code */}
-            <View style={styles.labelRow}>
-              <Text style={styles.labelRowKey}>Short Code</Text>
-              <Text style={[styles.labelRowVal, styles.mono, styles.shortCodeText]}>
-                {shortId || sample.short_id || '—'}
-              </Text>
-            </View>
+                <View style={styles.labelRow}>
+                  <Text style={styles.labelRowKey}>Short Code</Text>
+                  <Text style={[styles.labelRowVal, styles.mono, styles.shortCodeText]}>
+                    {shortId || sample.short_id || '—'}
+                  </Text>
+                </View>
 
-            {/* Test Code */}
-            {(sample.test_code) ? (
-              <View style={styles.labelRow}>
-                <Text style={styles.labelRowKey}>Test Code</Text>
-                <Text style={[styles.labelRowVal, styles.mono]}>{sample.test_code}</Text>
+                {sample.test_code ? (
+                  <View style={styles.labelRow}>
+                    <Text style={styles.labelRowKey}>Test Code</Text>
+                    <Text style={[styles.labelRowVal, styles.mono]}>{sample.test_code}</Text>
+                  </View>
+                ) : null}
               </View>
-            ) : null}
+
+              {/* QR Code */}
+              {qrUri && (
+                <View style={styles.qrBlock}>
+                  <Image source={{ uri: qrUri }} style={styles.qrImage} resizeMode="contain" />
+                  <Text style={styles.qrLabel}>Full ID</Text>
+                </View>
+              )}
+            </View>
 
             {/* Divider */}
             <View style={styles.divider} />
 
-            {/* Barcode (encodes short_id) */}
+            {/* Barcode (short_id) */}
             <Text style={styles.barcodeSubtitle}>SHORT CODE BARCODE</Text>
             <Image source={{ uri: barcodeUri }} style={styles.barcodeImage} resizeMode="contain" />
             <Text style={styles.barcodeRawText}>{shortId || sample.short_id || sampleId || sample.sample_id}</Text>
@@ -344,6 +365,13 @@ const styles = StyleSheet.create({
   shortCodeText: { fontSize: 20, color: '#2563eb' },
 
   divider: { width: '100%', height: 1, backgroundColor: '#e2e8f0', marginVertical: 14 },
+  labelTopRow: { flexDirection: 'row', width: '100%', alignItems: 'flex-start', marginBottom: 4 },
+  labelFields: { flex: 1, paddingRight: 12 },
+
+  qrBlock: { alignItems: 'center' },
+  qrImage: { width: 80, height: 80 },
+  qrLabel: { fontSize: 9, color: '#94a3b8', fontWeight: '700', textAlign: 'center', marginTop: 2, textTransform: 'uppercase' },
+
   barcodeSubtitle: { fontSize: 10, fontWeight: '700', color: '#94a3b8', letterSpacing: 1.5, marginBottom: 8, textTransform: 'uppercase' },
   barcodeImage: { width: 280, height: 80 },
   barcodeRawText: { fontFamily: 'monospace', fontSize: 11, color: '#475569', marginTop: 6 },
