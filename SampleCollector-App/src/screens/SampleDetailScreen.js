@@ -23,10 +23,9 @@ export default function SampleDetailScreen({ route }) {
   const [loadingBarcode, setLoadingBarcode] = useState(false);
 
   const fetchBarcode = async (id) => {
-    // Prefer short_id for compact barcode; fall back to full sample_id
     const barcodeId = id || shortId || sample.short_id || sampleId || sample.sample_id || sample.lab_barcode;
     if (!barcodeId) {
-      Alert.alert('No ID', 'No sample ID available to generate barcode. Please acknowledge first.');
+      Alert.alert('No ID', 'No sample ID available. Please acknowledge first.');
       return;
     }
     setLoadingBarcode(true);
@@ -40,7 +39,7 @@ export default function SampleDetailScreen({ route }) {
       } else {
         Alert.alert('Error', data.message || 'Barcode generation failed.');
       }
-    } catch (err) {
+    } catch {
       Alert.alert('Error', 'Failed to reach server.');
     } finally {
       setLoadingBarcode(false);
@@ -57,7 +56,6 @@ export default function SampleDetailScreen({ route }) {
       let newSampleId = sample.sample_id;
       let newShortId = sample.short_id;
 
-      // For Pending items that don't have a sample_id yet, generate one first
       if (!newSampleId) {
         const genData = await apiFetch('/api/lab/generate-sample-id', {
           method: 'POST',
@@ -113,19 +111,13 @@ export default function SampleDetailScreen({ route }) {
         <head>
           <meta charset="utf-8"/>
           <style>
-            @page {
-              size: 2.25in 1.25in;
-              margin: 0;
-            }
+            @page { size: 2.25in 1.25in; margin: 0; }
             * { box-sizing: border-box; margin: 0; padding: 0; }
             body {
-              width: 2.25in;
-              height: 1.25in;
+              width: 2.25in; height: 1.25in;
               font-family: 'Courier New', Courier, monospace;
-              background: #fff;
-              color: #000;
-              padding: 2mm 3mm 1mm 3mm;
-              overflow: hidden;
+              background: #fff; color: #000;
+              padding: 2mm 3mm 1mm 3mm; overflow: hidden;
             }
             .patient  { font-size: 8pt; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
             .row      { display: flex; justify-content: space-between; align-items: baseline; margin-top: 1mm; }
@@ -162,8 +154,6 @@ export default function SampleDetailScreen({ route }) {
           <div class="bc-label">${resolvedShortId}</div>
         </body>
       </html>
-        </body>
-      </html>
     `;
     try {
       await Print.printAsync({ html });
@@ -172,88 +162,143 @@ export default function SampleDetailScreen({ route }) {
     }
   };
 
+  const resolvedSampleId = sampleId || sample.sample_id;
+  const resolvedShortId  = shortId  || sample.short_id;
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
 
-      {/* Info Card */}
+      {/* Patient Info Card */}
       <View style={styles.card}>
-        <Text style={styles.label}>PATIENT</Text>
-        <Text style={styles.value}>{sample.patient_name}</Text>
+        <View style={styles.cardHeader}>
+          <Text style={styles.cardHeaderText}>PATIENT INFO</Text>
+          <View style={[styles.statusBadge, acknowledged ? styles.badgeGreen : styles.badgePending]}>
+            <View style={[styles.statusDot, acknowledged ? styles.dotGreen : styles.dotBlue]} />
+            <Text style={[styles.statusText, acknowledged ? styles.textGreen : styles.textBlue]}>
+              {acknowledged ? 'Collected' : sample.status || 'Pending'}
+            </Text>
+          </View>
+        </View>
 
-        <Text style={styles.label}>SAMPLE ID</Text>
-        <Text style={[styles.value, styles.mono]}>{sampleId || sample.sample_id || '—'}</Text>
+        <View style={styles.cardBody}>
+          {/* Patient name — full width */}
+          <View style={styles.fullRow}>
+            <Text style={styles.fieldKey}>Patient Name</Text>
+            <Text style={styles.patientNameVal}>{sample.patient_name}</Text>
+          </View>
 
-        <Text style={styles.label}>TEST</Text>
-        <Text style={styles.value}>{sample.test_name}</Text>
+          {/* Two-column grid */}
+          <View style={styles.grid}>
+            <View style={styles.gridCell}>
+              <Text style={styles.fieldKey}>Test</Text>
+              <Text style={styles.fieldVal} numberOfLines={2}>{sample.test_name || '—'}</Text>
+            </View>
+            <View style={styles.gridCell}>
+              <Text style={styles.fieldKey}>Tube Type</Text>
+              <Text style={styles.fieldVal}>{sample.tube_color || '—'}</Text>
+            </View>
+            {sample.test_code ? (
+              <View style={styles.gridCell}>
+                <Text style={styles.fieldKey}>Test Code</Text>
+                <Text style={[styles.fieldVal, styles.mono]}>{sample.test_code}</Text>
+              </View>
+            ) : null}
+            {resolvedShortId ? (
+              <View style={styles.gridCell}>
+                <Text style={styles.fieldKey}>Short Code</Text>
+                <Text style={[styles.fieldVal, styles.mono, styles.shortCode]}>{resolvedShortId}</Text>
+              </View>
+            ) : null}
+          </View>
 
-        {sample.tube_color ? (
-          <>
-            <Text style={styles.label}>TUBE</Text>
-            <Text style={styles.value}>{sample.tube_color}</Text>
-          </>
-        ) : null}
-
-        <Text style={styles.label}>STATUS</Text>
-        <View style={[styles.statusBadge, acknowledged ? styles.badgeGreen : styles.badgeBlue]}>
-          <Text style={[styles.statusText, acknowledged ? styles.statusGreen : styles.statusBlue]}>
-            {acknowledged ? 'Collected' : sample.status || 'Pending'}
-          </Text>
+          {resolvedSampleId ? (
+            <View style={styles.sampleIdRow}>
+              <Text style={styles.fieldKey}>Sample ID</Text>
+              <Text style={[styles.fieldVal, styles.mono, styles.sampleIdText]} numberOfLines={2} adjustsFontSizeToFit>
+                {resolvedSampleId}
+              </Text>
+            </View>
+          ) : null}
         </View>
       </View>
 
       {/* Acknowledge Button */}
       {!acknowledged && (
-        <TouchableOpacity style={styles.ackButton} onPress={handleAcknowledge} disabled={acknowledging}>
+        <TouchableOpacity
+          style={styles.ackButton}
+          onPress={handleAcknowledge}
+          disabled={acknowledging}
+          activeOpacity={0.85}
+        >
           {acknowledging
             ? <ActivityIndicator color="#fff" />
-            : <Text style={styles.ackButtonText}>Acknowledge Sample</Text>
+            : (
+              <View style={styles.btnInner}>
+                <Text style={styles.ackButtonText}>Mark as Collected</Text>
+              </View>
+            )
           }
         </TouchableOpacity>
       )}
 
-      {/* Load Barcode (if already collected but barcode not yet loaded) */}
+      {/* Load Barcode */}
       {acknowledged && !barcodeUri && !loadingBarcode && (
-        <TouchableOpacity style={styles.loadBarcodeBtn} onPress={() => fetchBarcode()}>
-          <Text style={styles.loadBarcodeBtnText}>Load Barcode</Text>
+        <TouchableOpacity
+          style={styles.loadBarcodeBtn}
+          onPress={() => fetchBarcode()}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.loadBarcodeBtnText}>Load Barcode Label</Text>
         </TouchableOpacity>
       )}
 
       {loadingBarcode && (
-        <View style={styles.barcodeBox}>
-          <ActivityIndicator size="large" color="#0d2554" />
+        <View style={styles.loadingBox}>
+          <ActivityIndicator size="large" color="#2563eb" />
+          <Text style={styles.loadingLabel}>Generating barcode...</Text>
         </View>
       )}
 
-      {/* Barcode Label */}
+      {/* Barcode Label Card */}
       {barcodeUri && (
         <View style={styles.barcodeCard}>
-          {/* Header */}
+
+          {/* Dark header strip with meril logo */}
           <View style={styles.barcodeHeader}>
-            <Text style={styles.barcodeHeaderSub}>SAMPLE LABEL</Text>
-            <Text style={styles.barcodeHeaderName}>{sample.patient_name}</Text>
+            <View>
+              <Text style={styles.barcodeHeaderSub}>SAMPLE LABEL</Text>
+              <Text style={styles.barcodeHeaderName}>{sample.patient_name}</Text>
+            </View>
+            <Image
+              source={require('../Asset/meril.png')}
+              style={styles.merilLogoSmall}
+              resizeMode="contain"
+            />
           </View>
 
           {/* Label body */}
           <View style={styles.labelBody}>
-            {/* Top row: text fields + QR code */}
             <View style={styles.labelTopRow}>
+              {/* Left: text fields */}
               <View style={styles.labelFields}>
-                <Text style={styles.labelPatient}>{sample.patient_name}</Text>
-
+                <View style={styles.labelRow}>
+                  <Text style={styles.labelRowKey}>Patient</Text>
+                  <Text style={[styles.labelRowVal, styles.labelPatientVal]} numberOfLines={1}>
+                    {sample.patient_name}
+                  </Text>
+                </View>
                 <View style={styles.labelRow}>
                   <Text style={styles.labelRowKey}>Sample ID</Text>
                   <Text style={[styles.labelRowVal, styles.mono]} numberOfLines={2} adjustsFontSizeToFit>
-                    {sampleId || sample.sample_id || '—'}
+                    {resolvedSampleId || '—'}
                   </Text>
                 </View>
-
                 <View style={styles.labelRow}>
                   <Text style={styles.labelRowKey}>Short Code</Text>
-                  <Text style={[styles.labelRowVal, styles.mono, styles.shortCodeText]}>
-                    {shortId || sample.short_id || '—'}
+                  <Text style={[styles.labelRowVal, styles.mono, styles.shortCodeBig]}>
+                    {resolvedShortId || '—'}
                   </Text>
                 </View>
-
                 {sample.test_code ? (
                   <View style={styles.labelRow}>
                     <Text style={styles.labelRowKey}>Test Code</Text>
@@ -262,7 +307,7 @@ export default function SampleDetailScreen({ route }) {
                 ) : null}
               </View>
 
-              {/* QR Code */}
+              {/* Right: QR code */}
               {qrUri && (
                 <View style={styles.qrBlock}>
                   <Image source={{ uri: qrUri }} style={styles.qrImage} resizeMode="contain" />
@@ -271,16 +316,13 @@ export default function SampleDetailScreen({ route }) {
               )}
             </View>
 
-            {/* Divider */}
-            <View style={styles.divider} />
+            <View style={styles.dividerLine} />
 
-            {/* Barcode (short_id) */}
-            <Text style={styles.barcodeSubtitle}>SHORT CODE BARCODE</Text>
+            <Text style={styles.barcodeSubtitle}>BARCODE · SHORT CODE</Text>
             <Image source={{ uri: barcodeUri }} style={styles.barcodeImage} resizeMode="contain" />
-            <Text style={styles.barcodeRawText}>{shortId || sample.short_id || sampleId || sample.sample_id}</Text>
+            <Text style={styles.barcodeRawText}>{resolvedShortId || resolvedSampleId}</Text>
           </View>
 
-          {/* Test name chip */}
           {sample.test_name && (
             <View style={styles.testChip}>
               <Text style={styles.testChipLabel}>TEST</Text>
@@ -290,102 +332,262 @@ export default function SampleDetailScreen({ route }) {
         </View>
       )}
 
+      {/* Print Button */}
       {barcodeUri && (
-        <TouchableOpacity style={styles.printButton} onPress={handlePrint}>
+        <TouchableOpacity style={styles.printButton} onPress={handlePrint} activeOpacity={0.85}>
           <Text style={styles.printButtonText}>Print Label</Text>
         </TouchableOpacity>
       )}
+
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8fafc' },
-  content: { padding: 16, paddingBottom: 40 },
+  container: { flex: 1, backgroundColor: '#F0F4FF' },
+  content: { padding: 16, paddingBottom: 48 },
 
+  /* Info card */
   card: {
-    backgroundColor: '#fff', borderRadius: 16, padding: 20, marginBottom: 16,
-    shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 6, elevation: 3,
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    marginBottom: 16,
+    overflow: 'hidden',
+    shadowColor: '#1e40af',
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
   },
-  label: { fontSize: 11, fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase', marginTop: 14, marginBottom: 2 },
-  value: { fontSize: 16, fontWeight: '700', color: '#0f172a' },
-  mono: { fontFamily: 'monospace', fontSize: 13 },
-  statusBadge: { alignSelf: 'flex-start', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 4, marginTop: 4 },
-  badgeBlue: { backgroundColor: '#dbeafe' },
-  badgeGreen: { backgroundColor: '#dcfce7' },
-  statusText: { fontSize: 13, fontWeight: '700' },
-  statusBlue: { color: '#1e40af' },
-  statusGreen: { color: '#166534' },
+  cardHeader: {
+    backgroundColor: '#0d2554',
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  cardHeaderText: {
+    color: '#93c5fd',
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
+  },
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    gap: 5,
+  },
+  badgePending: { backgroundColor: '#DBEAFE' },
+  badgeGreen: { backgroundColor: '#DCFCE7' },
+  statusDot: { width: 6, height: 6, borderRadius: 3 },
+  dotBlue: { backgroundColor: '#2563eb' },
+  dotGreen: { backgroundColor: '#16a34a' },
+  statusText: { fontSize: 12, fontWeight: '700' },
+  textBlue: { color: '#1d4ed8' },
+  textGreen: { color: '#15803d' },
 
-  ackButton: {
-    backgroundColor: '#0d2554', borderRadius: 14, padding: 18,
-    alignItems: 'center', marginBottom: 16,
+  cardBody: { padding: 18 },
+
+  fullRow: { marginBottom: 14 },
+  fieldKey: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#94a3b8',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 3,
   },
+  patientNameVal: {
+    fontSize: 20,
+    fontWeight: '900',
+    color: '#0f172a',
+  },
+
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+    marginBottom: 12,
+  },
+  gridCell: {
+    flex: 1,
+    minWidth: '44%',
+    backgroundColor: '#F8FAFC',
+    borderRadius: 10,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  fieldVal: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#1e293b',
+  },
+  mono: { fontFamily: 'monospace' },
+  shortCode: { fontSize: 18, color: '#2563eb' },
+
+  sampleIdRow: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: 10,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  sampleIdText: { fontSize: 12, color: '#475569' },
+
+  /* Buttons */
+  ackButton: {
+    backgroundColor: '#2563eb',
+    borderRadius: 14,
+    padding: 18,
+    alignItems: 'center',
+    marginBottom: 16,
+    shadowColor: '#2563eb',
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
+  },
+  btnInner: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   ackButtonText: { color: '#fff', fontSize: 16, fontWeight: '800' },
 
   loadBarcodeBtn: {
-    backgroundColor: '#e0e7ff', borderRadius: 14, padding: 16,
-    alignItems: 'center', marginBottom: 16,
+    backgroundColor: '#EFF6FF',
+    borderRadius: 14,
+    padding: 16,
+    alignItems: 'center',
+    marginBottom: 16,
+    borderWidth: 1.5,
+    borderColor: '#BFDBFE',
   },
-  loadBarcodeBtnText: { color: '#3730a3', fontSize: 15, fontWeight: '700' },
+  loadBarcodeBtnText: { color: '#2563eb', fontSize: 15, fontWeight: '700' },
 
-  barcodeBox: {
-    backgroundColor: '#fff', borderRadius: 16, padding: 32,
-    alignItems: 'center', marginBottom: 16,
+  loadingBox: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 32,
+    alignItems: 'center',
+    marginBottom: 16,
+    gap: 12,
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 2,
   },
+  loadingLabel: { fontSize: 13, color: '#64748b', fontWeight: '500' },
 
-  /* Barcode card — matches BarcodeModal */
+  /* Barcode card */
   barcodeCard: {
-    backgroundColor: '#fff', borderRadius: 20, marginBottom: 16,
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    marginBottom: 16,
     overflow: 'hidden',
-    shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 12, elevation: 4,
+    shadowColor: '#1e40af',
+    shadowOpacity: 0.1,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 5,
   },
   barcodeHeader: {
-    backgroundColor: '#0f172a', padding: 20,
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    backgroundColor: '#0f172a',
+    padding: 18,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   barcodeHeaderSub: { color: '#38bdf8', fontSize: 11, fontWeight: '700', letterSpacing: 1.5 },
-  barcodeHeaderName: { color: '#fff', fontSize: 18, fontWeight: '900', marginTop: 2 },
+  barcodeHeaderName: { color: '#fff', fontSize: 17, fontWeight: '900', marginTop: 2, maxWidth: 200 },
+  merilLogoSmall: { width: 52, height: 18, opacity: 0.9 },
 
   labelBody: {
-    margin: 20,
-    borderWidth: 1.5, borderStyle: 'dashed', borderColor: '#cbd5e1',
-    borderRadius: 12, padding: 20, alignItems: 'center',
-    backgroundColor: '#f8fafc',
+    margin: 18,
+    borderWidth: 1.5,
+    borderStyle: 'dashed',
+    borderColor: '#CBD5E1',
+    borderRadius: 12,
+    padding: 18,
+    alignItems: 'center',
+    backgroundColor: '#FAFCFF',
   },
-  labelPatient: { fontSize: 16, fontWeight: '800', color: '#0f172a', marginBottom: 14, textAlign: 'center' },
 
-  /* Key–value rows inside the label */
-  labelRow: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    width: '100%', paddingVertical: 5, borderBottomWidth: 1, borderBottomColor: '#f1f5f9',
-  },
-  labelRowKey: { fontSize: 11, fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase' },
-  labelRowVal: { fontSize: 13, fontWeight: '700', color: '#0f172a', flex: 1, textAlign: 'right' },
-  shortCodeText: { fontSize: 20, color: '#2563eb' },
-
-  divider: { width: '100%', height: 1, backgroundColor: '#e2e8f0', marginVertical: 14 },
   labelTopRow: { flexDirection: 'row', width: '100%', alignItems: 'flex-start', marginBottom: 4 },
   labelFields: { flex: 1, paddingRight: 12 },
 
+  labelRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+    paddingVertical: 5,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+  },
+  labelRowKey: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#94a3b8',
+    textTransform: 'uppercase',
+    minWidth: 72,
+  },
+  labelRowVal: { fontSize: 13, fontWeight: '700', color: '#0f172a', flex: 1, textAlign: 'right' },
+  labelPatientVal: { fontSize: 14, fontWeight: '800', color: '#0f172a' },
+  shortCodeBig: { fontSize: 20, color: '#2563eb' },
+
   qrBlock: { alignItems: 'center' },
   qrImage: { width: 80, height: 80 },
-  qrLabel: { fontSize: 9, color: '#94a3b8', fontWeight: '700', textAlign: 'center', marginTop: 2, textTransform: 'uppercase' },
+  qrLabel: {
+    fontSize: 9,
+    color: '#94a3b8',
+    fontWeight: '700',
+    textAlign: 'center',
+    marginTop: 2,
+    textTransform: 'uppercase',
+  },
 
-  barcodeSubtitle: { fontSize: 10, fontWeight: '700', color: '#94a3b8', letterSpacing: 1.5, marginBottom: 8, textTransform: 'uppercase' },
+  dividerLine: { width: '100%', height: 1, backgroundColor: '#E2E8F0', marginVertical: 14 },
+
+  barcodeSubtitle: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#94a3b8',
+    letterSpacing: 1.5,
+    marginBottom: 8,
+    textTransform: 'uppercase',
+  },
   barcodeImage: { width: 280, height: 80 },
   barcodeRawText: { fontFamily: 'monospace', fontSize: 11, color: '#475569', marginTop: 6 },
 
   testChip: {
-    flexDirection: 'row', alignItems: 'center', gap: 8,
-    backgroundColor: '#eff6ff', marginHorizontal: 20, marginBottom: 20,
-    padding: 10, borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#EFF6FF',
+    marginHorizontal: 18,
+    marginBottom: 18,
+    padding: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
   },
   testChipLabel: { fontSize: 10, color: '#60a5fa', fontWeight: '700', letterSpacing: 0.5 },
   testChipName: { fontSize: 13, fontWeight: '700', color: '#1e40af' },
 
+  /* Print button */
   printButton: {
-    backgroundColor: '#16a34a', borderRadius: 14, padding: 18, alignItems: 'center',
+    backgroundColor: '#16a34a',
+    borderRadius: 14,
+    padding: 18,
+    alignItems: 'center',
+    shadowColor: '#16a34a',
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
   },
   printButtonText: { color: '#fff', fontSize: 16, fontWeight: '800' },
 });
