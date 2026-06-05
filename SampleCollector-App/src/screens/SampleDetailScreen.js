@@ -104,33 +104,52 @@ export default function SampleDetailScreen({ route }) {
     const resolvedSampleId = sampleId || sample.sample_id || '—';
     const resolvedShortId  = shortId  || sample.short_id  || '—';
     const html = `
+      <!DOCTYPE html>
       <html>
-        <body style="margin:0;padding:20px;font-family:sans-serif;background:#fff;">
-          <div style="border:1.5px dashed #cbd5e1;border-radius:12px;padding:20px;background:#f8fafc;max-width:340px;margin:0 auto;">
-            <div style="font-size:17px;font-weight:800;color:#0f172a;margin-bottom:12px;text-align:center;">${sample.patient_name}</div>
-            <table style="width:100%;font-size:13px;border-collapse:collapse;margin-bottom:14px;">
-              <tr>
-                <td style="color:#64748b;font-weight:600;padding:4px 0;width:40%;">Sample ID</td>
-                <td style="font-family:monospace;font-weight:700;color:#0f172a;word-break:break-all;">${resolvedSampleId}</td>
-              </tr>
-              <tr>
-                <td style="color:#64748b;font-weight:600;padding:4px 0;">Short Code</td>
-                <td style="font-family:monospace;font-weight:900;color:#2563eb;font-size:18px;">${resolvedShortId}</td>
-              </tr>
-              ${sample.test_code ? `<tr>
-                <td style="color:#64748b;font-weight:600;padding:4px 0;">Test Code</td>
-                <td style="font-family:monospace;font-weight:700;color:#0f172a;">${sample.test_code}</td>
-              </tr>` : ''}
-              ${sample.test_name ? `<tr>
-                <td style="color:#64748b;font-weight:600;padding:4px 0;">Test</td>
-                <td style="font-weight:700;color:#1e40af;">${sample.test_name}</td>
-              </tr>` : ''}
-            </table>
-            <div style="font-size:10px;color:#94a3b8;font-weight:700;text-align:center;margin-bottom:6px;letter-spacing:1px;">SHORT CODE BARCODE</div>
-            <div style="text-align:center;">
-              <img src="${barcodeUri}" style="max-width:280px;height:auto;" />
-            </div>
+        <head>
+          <meta charset="utf-8"/>
+          <style>
+            @page {
+              size: 2.25in 1.25in;
+              margin: 0;
+            }
+            * { box-sizing: border-box; margin: 0; padding: 0; }
+            body {
+              width: 2.25in;
+              height: 1.25in;
+              font-family: 'Courier New', Courier, monospace;
+              background: #fff;
+              color: #000;
+              padding: 2mm 3mm 1mm 3mm;
+              overflow: hidden;
+            }
+            .patient  { font-size: 8pt; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+            .row      { display: flex; justify-content: space-between; align-items: baseline; margin-top: 1mm; }
+            .key      { font-size: 5.5pt; color: #555; text-transform: uppercase; letter-spacing: 0.3pt; }
+            .val      { font-size: 6pt; font-weight: 700; }
+            .short    { font-size: 9pt; font-weight: 900; }
+            .divider  { border: none; border-top: 0.5pt solid #ccc; margin: 1.5mm 0 1mm; }
+            .barcode  { display: block; width: 100%; height: auto; }
+            .bc-label { text-align: center; font-size: 5.5pt; margin-top: 0.5mm; letter-spacing: 1pt; }
+          </style>
+        </head>
+        <body>
+          <div class="patient">${sample.patient_name}</div>
+          <div class="row">
+            <span class="key">Sample ID</span>
+            <span class="val" style="font-size:5pt;max-width:1.6in;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${resolvedSampleId}</span>
           </div>
+          <div class="row">
+            <span class="key">Short Code</span>
+            <span class="val short">${resolvedShortId}</span>
+            ${sample.test_code ? `<span class="key" style="margin-left:4mm;">Code</span><span class="val">${sample.test_code}</span>` : ''}
+          </div>
+          ${sample.test_name ? `<div class="row"><span class="key">Test</span><span class="val" style="max-width:1.6in;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${sample.test_name}</span></div>` : ''}
+          <hr class="divider"/>
+          <img class="barcode" src="${barcodeUri}" />
+          <div class="bc-label">${resolvedShortId}</div>
+        </body>
+      </html>
         </body>
       </html>
     `;
