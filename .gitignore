@@ -45,3 +45,7 @@ __pycache__/
 *$py.class
 venv/
 .venv/
+
+# Tender scraper runtime output
+putty-test/captcha_solver/Scrapper/tender_documents/
+putty-test/captcha_solver/Scrapper/row_data_cppp_states_diagno.csv
